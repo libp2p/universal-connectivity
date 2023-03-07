@@ -1,0 +1,32 @@
+{
+  "name": "js-libp2p-transports-example",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "description": "",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node --esm index.ts",
+    "start:debug": "DEBUG='*' ts-node --esm index.ts",
+    "serve": "npm run start",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@chainsafe/libp2p-noise": "^11.0.0",
+    "@chainsafe/libp2p-yamux": "^3.0.5",
+    "@libp2p/bootstrap": "^6.0.0",
+    "@libp2p/kad-dht": "^7.0.0",
+    "@libp2p/peer-id": "^2.0.1",
+    "@libp2p/tcp": "^6.1.2",
+    "@libp2p/websockets": "^5.0.3",
+    "@libp2p/webtransport": "^1.0.7",
+    "blockstore-core": "^3.0.0",
+    "datastore-core": "^8.0.4",
+    "libp2p": "^0.42.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
+  }
+}
