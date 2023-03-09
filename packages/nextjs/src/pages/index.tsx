@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
 import { useEffect, useState } from 'react'
-import { getPeerMultiaddrs } from '@/lib/libp2p'
+import { connectToPeer, getPeerMultiaddrs } from '@/lib/libp2p'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 export default function Home() {
@@ -17,11 +17,13 @@ export default function Home() {
     )
       .then((addrs) => {
         setMultiaddrs(addrs)
+        console.log(addrs.map((addr) => addr.toString()))
+        return connectToPeer(libp2p)(addrs)
       })
       .catch(() => {
         setIsConnected(false)
       })
-  }, [])
+  }, [setIsConnected, setMultiaddrs])
 
   return (
     <>

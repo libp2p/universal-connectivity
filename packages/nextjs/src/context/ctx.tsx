@@ -27,8 +27,6 @@ export function AppWrapper({ children }: WrapperProps) {
 
   useEffect(() => {
     const init = async () => {
-      localStorage.debug = 'libp2p*,-*:trace'
-
       try {
         const libp2p = await startLibp2p()
 

@@ -13,9 +13,10 @@ import { LevelDatastore } from 'datastore-level'
 import { webSockets } from '@libp2p/websockets'
 
 export async function startLibp2p() {
+  // localStorage.debug = 'libp2p*,-*:trace'
   // application-specific data lives in the datastore
-  const datastore = new MemoryDatastore()
-  // const datastore = new LevelDatastore('js-libp2p-nextjs-example')
+  // const datastore = new MemoryDatastore()
+  const datastore = new LevelDatastore('js-libp2p-nextjs-example')
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
@@ -28,9 +29,14 @@ export async function startLibp2p() {
       bootstrap({
         list: [
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+          // '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+          // '/dns4/am6.bootstrap.libp2p.io/tcp/443/wss/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+          // '/dns4/node0.preload.ipfs.io/tcp/443/wss/p2p/QmZMxNdpMkewiVZLMRxaNxUeZpDUb34pWjZ1kZvsd16Zic',
+          // '/dns4/node1.preload.ipfs.io/tcp/443/wss/p2p/Qmbut9Ywz9YEDrz8ySBSgWyJk41Uvm2QJPhwDJzJyGFsD6',
+          // '/dns4/node2.preload.ipfs.io/tcp/443/wss/p2p/QmV7gnbW5VTcJ3oyM2Xk1rdFBJ3kTkvxc87UFGsun29STS',
+          // '/dns4/node3.preload.ipfs.io/tcp/443/wss/p2p/QmY7JB6MQXhxHvq7dBDh4HpbH29v4yE9JRadAVpndvzySN'
         ],
       }),
     ],
@@ -64,7 +70,7 @@ export const getPeerMultiaddrs =
       }
       console.log('wait 100 seconds before next dht lookup')
       await new Promise((resolve, reject) => {
-        setTimeout(() => resolve(null), 100 * 1000)
+        setTimeout(() => resolve(null), 10 * 1000)
       })
     }
 
