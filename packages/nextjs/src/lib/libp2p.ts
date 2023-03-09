@@ -9,6 +9,7 @@ import { kadDHT } from '@libp2p/kad-dht'
 import type { PeerInfo } from '@libp2p/interface-peer-info'
 import type { Multiaddr } from '@multiformats/multiaddr'
 import { LevelDatastore } from 'datastore-level'
+
 import { webSockets } from '@libp2p/websockets'
 
 export async function startLibp2p() {
@@ -49,7 +50,6 @@ export const getPeerMultiaddrs =
     let peerInfo: PeerInfo
 
     outer: while (true) {
-      console.log(libp2p)
       try {
         // 👇 How does `dht.findPeer` work when in client mode?
         for await (const event of libp2p.dht.findPeer(peer)) {
@@ -62,9 +62,9 @@ export const getPeerMultiaddrs =
       } catch (e) {
         console.log(e)
       }
-      console.log('wait 5 seconds before next dht lookup')
+      console.log('wait 100 seconds before next dht lookup')
       await new Promise((resolve, reject) => {
-        setTimeout(() => resolve(null), 5000)
+        setTimeout(() => resolve(null), 100 * 1000)
       })
     }
 
