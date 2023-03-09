@@ -4,7 +4,6 @@ import { yamux } from '@chainsafe/libp2p-yamux'
 import { webTransport } from '@libp2p/webtransport'
 import { bootstrap } from '@libp2p/bootstrap'
 import { MemoryDatastore } from 'datastore-core'
-
 import { peerIdFromString } from '@libp2p/peer-id'
 import { kadDHT } from '@libp2p/kad-dht'
 import type { PeerInfo } from '@libp2p/interface-peer-info'
@@ -14,8 +13,8 @@ import { webSockets } from '@libp2p/websockets'
 
 export async function startLibp2p() {
   // application-specific data lives in the datastore
-  // const datastore = new MemoryDatastore()
-  const datastore = new LevelDatastore('js-libp2p-nextjs-example')
+  const datastore = new MemoryDatastore()
+  // const datastore = new LevelDatastore('js-libp2p-nextjs-example')
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
