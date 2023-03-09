@@ -58,6 +58,7 @@ export const getPeerMultiaddrs =
     outer: while (true) {
       try {
         // 👇 How does `dht.findPeer` work when in client mode?
+        // IIUC, `libp2p.dht.findPeer` sends a DHT client request to one of the bootstrap nodes it manages to connect to
         for await (const event of libp2p.dht.findPeer(peer)) {
           console.log(event)
           if (event.name === 'FINAL_PEER') {
@@ -74,14 +75,10 @@ export const getPeerMultiaddrs =
       })
     }
 
-    // Filter out private IPs
-    const publicMultiaddrs = multiaddrs.filter((multiaddr) => {
-      return !isIPPrivate(multiaddr.toOptions().host)
-    })
-
-    return publicMultiaddrs
+    return multiaddrs
   }
 
+// Attempt to connect to an array of multiaddrs
 export const connectToPeer =
   (libp2p: Libp2p) => async (multiaddrs: Multiaddr[]) => {
     // '12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2', // lidel's IPFS node with Webtransport
@@ -90,16 +87,21 @@ export const connectToPeer =
     let errCount = 0
     let conCount = 0
 
-    for (const multiaddr of multiaddrs) {
+    // Filter out private IPs
+    const publicMultiaddrs = multiaddrs.filter((multiaddr) => {
+      return !isIPPrivate(multiaddr.toOptions().host)
+    })
+
+    for (const multiaddr of publicMultiaddrs) {
       try {
         const conn = await libp2p.dial(multiaddr)
         conCount++
       } catch (e) {
+        console.error(e)
         errCount++
       }
     }
-    if (errCount == multiaddrs.length) {
+    if (conCount === 0) {
       throw new Error('Failed to connect to peer')
     }
-    console.log(`conCount: ${conCount} | errCount: ${errCount}`)
   }

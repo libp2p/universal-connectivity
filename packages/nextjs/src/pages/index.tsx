@@ -7,6 +7,7 @@ import { connectToPeer, getPeerMultiaddrs } from '@/lib/libp2p'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 const APP_PEER = '12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2'
+// const APP_PEER = '12D3KooWRBy97UB99e3J6hiPesre1MZeuNQvfan4gBziswrRJsNK'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
@@ -17,7 +18,6 @@ export default function Home() {
     const connect = async () => {
       const addrs = await getPeerMultiaddrs(libp2p)(APP_PEER)
       setMultiaddrs(addrs)
-      console.log(addrs.map((addr) => addr.toString()))
 
       await connectToPeer(libp2p)(addrs)
     }
@@ -56,6 +56,11 @@ export default function Home() {
                 <li>This PeerID: {libp2p.peerId.toString()}</li>
               </ul>
               <h2>Multiaddrs for PeerID: {APP_PEER}</h2>
+              {multiaddrs && (
+                <pre className="px-2">
+                  {multiaddrs.map((peer) => peer.toString()).join('\n')}
+                </pre>
+              )}
               <p className="inline-flex items-center">
                 Connected:{' '}
                 {isConnected ? (
@@ -64,11 +69,6 @@ export default function Home() {
                   <XCircleIcon className="w-6 h-6 text-red-500" />
                 )}
               </p>
-              {multiaddrs && (
-                <pre className="px-2">
-                  {multiaddrs.map((peer) => peer.toString()).join('\n')}
-                </pre>
-              )}
             </div>
           </main>
         </div>
