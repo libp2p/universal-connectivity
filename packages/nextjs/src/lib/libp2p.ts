@@ -9,6 +9,7 @@ import { kadDHT } from '@libp2p/kad-dht'
 import type { PeerInfo } from '@libp2p/interface-peer-info'
 import type { Multiaddr } from '@multiformats/multiaddr'
 import { LevelDatastore } from 'datastore-level'
+import isIPPrivate from 'private-ip'
 
 import { webSockets } from '@libp2p/websockets'
 
@@ -52,8 +53,7 @@ export const getPeerMultiaddrs =
   async (peerId: string): Promise<Multiaddr[]> => {
     const peer = peerIdFromString(peerId)
 
-    let multiaddr: Multiaddr[]
-    let peerInfo: PeerInfo
+    let multiaddrs: Multiaddr[]
 
     outer: while (true) {
       try {
@@ -61,7 +61,7 @@ export const getPeerMultiaddrs =
         for await (const event of libp2p.dht.findPeer(peer)) {
           console.log(event)
           if (event.name === 'FINAL_PEER') {
-            peerInfo = event.peer
+            multiaddrs = event.peer.multiaddrs
             break outer
           }
         }
@@ -74,7 +74,12 @@ export const getPeerMultiaddrs =
       })
     }
 
-    return peerInfo.multiaddrs
+    // Filter out private IPs
+    const publicMultiaddrs = multiaddrs.filter((multiaddr) => {
+      return !isIPPrivate(multiaddr.toOptions().host)
+    })
+
+    return publicMultiaddrs
   }
 
 export const connectToPeer =
@@ -82,15 +87,19 @@ export const connectToPeer =
     // '12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2', // lidel's IPFS node with Webtransport
     // '12D3KooWRBy97UB99e3J6hiPesre1MZeuNQvfan4gBziswrRJsNK', // local node
 
-    // Establish a connection using a stable PeerID
+    let errCount = 0
+    let conCount = 0
 
     for (const multiaddr of multiaddrs) {
-      console.log(multiaddr)
       try {
         const conn = await libp2p.dial(multiaddr)
-        console.log(conn)
+        conCount++
       } catch (e) {
-        console.log(e)
+        errCount++
       }
     }
+    if (errCount == multiaddrs.length) {
+      throw new Error('Failed to connect to peer')
+    }
+    console.log(`conCount: ${conCount} | errCount: ${errCount}`)
   }

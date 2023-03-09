@@ -1,5 +1,5 @@
 import Head from 'next/head'
-
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
 import { useEffect, useState } from 'react'
@@ -56,8 +56,18 @@ export default function Home() {
                 <li>This PeerID: {libp2p.peerId.toString()}</li>
               </ul>
               <h2>Multiaddrs for PeerID: {APP_PEER}</h2>
+              <p className="inline-flex items-center">
+                Connected:{' '}
+                {isConnected ? (
+                  <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
+                ) : (
+                  <XCircleIcon className="w-6 h-6 text-red-500" />
+                )}
+              </p>
               {multiaddrs && (
-                <pre className='px-2'>{multiaddrs.map((peer) => peer.toString()).join('\n')}</pre>
+                <pre className="px-2">
+                  {multiaddrs.map((peer) => peer.toString()).join('\n')}
+                </pre>
               )}
             </div>
           </main>
