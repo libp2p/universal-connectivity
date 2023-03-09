@@ -6,21 +6,28 @@ import { useEffect, useState } from 'react'
 import { connectToPeer, getPeerMultiaddrs } from '@/lib/libp2p'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
+const APP_PEER = '12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2'
+
 export default function Home() {
   const { libp2p } = useLibp2pContext()
   const [isConnected, setIsConnected] = useState(false)
   const [multiaddrs, setMultiaddrs] = useState<Multiaddr[]>()
 
   useEffect(() => {
-    getPeerMultiaddrs(libp2p)(
-      `12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2`,
-    )
-      .then((addrs) => {
-        setMultiaddrs(addrs)
-        console.log(addrs.map((addr) => addr.toString()))
-        return connectToPeer(libp2p)(addrs)
+    const connect = async () => {
+      const addrs = await getPeerMultiaddrs(libp2p)(APP_PEER)
+      setMultiaddrs(addrs)
+      console.log(addrs.map((addr) => addr.toString()))
+
+      await connectToPeer(libp2p)(addrs)
+    }
+
+    connect()
+      .then(() => {
+        setIsConnected(true)
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error(e)
         setIsConnected(false)
       })
   }, [setIsConnected, setMultiaddrs])
@@ -45,10 +52,13 @@ export default function Home() {
           </header>
           <main>
             <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-              <ul>
-                <li>PeerID: {libp2p.peerId.toString()}</li>
+              <ul className="my-2">
+                <li>This PeerID: {libp2p.peerId.toString()}</li>
               </ul>
-              {/* <pre>{libp2p.getPeers().map((peer) => peer.toString())}</pre> */}
+              <h2>Multiaddrs for PeerID: {APP_PEER}</h2>
+              {multiaddrs && (
+                <pre className='px-2'>{multiaddrs.map((peer) => peer.toString()).join('\n')}</pre>
+              )}
             </div>
           </main>
         </div>

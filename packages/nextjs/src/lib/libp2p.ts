@@ -68,7 +68,7 @@ export const getPeerMultiaddrs =
       } catch (e) {
         console.log(e)
       }
-      console.log('wait 100 seconds before next dht lookup')
+      console.log('wait 10 seconds before next dht lookup')
       await new Promise((resolve, reject) => {
         setTimeout(() => resolve(null), 10 * 1000)
       })
