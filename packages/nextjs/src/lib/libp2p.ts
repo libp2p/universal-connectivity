@@ -59,8 +59,9 @@ export const getPeerMultiaddrs =
       try {
         // 👇 How does `dht.findPeer` work when in client mode?
         // IIUC, `libp2p.dht.findPeer` sends a DHT client request to one of the bootstrap nodes it manages to connect to
+        // Main constraint is that in secure context can only connect to peers with a TLS certificate, WebRTC peers, or WebTransport peers
         for await (const event of libp2p.dht.findPeer(peer)) {
-          console.log(event)
+          console.log('peer record found: ', event)
           if (event.name === 'FINAL_PEER') {
             multiaddrs = event.peer.multiaddrs
             break outer
