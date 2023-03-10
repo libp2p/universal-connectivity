@@ -30,7 +30,7 @@ export default function Home() {
         console.error(e)
         setIsConnected(false)
       })
-  }, [setIsConnected, setMultiaddrs])
+  }, [setIsConnected, setMultiaddrs, libp2p])
 
   return (
     <>

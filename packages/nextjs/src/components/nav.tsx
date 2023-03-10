@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 
 const user = {
@@ -35,7 +36,13 @@ export default function Navigation() {
             <div className="flex h-16 justify-between">
               <div className="flex">
                 <div className="flex flex-shrink-0 items-center">
-                  <img
+                  <Image
+                    src="/libp2p-logo.svg"
+                    alt="libp2p logo"
+                    height="46"
+                    width="46"
+                  />
+                  {/* <img
                     className="block h-12 w-auto lg:hidden"
                     src="/libp2p-logo.svg"
                     alt="Your Company"
@@ -44,13 +51,13 @@ export default function Navigation() {
                     className="hidden h-12 w-auto lg:block"
                     src="/libp2p-logo.svg"
                     alt="Your Company"
-                  />
+                  /> */}
                 </div>
                 <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
                   {navigationItems.map((item) => (
-                    <Link href={item.href} legacyBehavior>
+                    <Link key={item.href} href={item.href} legacyBehavior>
                       <a
-                        key={item.name}
+                        key={item.href}
                         className={classNames(
                           router.pathname === item.href
                             ? 'border-indigo-500 text-gray-900'
@@ -134,7 +141,7 @@ export default function Navigation() {
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 pt-2 pb-3">
               {navigationItems.map((item) => (
-                <Link href={item.href} legacyBehavior>
+                <Link key={item.href} href={item.href} legacyBehavior>
                   <Disclosure.Button
                     key={item.href}
                     // as="a"
