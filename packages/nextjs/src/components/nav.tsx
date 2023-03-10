@@ -1,20 +1,18 @@
 import { Fragment } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import Libp2pLogo from '../../public/libp2p-logo.svg'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 
 const user = {
   name: 'Juan Benet',
   email: 'tom@example.com',
-  imageUrl:
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+  imageUrl: 'https://github.com/achingbrain.png',
 }
 
-const navigation = [
-  { name: 'Connecting to a Peer', href: '#', current: true },
-  // { name: 'Team', href: '#', current: false },
-  // { name: 'Projects', href: '#', current: false },
-  // { name: 'Calendar', href: '#', current: false },
+const navigationItems = [
+  { name: 'Connecting to a Peer', href: '/' },
+  { name: 'Chat', href: '/chat' },
 ]
 const userNavigation = [
   { name: 'Your Profile', href: '#' },
@@ -27,6 +25,8 @@ function classNames(...classes: string[]) {
 }
 
 export default function Navigation() {
+  const router = useRouter()
+
   return (
     <Disclosure as="nav" className="border-b border-gray-200 bg-white">
       {({ open }) => (
@@ -47,20 +47,23 @@ export default function Navigation() {
                   />
                 </div>
                 <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                  {navigation.map((item) => (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      className={classNames(
-                        item.current
-                          ? 'border-indigo-500 text-gray-900'
-                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
-                      )}
-                      aria-current={item.current ? 'page' : undefined}
-                    >
-                      {item.name}
-                    </a>
+                  {navigationItems.map((item) => (
+                    <Link href={item.href} legacyBehavior>
+                      <a
+                        key={item.name}
+                        className={classNames(
+                          router.pathname === item.href
+                            ? 'border-indigo-500 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                          'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
+                        )}
+                        aria-current={
+                          router.pathname === item.href ? 'page' : undefined
+                        }
+                      >
+                        {item.name}
+                      </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -130,26 +133,30 @@ export default function Navigation() {
 
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 pt-2 pb-3">
-              {navigation.map((item) => (
-                <Disclosure.Button
-                  key={item.name}
-                  as="a"
-                  href={item.href}
-                  className={classNames(
-                    item.current
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800',
-                    'block border-l-4 py-2 pl-3 pr-4 text-base font-medium',
-                  )}
-                  aria-current={item.current ? 'page' : undefined}
-                >
-                  {item.name}
-                </Disclosure.Button>
+              {navigationItems.map((item) => (
+                <Link href={item.href} legacyBehavior>
+                  <Disclosure.Button
+                    key={item.href}
+                    // as="a"
+                    // href={item.href}
+                    className={classNames(
+                      router.pathname === item.href
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800',
+                      'block border-l-4 py-2 pl-3 pr-4 text-base font-medium',
+                    )}
+                    aria-current={
+                      router.pathname === item.href ? 'page' : undefined
+                    }
+                  >
+                    {item.name}
+                  </Disclosure.Button>
+                </Link>
               ))}
             </div>
             <div className="border-t border-gray-200 pt-4 pb-3">
               <div className="flex items-center px-4">
-                {/* <div className="flex-shrink-0">
+                <div className="flex-shrink-0">
                   <img
                     className="h-10 w-10 rounded-full"
                     src={user.imageUrl}
@@ -163,7 +170,7 @@ export default function Navigation() {
                   <div className="text-sm font-medium text-gray-500">
                     {user.email}
                   </div>
-                </div> */}
+                </div>
                 <button
                   type="button"
                   className="ml-auto flex-shrink-0 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
