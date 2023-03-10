@@ -1,4 +1,4 @@
-export default function Chat() {
+export default function ChatContainer() {
   return (
     <div className="container mx-auto">
       <div className="min-w-full border rounded lg:grid lg:grid-cols-3">
@@ -34,13 +34,13 @@ export default function Chat() {
               <a className="flex items-center px-3 py-2 text-sm transition duration-150 ease-in-out border-b border-gray-300 cursor-pointer hover:bg-gray-100 focus:outline-none">
                 <img
                   className="object-cover w-10 h-10 rounded-full"
-                  src="https://cdn.pixabay.com/photo/2018/09/12/12/14/man-3672010__340.jpg"
+                  src="https://github.com/2color.png"
                   alt="username"
                 />
                 <div className="w-full pb-2">
                   <div className="flex justify-between">
                     <span className="block ml-2 font-semibold text-gray-600">
-                      Jhon Don
+                      Daniel
                     </span>
                     <span className="block ml-2 text-sm text-gray-600">
                       25 minutes
@@ -52,13 +52,13 @@ export default function Chat() {
               <a className="flex items-center px-3 py-2 text-sm transition duration-150 ease-in-out bg-gray-100 border-b border-gray-300 cursor-pointer focus:outline-none">
                 <img
                   className="object-cover w-10 h-10 rounded-full"
-                  src="https://cdn.pixabay.com/photo/2016/06/15/15/25/loudspeaker-1459128__340.png"
+                  src="https://github.com/achingbrain.png"
                   alt="username"
                 />
                 <div className="w-full pb-2">
                   <div className="flex justify-between">
                     <span className="block ml-2 font-semibold text-gray-600">
-                      Same
+                      Alex
                     </span>
                     <span className="block ml-2 text-sm text-gray-600">
                       50 minutes
@@ -72,13 +72,13 @@ export default function Chat() {
               <a className="flex items-center px-3 py-2 text-sm transition duration-150 ease-in-out border-b border-gray-300 cursor-pointer hover:bg-gray-100 focus:outline-none">
                 <img
                   className="object-cover w-10 h-10 rounded-full"
-                  src="https://cdn.pixabay.com/photo/2018/01/15/07/51/woman-3083383__340.jpg"
+                  src="https://github.com/hannahhoward.png"
                   alt="username"
                 />
                 <div className="w-full pb-2">
                   <div className="flex justify-between">
                     <span className="block ml-2 font-semibold text-gray-600">
-                      Emma
+                      Hannah
                     </span>
                     <span className="block ml-2 text-sm text-gray-600">
                       6 hour
@@ -97,7 +97,7 @@ export default function Chat() {
             <div className="relative flex items-center p-3 border-b border-gray-300">
               <img
                 className="object-cover w-10 h-10 rounded-full"
-                src="https://cdn.pixabay.com/photo/2018/01/15/07/51/woman-3083383__340.jpg"
+                src="https://github.com/achingbrain.png"
                 alt="username"
               />
               <span className="block ml-2 font-bold text-gray-600">Emma</span>
