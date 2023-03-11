@@ -14,6 +14,7 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false)
   const [multiaddrs, setMultiaddrs] = useState<Multiaddr[]>()
 
+  // Effect hook to connect to a specific peer when the page loads
   useEffect(() => {
     const connect = async () => {
       const addrs = await getPeerMultiaddrs(libp2p)(APP_PEER)

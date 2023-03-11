@@ -8,6 +8,7 @@ import { peerIdFromString } from '@libp2p/peer-id'
 import { kadDHT } from '@libp2p/kad-dht'
 import type { PeerInfo } from '@libp2p/interface-peer-info'
 import type { Multiaddr } from '@multiformats/multiaddr'
+import { protocols } from '@multiformats/multiaddr'
 import { LevelDatastore } from 'datastore-level'
 import isIPPrivate from 'private-ip'
 
@@ -30,10 +31,10 @@ export async function startLibp2p() {
     peerDiscovery: [
       bootstrap({
         list: [
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-          // '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+          // '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+          // '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
+          // '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
           // '/dns4/am6.bootstrap.libp2p.io/tcp/443/wss/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
           // '/dns4/node0.preload.ipfs.io/tcp/443/wss/p2p/QmZMxNdpMkewiVZLMRxaNxUeZpDUb34pWjZ1kZvsd16Zic',
           // '/dns4/node1.preload.ipfs.io/tcp/443/wss/p2p/Qmbut9Ywz9YEDrz8ySBSgWyJk41Uvm2QJPhwDJzJyGFsD6',
@@ -62,7 +63,7 @@ export const getPeerMultiaddrs =
         // IIUC, `libp2p.dht.findPeer` sends a DHT client request to one of the bootstrap nodes it manages to connect to
         // Main constraint is that in secure context can only connect to peers with a TLS certificate, WebRTC peers, or WebTransport peers
         for await (const event of libp2p.dht.findPeer(peer)) {
-          console.log('peer record found: ', event)
+          console.log('findPeer event: ', event)
           if (event.name === 'FINAL_PEER') {
             multiaddrs = event.peer.multiaddrs
             break outer
@@ -94,6 +95,11 @@ export const connectToPeer =
       return !isIPPrivate(multiaddr.toOptions().host)
     })
 
+    console.log(
+      publicMultiaddrs.map((addr) =>
+        addr.protoCodes().map((pt) => protocols(pt)),
+      ),
+    )
     for (const multiaddr of publicMultiaddrs) {
       try {
         const conn = await libp2p.dial(multiaddr)
