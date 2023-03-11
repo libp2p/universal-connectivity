@@ -21,6 +21,7 @@ export async function startLibp2p() {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
+    connectionManager: { autoDial: false },
     dht: kadDHT(),
     datastore,
     transports: [webTransport(), webSockets()],
