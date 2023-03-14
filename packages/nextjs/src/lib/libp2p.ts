@@ -161,6 +161,8 @@ export const addPeerIdToWebTransportMultiAddr = (
   addr: Multiaddr,
   peerId: string,
 ): Multiaddr => {
+  if (addr.toString().includes('/p2p')) return addr
+
   return multiaddr(`${addr.toString()}/p2p/${peerId}`)
 }
 /**
