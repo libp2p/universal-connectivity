@@ -8,9 +8,11 @@ import { peerIdFromString } from '@libp2p/peer-id'
 import { kadDHT } from '@libp2p/kad-dht'
 import type { PeerInfo } from '@libp2p/interface-peer-info'
 import type { Multiaddr } from '@multiformats/multiaddr'
-import { protocols } from '@multiformats/multiaddr'
+import { protocols, Protocol } from '@multiformats/multiaddr'
 import { LevelDatastore } from 'datastore-level'
 import isIPPrivate from 'private-ip'
+import { delegatedPeerRouting } from '@libp2p/delegated-peer-routing'
+import { create as KuboClient } from 'kubo-rpc-client'
 
 import { webSockets } from '@libp2p/websockets'
 
@@ -20,9 +22,17 @@ export async function startLibp2p() {
   // const datastore = new MemoryDatastore()
   const datastore = new LevelDatastore('js-libp2p-nextjs-example')
 
+  // default is to use ipfs.io
+  const client = KuboClient({
+    // use default api settings
+    protocol: 'https',
+    port: 443,
+    host: 'node0.delegate.ipfs.io',
+  })
+
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    connectionManager: { autoDial: false },
+    connectionManager: { autoDial: true },
     dht: kadDHT(),
     datastore,
     transports: [webTransport(), webSockets()],
@@ -32,17 +42,21 @@ export async function startLibp2p() {
       bootstrap({
         list: [
           // '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+          // '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
           // '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
           // '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-          // '/dns4/am6.bootstrap.libp2p.io/tcp/443/wss/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+          '/dns4/am6.bootstrap.libp2p.io/tcp/443/wss/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+          // '/dnsaddr/ny5.bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+          // '/dns4/ny5.bootstrap.libp2p.io/tcp/443/wss/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+
           // '/dns4/node0.preload.ipfs.io/tcp/443/wss/p2p/QmZMxNdpMkewiVZLMRxaNxUeZpDUb34pWjZ1kZvsd16Zic',
           // '/dns4/node1.preload.ipfs.io/tcp/443/wss/p2p/Qmbut9Ywz9YEDrz8ySBSgWyJk41Uvm2QJPhwDJzJyGFsD6',
           // '/dns4/node2.preload.ipfs.io/tcp/443/wss/p2p/QmV7gnbW5VTcJ3oyM2Xk1rdFBJ3kTkvxc87UFGsun29STS',
-          // '/dns4/node3.preload.ipfs.io/tcp/443/wss/p2p/QmY7JB6MQXhxHvq7dBDh4HpbH29v4yE9JRadAVpndvzySN'
+          // '/dns4/node3.preload.ipfs.io/tcp/443/wss/p2p/QmY7JB6MQXhxHvq7dBDh4HpbH29v4yE9JRadAVpndvzySN',
         ],
       }),
     ],
+    // peerRouting: [delegatedPeerRouting(client)],
   })
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
@@ -82,34 +96,68 @@ export const getPeerMultiaddrs =
   }
 
 // Attempt to connect to an array of multiaddrs
-export const connectToPeer =
+export const connectToMultiaddrs =
   (libp2p: Libp2p) => async (multiaddrs: Multiaddr[]) => {
-    // '12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2', // lidel's IPFS node with Webtransport
-    // '12D3KooWRBy97UB99e3J6hiPesre1MZeuNQvfan4gBziswrRJsNK', // local node
+    const publicWebTransportMultiaddrs = filterPublicMultiaddrs(multiaddrs)
 
-    let errCount = 0
+    if (publicWebTransportMultiaddrs.length === 0) {
+      throw new Error('No Public WebTransport multiaddrs found for this peer')
+    }
+
+    console.log(publicWebTransportMultiaddrs.map((addr) => addr.toString()))
+
     let conCount = 0
-
-    // Filter out private IPs
-    const publicMultiaddrs = multiaddrs.filter((multiaddr) => {
-      return !isIPPrivate(multiaddr.toOptions().host)
-    })
-
-    console.log(
-      publicMultiaddrs.map((addr) =>
-        addr.protoCodes().map((pt) => protocols(pt)),
-      ),
-    )
-    for (const multiaddr of publicMultiaddrs) {
+    const error = []
+    for (const multiaddr of publicWebTransportMultiaddrs) {
       try {
         const conn = await libp2p.dial(multiaddr)
         conCount++
       } catch (e) {
+        errs.push(e)
         console.error(e)
-        errCount++
       }
     }
     if (conCount === 0) {
-      throw new Error('Failed to connect to peer')
+      throw new Libp2pDialError('Failed to connect to peer', errs)
     }
   }
+
+/**
+ * Returns a filtered list of public multiaddrs of a specific protocol
+ *
+ * @param multiaddrs multiaddrs to filter out
+ * @param selectedProtocol protoc
+ * @returns
+ */
+export const filterPublicMultiaddrs = (
+  multiaddrs: Multiaddr[],
+  selectedProtocol: Protocol = protocols('webtransport'),
+): Multiaddr[] => {
+  return (
+    multiaddrs
+      // Filter out private IPs
+      .filter((multiaddr) => {
+        return !isIPPrivate(multiaddr.toOptions().host)
+      })
+      .filter((addr) => {
+        const res = addr
+          .protoCodes()
+          .filter((pt) => protocols(pt)?.name === selectedProtocol.name)
+
+        return res.length > 0
+      })
+  )
+}
+
+/**
+ * Custom Libp2p Dial Error that can hold an array of dial error objects
+ */
+export class Libp2pDialError extends Error {
+  // error can be an array of dial errors
+  error: object
+  constructor(message: string, error: object) {
+    super(message)
+    Object.setPrototypeOf(this, Libp2pDialError.prototype)
+    this.error = error
+  }
+}
