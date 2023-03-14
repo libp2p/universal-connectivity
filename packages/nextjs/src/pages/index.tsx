@@ -5,6 +5,7 @@ import { useLibp2pContext } from '@/context/ctx'
 import { useCallback, useEffect, useState } from 'react'
 import {
   connectToMultiaddrs,
+  filterPublicMultiaddrs,
   getPeerMultiaddrs,
   Libp2pDialError,
 } from '@/lib/libp2p'
@@ -44,7 +45,9 @@ export default function Home() {
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       try {
         // 👇 Peer routing (DHT/DELEGATED)
+        setMultiaddrs(undefined)
         const addrs = await getPeerMultiaddrs(libp2p)(peerID)
+
         setMultiaddrs(addrs)
       } catch (e) {
         console.error(e)
@@ -53,11 +56,21 @@ export default function Home() {
     [libp2p, setMultiaddrs, peerID],
   )
 
+  const handleFilterMultiaddrs = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (multiaddrs) {
+        setMultiaddrs(filterPublicMultiaddrs(multiaddrs))
+      }
+    },
+    [setMultiaddrs, multiaddrs],
+  )
+
   const handleConnectToMultiaddrs = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       try {
         if (multiaddrs) {
-          await connectToMultiaddrs(libp2p)(multiaddrs)
+          const connections = await connectToMultiaddrs(libp2p)(multiaddrs)
+          console.log('connections: ', connections)
         }
       } catch (e) {
         console.error(e)
@@ -98,20 +111,7 @@ export default function Home() {
               <ul className="my-2 space-y-2 break-all">
                 <li className="">This PeerID: {libp2p.peerId.toString()}</li>
               </ul>
-              <h3> Multiaddrs for {peerID} 👇</h3>
-              {multiaddrs && (
-                <pre className="px-2">
-                  {multiaddrs.map((peer) => peer.toString()).join('\n')}
-                </pre>
-              )}
-              <p className="inline-flex items-center">
-                Connected:{' '}
-                {isConnected ? (
-                  <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
-                ) : (
-                  <XCircleIcon className="w-6 h-6 text-red-500" />
-                )}
-              </p>
+
               <div className="my-6 w-1/2">
                 <label
                   htmlFor="peer-id"
@@ -142,14 +142,39 @@ export default function Home() {
                 >
                   Get Multiaddrs
                 </button>
-                <button
-                  type="button"
-                  className="rounded-md bg-teal-600 mx-4 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                  onClick={handleConnectToMultiaddrs}
-                >
-                  Connect to Peer
-                </button>
               </div>
+              <div>
+                {multiaddrs && multiaddrs.length > 0 ? (
+                  <>
+                    <h3> Multiaddrs for {peerID} 👇</h3>
+                    <pre className="px-2">
+                      {multiaddrs.map((peer) => peer.toString()).join('\n')}
+                    </pre>
+                    <button
+                      type="button"
+                      className="rounded-md bg-teal-500 mx-2 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                      onClick={handleFilterMultiaddrs}
+                    >
+                      Filter Public WebTransport
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md bg-teal-500 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-teal-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                      onClick={handleConnectToMultiaddrs}
+                    >
+                      Connect to Peer
+                    </button>
+                  </>
+                ) : null}
+              </div>
+              <p className="my-4 inline-flex items-center text-xl">
+                Connected:{' '}
+                {isConnected ? (
+                  <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
+                ) : (
+                  <XCircleIcon className="w-6 h-6 text-red-500" />
+                )}
+              </p>
             </div>
           </main>
         </div>
