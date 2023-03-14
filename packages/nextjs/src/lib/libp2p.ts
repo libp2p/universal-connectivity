@@ -37,7 +37,7 @@ export async function startLibp2p() {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    connectionManager: { autoDial: true },
+    connectionManager: { autoDial: false },
     dht: kadDHT(),
     datastore,
     transports: [webTransport(), webSockets()],
@@ -61,7 +61,7 @@ export async function startLibp2p() {
         ],
       }),
     ],
-    // peerRouting: [delegatedPeerRouting(client)],
+    peerRouters: [delegatedPeerRouting(client)],
   })
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
@@ -109,12 +109,11 @@ export const connectToMultiaddrs =
       throw new Error('No Public WebTransport multiaddrs found for this peer')
     }
 
-    console.log(publicWebTransportMultiaddrs.map((addr) => addr.toString()))
-
     const conns = []
     const errs = []
     for (let multiaddr of publicWebTransportMultiaddrs) {
       multiaddr = addPeerIdToWebTransportMultiAddr(multiaddr, peerId)
+      console.log(`dialling: ${multiaddr.toString()}`)
       try {
         conns.push(await libp2p.dial(multiaddr))
       } catch (e) {
