@@ -7,14 +7,19 @@ import { MemoryDatastore } from 'datastore-core'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { kadDHT } from '@libp2p/kad-dht'
 import type { PeerInfo } from '@libp2p/interface-peer-info'
-import type { Multiaddr } from '@multiformats/multiaddr'
-import { protocols, Protocol } from '@multiformats/multiaddr'
+import {
+  multiaddr,
+  Multiaddr,
+  protocols,
+  Protocol,
+} from '@multiformats/multiaddr'
 import { LevelDatastore } from 'datastore-level'
 import isIPPrivate from 'private-ip'
 import { delegatedPeerRouting } from '@libp2p/delegated-peer-routing'
 import { create as KuboClient } from 'kubo-rpc-client'
 
 import { webSockets } from '@libp2p/websockets'
+import { PeerId } from 'kubo-rpc-client/dist/src/types'
 
 export async function startLibp2p() {
   // localStorage.debug = 'libp2p*,-*:trace'
@@ -97,7 +102,7 @@ export const getPeerMultiaddrs =
 
 // Attempt to connect to an array of multiaddrs
 export const connectToMultiaddrs =
-  (libp2p: Libp2p) => async (multiaddrs: Multiaddr[]) => {
+  (libp2p: Libp2p) => async (multiaddrs: Multiaddr[], peerId: string) => {
     const publicWebTransportMultiaddrs = filterPublicMultiaddrs(multiaddrs)
 
     if (publicWebTransportMultiaddrs.length === 0) {
@@ -108,7 +113,8 @@ export const connectToMultiaddrs =
 
     const conns = []
     const errs = []
-    for (const multiaddr of publicWebTransportMultiaddrs) {
+    for (let multiaddr of publicWebTransportMultiaddrs) {
+      multiaddr = addPeerIdToWebTransportMultiAddr(multiaddr, peerId)
       try {
         conns.push(await libp2p.dial(multiaddr))
       } catch (e) {
@@ -149,6 +155,15 @@ export const filterPublicMultiaddrs = (
   )
 }
 
+// Add the peer ID to the multiaddr so that it can connect
+// Because multiaddrs aren't returned with the PeerID in them
+// from the libp2p.dht.findPeer call
+export const addPeerIdToWebTransportMultiAddr = (
+  addr: Multiaddr,
+  peerId: string,
+): Multiaddr => {
+  return multiaddr(`${addr.toString()}/p2p/${peerId}`)
+}
 /**
  * Custom Libp2p Dial Error that can hold an array of dial error objects
  */

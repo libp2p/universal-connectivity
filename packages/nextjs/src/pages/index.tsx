@@ -69,7 +69,7 @@ export default function Home() {
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       try {
         if (multiaddrs) {
-          const connections = await connectToMultiaddrs(libp2p)(multiaddrs)
+          const connections = await connectToMultiaddrs(libp2p)(multiaddrs, peerID)
           console.log('connections: ', connections)
         }
       } catch (e) {
