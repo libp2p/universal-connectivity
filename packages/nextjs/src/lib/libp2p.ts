@@ -37,7 +37,7 @@ export async function startLibp2p() {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    connectionManager: { autoDial: false },
+    // connectionManager: { autoDial: false },
     dht: kadDHT(),
     datastore,
     transports: [webTransport(), webSockets()],
@@ -61,7 +61,7 @@ export async function startLibp2p() {
         ],
       }),
     ],
-    peerRouters: [delegatedPeerRouting(client)],
+    // peerRouters: [delegatedPeerRouting(client)],
   })
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
@@ -115,7 +115,9 @@ export const connectToMultiaddrs =
       multiaddr = addPeerIdToWebTransportMultiAddr(multiaddr, peerId)
       console.log(`dialling: ${multiaddr.toString()}`)
       try {
-        conns.push(await libp2p.dial(multiaddr))
+        const conn = await libp2p.dial(multiaddr)
+        conns.push(conn)
+        console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
       } catch (e) {
         errs.push(e)
         console.error(e)

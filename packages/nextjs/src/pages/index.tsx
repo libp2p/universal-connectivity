@@ -71,6 +71,12 @@ export default function Home() {
         if (multiaddrs) {
           const connections = await connectToMultiaddrs(libp2p)(multiaddrs, peerID)
           console.log('connections: ', connections)
+
+          if (connections.find(conn => {
+            return conn.remotePeer.toString() === peerID
+          })) {
+            setIsConnected(true)
+          }
         }
       } catch (e) {
         console.error(e)
