@@ -3,6 +3,8 @@ import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
 import { useCallback, useEffect, useState } from 'react'
+import { useInterval } from 'usehooks-ts'
+
 import {
   connectToMultiaddrs,
   filterPublicMultiaddrs,
@@ -11,6 +13,8 @@ import {
 } from '@/lib/libp2p'
 import type { Multiaddr } from '@multiformats/multiaddr'
 import { multiaddr } from '@multiformats/multiaddr'
+import { peerIdFromString } from '@libp2p/peer-id'
+import { PeerId } from '@libp2p/interface-peer-id'
 
 const DEFAULT_APP_PEER = '12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2'
 // const APP_PEER = '12D3KooWRBy97UB99e3J6hiPesre1MZeuNQvfan4gBziswrRJsNK'
@@ -19,7 +23,34 @@ export default function Home() {
   const { libp2p } = useLibp2pContext()
   const [isConnected, setIsConnected] = useState(false)
   const [peerID, setPeerID] = useState(DEFAULT_APP_PEER)
+  const [peers, setPeers] = useState<PeerId[]>([])
+  const [latency, setLatency] = useState<number>()
   const [multiaddrs, setMultiaddrs] = useState<Multiaddr[]>()
+
+  useInterval(() => {
+    const getConnectedPeers = async () => {
+      return await libp2p.getPeers()
+    }
+
+    const ping = async () => {
+      return await libp2p.ping(peerIdFromString(peerID))
+    }
+    ping()
+      .then((lat) => {
+        setLatency(lat)
+      })
+      .catch((e) => {
+        console.error(e, e?.error)
+      })
+
+    getConnectedPeers().then((peers) => {
+      // If one of the connected peers matches the one in input we're connected
+      if (peers.some((pID) => peerID === pID.toString())) {
+        setIsConnected(true)
+      }
+      setPeers(peers)
+    })
+  }, 1000)
 
   // Effect hook to connect to a specific peer when the page loads
   // useEffect(() => {
@@ -69,12 +100,17 @@ export default function Home() {
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       try {
         if (multiaddrs) {
-          const connections = await connectToMultiaddrs(libp2p)(multiaddrs, peerID)
+          const connections = await connectToMultiaddrs(libp2p)(
+            multiaddrs,
+            peerID,
+          )
           console.log('connections: ', connections)
 
-          if (connections.find(conn => {
-            return conn.remotePeer.toString() === peerID
-          })) {
+          if (
+            connections.find((conn) => {
+              return conn.remotePeer.toString() === peerID
+            })
+          ) {
             setIsConnected(true)
           }
         }
@@ -82,7 +118,7 @@ export default function Home() {
         console.error(e)
       }
     },
-    [libp2p, multiaddrs],
+    [libp2p, multiaddrs, peerID],
   )
 
   const handlePeerIdChange = useCallback(
@@ -91,8 +127,6 @@ export default function Home() {
     },
     [setPeerID],
   )
-
-  const getMultiaddrs = useCallback(async () => {}, [])
 
   return (
     <>
@@ -179,12 +213,58 @@ export default function Home() {
                   <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
                 ) : (
                   <XCircleIcon className="w-6 h-6 text-red-500" />
-                )}
+                )}{' '}
+                {typeof latency === 'number'
+                  ? `(latency: ${latency} ms)`
+                  : null}
               </p>
+              <div>
+                {peers.length > 0 ? (
+                  <>
+                    <h3 className="text-xl">
+                      {' '}
+                      Connected peers ({peers.length}) 👇
+                    </h3>
+                    <pre className="px-2">
+                      {peers.map((peer) => peer.toString()).join('\n')}
+                    </pre>
+                  </>
+                ) : null}
+              </div>
             </div>
           </main>
         </div>
       </main>
     </>
+  )
+}
+
+export function Stats(
+  stats: { name: string; stat: string }[] = [
+    { name: 'Peer Ping Latency', stat: '' },
+    { name: 'Peer Count', stat: '' },
+  ],
+) {
+  return (
+    <div>
+      <h3 className="text-base font-semibold leading-6 text-gray-900">
+        Last 30 days
+      </h3>
+      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+        {stats.map((item) => (
+          <div
+            key={item.name}
+            className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"
+          >
+            <dt className="truncate text-sm font-medium text-gray-500">
+              {item.name}
+            </dt>
+            <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+              {item.stat}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   )
 }
