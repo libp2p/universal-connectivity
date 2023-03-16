@@ -1,5 +1,5 @@
 {
-  "name": "js-libp2p-nextjs-example",
+  "name": "universal-connectivity-browser",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
