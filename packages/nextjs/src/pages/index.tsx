@@ -15,6 +15,7 @@ import type { Multiaddr } from '@multiformats/multiaddr'
 import { multiaddr } from '@multiformats/multiaddr'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { PeerId } from '@libp2p/interface-peer-id'
+import type { Connection } from '@libp2p/interface-connection'
 
 const DEFAULT_APP_PEER = '12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2'
 // const APP_PEER = '12D3KooWRBy97UB99e3J6hiPesre1MZeuNQvfan4gBziswrRJsNK'
@@ -24,12 +25,16 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false)
   const [peerID, setPeerID] = useState(DEFAULT_APP_PEER)
   const [peers, setPeers] = useState<PeerId[]>([])
+  const [connections, setConnections] = useState<Connection[]>([])
   const [latency, setLatency] = useState<number>()
   const [multiaddrs, setMultiaddrs] = useState<Multiaddr[]>()
 
   useInterval(() => {
     const getConnectedPeers = async () => {
       return await libp2p.getPeers()
+    }
+    const getConnections = async () => {
+      return await libp2p.getConnections()
     }
 
     const ping = async () => {
@@ -49,6 +54,10 @@ export default function Home() {
         setIsConnected(true)
       }
       setPeers(peers)
+    })
+    getConnections().then((conns) => {
+      // If one of the connected peers matches the one in input we're connected
+      setConnections(conns)
     })
   }, 1000)
 
@@ -225,8 +234,16 @@ export default function Home() {
                       {' '}
                       Connected peers ({peers.length}) 👇
                     </h3>
-                    <pre className="px-2">
+                    {/* <pre className="px-2">
                       {peers.map((peer) => peer.toString()).join('\n')}
+                    </pre> */}
+                    <pre className="px-2">
+                      {connections
+                        .map(
+                          (conn) =>
+                            `${conn.remotePeer.toString()} (${conn.remoteAddr.protoNames()})`,
+                        )
+                        .join('\n')}
                     </pre>
                   </>
                 ) : null}
