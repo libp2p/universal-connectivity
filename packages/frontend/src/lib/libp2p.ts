@@ -44,6 +44,17 @@ export async function startLibp2p(options: {} = {}) {
     transports: [webTransport(), webSockets()],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
+    connectionGater: {
+      denyDialMultiaddr: (peerId: PeerId, multiaddr: Multiaddr) => {
+        const { host } = multiaddr.toOptions()
+        // Avoid dialing private IPs
+        if (isIPPrivate(host)) {
+          return true
+        }
+
+        return false
+      },
+    },
     peerDiscovery: [
       bootstrap({
         list: [
