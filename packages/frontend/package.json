@@ -7,6 +7,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@chainsafe/libp2p-gossipsub": "^6.2.0",
     "@chainsafe/libp2p-noise": "^11.0.0",
     "@chainsafe/libp2p-yamux": "^3.0.5",
     "@headlessui/react": "^1.7.13",
