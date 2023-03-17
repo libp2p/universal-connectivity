@@ -2,7 +2,7 @@ import Head from 'next/head'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useInterval } from 'usehooks-ts'
 
 import {
@@ -17,8 +17,7 @@ import { peerIdFromString } from '@libp2p/peer-id'
 import { PeerId } from '@libp2p/interface-peer-id'
 import type { Connection } from '@libp2p/interface-connection'
 
-const DEFAULT_APP_PEER = '12D3KooWBdmLJjhpgJ9KZgLM3f894ff9xyBfPvPjFNn7MKJpyrC2'
-// const APP_PEER = '12D3KooWRBy97UB99e3J6hiPesre1MZeuNQvfan4gBziswrRJsNK'
+import { DEFAULT_APP_PEER } from '../lib/constants'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()

@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react'
 import ChatContainer from '@/components/chat'
 
 export default function Chat() {
-  const { libp2p } = useLibp2pContext()
   return (
     <>
       <Head>
@@ -17,11 +16,7 @@ export default function Chat() {
       </Head>
       <main className="min-h-full">
         <Nav />
-        <div className="py-10">
-          <header>
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            </div>
-          </header>
+        <div className="">
           <main>
             <ChatContainer />
           </main>

@@ -17,11 +17,12 @@ import { LevelDatastore } from 'datastore-level'
 import isIPPrivate from 'private-ip'
 import { delegatedPeerRouting } from '@libp2p/delegated-peer-routing'
 import { create as KuboClient } from 'kubo-rpc-client'
-
+import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { PeerId } from 'kubo-rpc-client/dist/src/types'
+import { CHAT_TOPIC } from './constants'
 
-export async function startLibp2p() {
+export async function startLibp2p(options: {} = {}) {
   // localStorage.debug = 'libp2p*,-*:trace'
   // application-specific data lives in the datastore
   // const datastore = new MemoryDatastore()
@@ -61,6 +62,10 @@ export async function startLibp2p() {
         ],
       }),
     ],
+    pubsub: gossipsub({
+      allowPublishToZeroPeers: true,
+      allowedTopics: [CHAT_TOPIC],
+    }),
     // peerRouters: [delegatedPeerRouting(client)],
   })
 
