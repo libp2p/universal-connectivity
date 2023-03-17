@@ -79,7 +79,7 @@ export default function ChatContainer() {
         <div className="lg:col-span-3 lg:block">
           <div className="w-full">
             <div className="relative flex items-center p-3 border-b border-gray-300">
-              {/* disable
+              {/* disable 
               <img
                 className="object-cover w-10 h-10 rounded-full"
                 src="https://github.com/achingbrain.png"

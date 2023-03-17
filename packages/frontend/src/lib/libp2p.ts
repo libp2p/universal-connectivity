@@ -1,7 +1,6 @@
 import { createLibp2p, Libp2p } from 'libp2p'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
-import { webTransport } from '@libp2p/webtransport'
 import { bootstrap } from '@libp2p/bootstrap'
 import { MemoryDatastore } from 'datastore-core'
 import { peerIdFromString } from '@libp2p/peer-id'
@@ -19,6 +18,8 @@ import { delegatedPeerRouting } from '@libp2p/delegated-peer-routing'
 import { create as KuboClient } from 'kubo-rpc-client'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
+import { webTransport } from '@libp2p/webtransport'
+import { webRTC } from '@libp2p/webrtc'
 import { PeerId } from 'kubo-rpc-client/dist/src/types'
 import { CHAT_TOPIC } from './constants'
 
@@ -41,20 +42,20 @@ export async function startLibp2p(options: {} = {}) {
     // connectionManager: { autoDial: false },
     dht: kadDHT(),
     datastore,
-    transports: [webTransport(), webSockets()],
+    transports: [webTransport(), webSockets(), webRTC()],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
-    connectionGater: {
-      denyDialMultiaddr: (peerId: PeerId, multiaddr: Multiaddr) => {
-        const { host } = multiaddr.toOptions()
-        // Avoid dialing private IPs
-        if (isIPPrivate(host)) {
-          return true
-        }
+    // connectionGater: {
+    //   denyDialMultiaddr: (peerId: PeerId, multiaddr: Multiaddr) => {
+    //     const { host } = multiaddr.toOptions()
+    //     // Avoid dialing private IPs
+    //     if (isIPPrivate(host)) {
+    //       return true
+    //     }
 
-        return false
-      },
-    },
+    //     return false
+    //   },
+    // },
     peerDiscovery: [
       bootstrap({
         list: [

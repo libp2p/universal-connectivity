@@ -16,6 +16,7 @@
     "@libp2p/delegated-peer-routing": "^4.0.0",
     "@libp2p/kad-dht": "^7.0.0",
     "@libp2p/peer-id": "^2.0.1",
+    "@libp2p/webrtc": "^1.0.4",
     "@libp2p/websockets": "^5.0.3",
     "@libp2p/webtransport": "^1.0.7",
     "@types/node": "18.14.6",
