@@ -37,7 +37,9 @@ export default function Home() {
     }
 
     const ping = async () => {
-      return await libp2p.ping(peerIdFromString(peerID))
+      if (isConnected) {
+        return await libp2p.ping(peerIdFromString(peerID))
+      }
     }
     ping()
       .then((lat) => {
