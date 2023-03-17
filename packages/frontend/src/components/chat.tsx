@@ -2,11 +2,20 @@ import { useLibp2pContext } from '@/context/ctx'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Message } from '@libp2p/interface-pubsub'
 import { CHAT_TOPIC } from '@/lib/constants'
+import { PeerId } from 'kubo-rpc-client/dist/src/types'
 
+interface ChatMessage {
+  msg: string
+  from: 'me' | 'other'
+}
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
-
-  const [messages, setMessages] = useState<string[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { msg: 'Hi', from: 'me' },
+    { msg: 'Yo', from: 'other' },
+    { msg: 'Wassup?', from: 'me' },
+    { msg: 'all good!😊', from: 'other' },
+  ])
   const [input, setInput] = useState<string>('')
 
   // Effect hook to subscribe to pubsub events and update the message state hook
@@ -16,39 +25,44 @@ export default function ChatContainer() {
       const msg = new TextDecoder().decode(data)
       console.log(`${topic}: ${msg}`)
       // Append new message
-      setMessages([msg, ...messages])
+      setMessages([...messages, { msg, from: 'other' }])
     }
 
     libp2p.pubsub.addEventListener('message', messageCB)
-    libp2p.pubsub.subscribe(CHAT_TOPIC)
 
     return () => {
       // Cleanup handlers 👇
-      libp2p.pubsub.unsubscribe(CHAT_TOPIC)
+      // libp2p.pubsub.unsubscribe(CHAT_TOPIC)
       libp2p.pubsub.removeEventListener('message', messageCB)
     }
   }, [libp2p, messages, setMessages])
+
+  const sendMessage = useCallback(async () => {
+    if (input === '') return
+
+    const res = await libp2p.pubsub.publish(
+      CHAT_TOPIC,
+      new TextEncoder().encode(input),
+    )
+    setMessages([...messages, { msg: input, from: 'me' }])
+    setInput('')
+  }, [input, messages, setInput, libp2p])
 
   const handleKeyUp = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key !== 'Enter') {
         return
       }
-      await libp2p.pubsub.publish(CHAT_TOPIC, new TextEncoder().encode(input))
-      setInput('')
+      sendMessage()
     },
-    [input, libp2p],
+    [sendMessage],
   )
 
   const handleSend = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
-      const res = await libp2p.pubsub.publish(
-        CHAT_TOPIC,
-        new TextEncoder().encode(input),
-      )
-      setInput('')
+      sendMessage()
     },
-    [input, libp2p],
+    [sendMessage],
   )
 
   const handleInput = useCallback(
@@ -78,32 +92,20 @@ export default function ChatContainer() {
               </span>
             </div>
             <div className="relative w-full p-6 overflow-y-auto h-[40rem]">
-              <pre className="border-dotted border-2 space-y-2	">
-                DEBUG
-                {messages.join('\n')}
-              </pre>
               <ul className="space-y-2">
                 {/* messages start */}
-                <li className="flex justify-start">
-                  <div className="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
-                    <span className="block">Hi</span>
-                  </div>
-                </li>
-                <li className="flex justify-end">
-                  <div className="relative max-w-xl px-4 py-2 text-gray-700 bg-gray-100 rounded shadow">
-                    <span className="block">Hiiii</span>
-                  </div>
-                </li>
-                <li className="flex justify-end">
-                  <div className="relative max-w-xl px-4 py-2 text-gray-700 bg-gray-100 rounded shadow">
-                    <span className="block">how are you?</span>
-                  </div>
-                </li>
-                <li className="flex justify-start">
-                  <div className="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
-                    <span className="block">Pretty good 😊</span>
-                  </div>
-                </li>
+                {messages.map(({ msg, from }, idx) => (
+                  <li
+                    key={idx}
+                    className={`flex ${
+                      from === 'me' ? 'justify-end' : 'justify-start'
+                    }`}
+                  >
+                    <div className="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
+                      <span className="block">{msg}</span>
+                    </div>
+                  </li>
+                ))}
                 {/* messages end */}
               </ul>
             </div>

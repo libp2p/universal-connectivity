@@ -80,6 +80,8 @@ export async function startLibp2p(options: {} = {}) {
     // peerRouters: [delegatedPeerRouting(client)],
   })
 
+  libp2p.pubsub.subscribe(CHAT_TOPIC)
+
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
   return libp2p
 }
