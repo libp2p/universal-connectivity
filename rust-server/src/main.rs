@@ -4,7 +4,7 @@ use libp2p::{
     core::{muxing::StreamMuxerBox},
     gossipsub,
     identity,
-    kad::record::store::MemoryStore,
+    kad::record::store::{RecordStore, MemoryStore},
     kad::{GetClosestPeersError, Kademlia, KademliaConfig, KademliaEvent, QueryResult},
     PeerId,
     swarm::{NetworkBehaviour, Swarm, SwarmBuilder},
@@ -16,7 +16,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::time::Duration;
 
-// replace with our private bootstrap node
+// TODO: replace with our private bootstrap node
 const BOOTNODES: [&str; 1] = [
     "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
     // "QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
@@ -27,7 +27,7 @@ const BOOTNODES: [&str; 1] = [
 /// An example WebRTC server that will accept connections
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut swarm = create_swarm()?;
+    let mut swarm = create_swarm::<MemoryStore>()?;
 
     swarm.listen_on("/ip4/127.0.0.1/udp/0/webrtc".parse()?)?;
 
@@ -37,14 +37,13 @@ async fn main() -> Result<()> {
     }
 }
 
-// We create a custom network behaviour with Gossipsub & Kademlia
 #[derive(NetworkBehaviour)]
-struct Behaviour {
-    gossipsub: gossipsub::Behaviour
-    // kademlia: Kademlia::Behaviour,
+struct Behaviour<T: RecordStore + std::marker::Send + 'static> {
+    gossipsub: gossipsub::Behaviour,
+    kademlia: Kademlia<T>,
 }
 
-fn create_swarm() -> Result<Swarm<Behaviour>> {
+fn create_swarm<T: RecordStore + std::marker::Send + 'static>() -> Result<Swarm<Behaviour<MemoryStore>>> {
     let local_key = identity::Keypair::generate_ed25519();
     let local_peer_id = PeerId::from(local_key.public());
     println!("Local peer id: {local_peer_id}");
@@ -59,6 +58,7 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
     // into the `transport` resolves the `dnsaddr` when Kademlia tries
     // to dial these nodes.
     for peer in &BOOTNODES {
+                                                    // TODO: update this
         kad_behaviour.add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
     }
 
@@ -99,7 +99,6 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))
         .boxed();
 
-    let behaviour = Behaviour { gossipsub };
-    // let behaviour = Behaviour { gossipsub, kad_behaviour };
+    let behaviour = Behaviour { gossipsub, kademlia: kad_behaviour };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
