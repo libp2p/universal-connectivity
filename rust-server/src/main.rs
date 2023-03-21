@@ -7,7 +7,8 @@ use libp2p::{
     kad::record::store::{RecordStore, MemoryStore},
     kad::{GetClosestPeersError, Kademlia, KademliaConfig, KademliaEvent, QueryResult},
     PeerId,
-    swarm::{NetworkBehaviour, Swarm, SwarmBuilder},
+    ping,
+    swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder},
     Transport,
     webrtc,
 };
@@ -41,6 +42,8 @@ async fn main() -> Result<()> {
 struct Behaviour<T: RecordStore + std::marker::Send + 'static> {
     gossipsub: gossipsub::Behaviour,
     kademlia: Kademlia<T>,
+    keep_alive: keep_alive::Behaviour,
+    ping: ping::Behaviour,
 }
 
 fn create_swarm<T: RecordStore + std::marker::Send + 'static>() -> Result<Swarm<Behaviour<MemoryStore>>> {
@@ -99,6 +102,6 @@ fn create_swarm<T: RecordStore + std::marker::Send + 'static>() -> Result<Swarm<
         .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))
         .boxed();
 
-    let behaviour = Behaviour { gossipsub, kademlia: kad_behaviour };
+    let behaviour = Behaviour { gossipsub, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default(), ping: ping::Behaviour::default() };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
