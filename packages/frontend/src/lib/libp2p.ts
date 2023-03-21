@@ -63,14 +63,6 @@ export async function startLibp2p(options: {} = {}) {
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-          // '/dns4/am6.bootstrap.libp2p.io/tcp/443/wss/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-          // '/dnsaddr/ny5.bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-          // '/dns4/ny5.bootstrap.libp2p.io/tcp/443/wss/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-
-          // '/dns4/node0.preload.ipfs.io/tcp/443/wss/p2p/QmZMxNdpMkewiVZLMRxaNxUeZpDUb34pWjZ1kZvsd16Zic',
-          // '/dns4/node1.preload.ipfs.io/tcp/443/wss/p2p/Qmbut9Ywz9YEDrz8ySBSgWyJk41Uvm2QJPhwDJzJyGFsD6',
-          // '/dns4/node2.preload.ipfs.io/tcp/443/wss/p2p/QmV7gnbW5VTcJ3oyM2Xk1rdFBJ3kTkvxc87UFGsun29STS',
-          // '/dns4/node3.preload.ipfs.io/tcp/443/wss/p2p/QmY7JB6MQXhxHvq7dBDh4HpbH29v4yE9JRadAVpndvzySN',
         ],
       }),
     ],
@@ -88,7 +80,7 @@ export async function startLibp2p(options: {} = {}) {
 }
 
 // Curried function to get multiaddresses for a peer by looking up dht
-export const getPeerMultiaddrs =
+export const getPeerMultiaddrsFromDHT =
   (libp2p: Libp2p) =>
   async (peerId: string): Promise<Multiaddr[]> => {
     const peer = peerIdFromString(peerId)
@@ -117,6 +109,29 @@ export const getPeerMultiaddrs =
     }
 
     return multiaddrs
+  }
+
+// Method that returns multiaddrs for a given peer
+export const getPeerMultiaddrs =
+  (libp2p: Libp2p) =>
+  async (peerId: string): Promise<Multiaddr[]> => {
+    const peer = peerIdFromString(peerId)
+    let peerInfo: PeerInfo
+
+    while (true) {
+      try {
+        peerInfo = await libp2p.peerRouting.findPeer(peer)
+        break
+      } catch (e) {
+        console.log(e)
+      }
+      console.log('wait 10 seconds before next dht lookup')
+      await new Promise((resolve, reject) => {
+        setTimeout(() => resolve(null), 10 * 1000)
+      })
+    }
+
+    return peerInfo.multiaddrs
   }
 
 // Attempt to connect to an array of multiaddrs
@@ -165,6 +180,7 @@ export const filterPublicMultiaddrs = (
       .filter((multiaddr) => {
         return !isIPPrivate(multiaddr.toOptions().host)
       })
+      // Could be done more easily with https://github.com/multiformats/js-mafmt
       .filter((addr) => {
         const res = addr
           .protoCodes()
