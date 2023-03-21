@@ -4,6 +4,8 @@ use libp2p::{
     core::{muxing::StreamMuxerBox},
     gossipsub,
     identity,
+    kad::record::store::MemoryStore,
+    kad::{GetClosestPeersError, Kademlia, KademliaConfig, KademliaEvent, QueryResult},
     PeerId,
     swarm::{NetworkBehaviour, Swarm, SwarmBuilder},
     Transport,
@@ -14,7 +16,15 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::time::Duration;
 
-/// An example WebRTC server that will accept connections and run the ping protocol on them.
+// replace with our private bootstrap node
+const BOOTNODES: [&str; 1] = [
+    "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    // "QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+    // "QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+    // "QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+];
+
+/// An example WebRTC server that will accept connections
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut swarm = create_swarm()?;
@@ -27,16 +37,30 @@ async fn main() -> Result<()> {
     }
 }
 
-// We create a custom network behaviour with Gossipsub
+// We create a custom network behaviour with Gossipsub & Kademlia
 #[derive(NetworkBehaviour)]
 struct Behaviour {
-    gossipsub: gossipsub::Behaviour,
+    gossipsub: gossipsub::Behaviour
+    // kademlia: Kademlia::Behaviour,
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
     let local_key = identity::Keypair::generate_ed25519();
     let local_peer_id = PeerId::from(local_key.public());
     println!("Local peer id: {local_peer_id}");
+
+    // Create a Kademlia behaviour.
+    let mut cfg = KademliaConfig::default();
+    cfg.set_query_timeout(Duration::from_secs(5 * 60));
+    let store = MemoryStore::new(local_peer_id);
+    let mut kad_behaviour = Kademlia::with_config(local_peer_id, store, cfg);
+
+    // Add the bootnodes to the local routing table. `libp2p-dns` built
+    // into the `transport` resolves the `dnsaddr` when Kademlia tries
+    // to dial these nodes.
+    for peer in &BOOTNODES {
+        kad_behaviour.add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
+    }
 
     // To content-address message, we can take the hash of message and use it as an ID.
     let message_id_fn = |message: &gossipsub::Message| {
@@ -76,5 +100,6 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         .boxed();
 
     let behaviour = Behaviour { gossipsub };
+    // let behaviour = Behaviour { gossipsub, kad_behaviour };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
