@@ -163,6 +163,20 @@ export const connectToMultiaddrs =
     return conns
   }
 
+// Attempt to connect to an array of multiaddrs
+export const connectToMultiaddr =
+  (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {
+    console.log(`dialling: ${multiaddr.toString()}`)
+    try {
+      const conn = await libp2p.dial(multiaddr)
+      console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
+      return conn
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
+  }
+
 /**
  * Returns a filtered list of public multiaddrs of a specific protocol
  *

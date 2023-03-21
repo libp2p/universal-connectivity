@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react'
 import { useInterval } from 'usehooks-ts'
 
 import {
+  connectToMultiaddr,
   connectToMultiaddrs,
   filterPublicMultiaddrs,
   getPeerMultiaddrs,
@@ -23,6 +24,7 @@ export default function Home() {
   const { libp2p } = useLibp2pContext()
   const [isConnected, setIsConnected] = useState(false)
   const [peerID, setPeerID] = useState(DEFAULT_APP_PEER)
+  const [maddr, setMultiaddr] = useState('')
   const [peers, setPeers] = useState<PeerId[]>([])
   const [connections, setConnections] = useState<Connection[]>([])
   const [latency, setLatency] = useState<number>()
@@ -131,6 +133,32 @@ export default function Home() {
     [libp2p, multiaddrs, peerID],
   )
 
+  const handleConnectToMultiaddr = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!maddr) {
+        return
+      }
+
+      try {
+        const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
+        console.log('connection: ', connection)
+        return connection
+      } catch (e) {
+        console.error(e)
+      }
+    },
+    [libp2p, maddr],
+  )
+
+  // handleConnectToMultiaddr
+
+  const handleMultiaddrChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setMultiaddr(e.target.value)
+    },
+    [setMultiaddr],
+  )
+
   const handlePeerIdChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setPeerID(e.target.value)
@@ -193,6 +221,7 @@ export default function Home() {
                   Get Multiaddrs
                 </button>
               </div>
+
               <div>
                 {multiaddrs && multiaddrs.length > 0 ? (
                   <>
@@ -216,6 +245,33 @@ export default function Home() {
                     </button>
                   </>
                 ) : null}
+              </div>
+              <div className="my-6 w-1/2">
+                <label
+                  htmlFor="peer-id"
+                  className="block text-sm font-medium leading-6 text-gray-900"
+                >
+                  multiaddr to connect to
+                </label>
+                <div className="mt-2">
+                  <input
+                    value={maddr}
+                    type="text"
+                    name="peer-id"
+                    id="peer-id"
+                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    placeholder="12D3Koo..."
+                    aria-describedby="multiaddr-id-description"
+                    onChange={handleMultiaddrChange}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  onClick={handleConnectToMultiaddr}
+                >
+                  Connect to multiaddr
+                </button>
               </div>
               <p className="my-4 inline-flex items-center text-xl">
                 Connected:{' '}
