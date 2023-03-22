@@ -1,11 +1,9 @@
 use anyhow::Result;
 use futures::StreamExt;
 use libp2p::{
-    core::{muxing::StreamMuxerBox},
-    gossipsub,
-    identity,
-    identify,
-    kad::record::store::{RecordStore, MemoryStore},
+    core::muxing::StreamMuxerBox,
+    gossipsub, identify, identity,
+    kad::record::store::{MemoryStore, RecordStore},
     kad::{GetClosestPeersError, Kademlia, KademliaConfig, KademliaEvent, QueryResult},
     multiaddr::Protocol,
     ping,
@@ -53,7 +51,7 @@ struct Behaviour {
     identify: identify::Behaviour,
     kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
-    // ping: ping::Behaviour,
+    ping: ping::Behaviour,
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
@@ -88,6 +86,7 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         .validation_mode(gossipsub::ValidationMode::Permissive) // This sets the kind of message validation. The default is Strict (enforce message signing)
         .message_id_fn(message_id_fn) // content-address messages. No two messages of the same content will be propagated.
         .mesh_outbound_min(1)
+        .idle_timeout(Duration::from_secs(360))
         .mesh_n_low(1)
         // .mesh_n(1)
         .build()
@@ -121,6 +120,12 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         .boxed();
 
     // let behaviour = Behaviour { gossipsub, identify: identify_config, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default(), ping: ping::Behaviour::default() };
-    let behaviour = Behaviour { gossipsub, identify: identify_config, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default() };
+    let behaviour = Behaviour {
+        gossipsub,
+        identify: identify_config,
+        kademlia: kad_behaviour,
+        keep_alive: keep_alive::Behaviour::default(),
+        ping: ping::Behaviour::default(),
+    };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
