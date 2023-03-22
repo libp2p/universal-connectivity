@@ -87,11 +87,11 @@ fn create_swarm<T: RecordStore + std::marker::Send + 'static>() -> Result<Swarm<
     )
     .expect("Correct configuration");
 
-    // Create a Gossipsub topic
-    let topic = gossipsub::IdentTopic::new("universal-connectivity");
+    // // Create a Gossipsub topic
+    // let topic = gossipsub::IdentTopic::new("universal-connectivity");
 
-    // subscribes to our topic
-    gossipsub.subscribe(&topic)?;
+    // // subscribes to our topic
+    // gossipsub.subscribe(&topic)?;
 
     let transport = webrtc::tokio::Transport::new(
         local_key.clone(),
