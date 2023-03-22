@@ -84,6 +84,7 @@ export async function startLibp2p(options: {} = {}) {
   libp2p.pubsub.subscribe(CHAT_TOPIC)
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
+
   return libp2p
 }
 
@@ -153,9 +154,9 @@ export const connectToMultiaddr =
   (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {
     console.log(`dialling: ${multiaddr.toString()}`)
     try {
-      const conn = await libp2p.dial(multiaddr)
-      console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
-      return conn
+      const stream = await libp2p.dialProtocol(multiaddr, ["/meshsub/1.1.0", "/ipfs/ping/1.0.0"])
+      console.info('connected to', stream)
+      return stream
     } catch (e) {
       console.error(e)
       throw e
