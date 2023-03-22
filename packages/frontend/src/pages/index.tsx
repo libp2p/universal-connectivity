@@ -39,14 +39,13 @@ export default function Home() {
     }
 
     const ping = async () => {
-      if (isConnected) {
+      if(maddr) {
         return libp2p.ping(multiaddr(maddr))
       }
     }
 
     ping()
       .then((lat) => {
-        console.log('latency: ', lat)
         setLatency(lat)
       })
       .catch((e) => {
@@ -142,9 +141,9 @@ export default function Home() {
       }
 
       try {
-        const stream = await connectToMultiaddr(libp2p)(multiaddr(maddr))
-        console.log('multiaddr stream: ', stream)
-        return stream
+        const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
+        console.log('connection: ', connection)
+        return connection
       } catch (e) {
         console.error(e)
       }

@@ -39,8 +39,7 @@ export async function startLibp2p(options: {} = {}) {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    // connectionManager: { autoDial: false },
-    dht: kadDHT(),
+    // dht: kadDHT(),
     datastore,
     transports: [webTransport(), webSockets(), webRTC()],
     connectionEncryption: [noise()],
@@ -57,27 +56,23 @@ export async function startLibp2p(options: {} = {}) {
     //   },
     // },
     peerDiscovery: [
-      bootstrap({
-        list: [
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-          // '/dns4/am6.bootstrap.libp2p.io/tcp/443/wss/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-          // '/dnsaddr/ny5.bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-          // '/dns4/ny5.bootstrap.libp2p.io/tcp/443/wss/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-
-          // '/dns4/node0.preload.ipfs.io/tcp/443/wss/p2p/QmZMxNdpMkewiVZLMRxaNxUeZpDUb34pWjZ1kZvsd16Zic',
-          // '/dns4/node1.preload.ipfs.io/tcp/443/wss/p2p/Qmbut9Ywz9YEDrz8ySBSgWyJk41Uvm2QJPhwDJzJyGFsD6',
-          // '/dns4/node2.preload.ipfs.io/tcp/443/wss/p2p/QmV7gnbW5VTcJ3oyM2Xk1rdFBJ3kTkvxc87UFGsun29STS',
-          // '/dns4/node3.preload.ipfs.io/tcp/443/wss/p2p/QmY7JB6MQXhxHvq7dBDh4HpbH29v4yE9JRadAVpndvzySN',
-        ],
-      }),
+      // bootstrap({
+      //   list: [
+      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
+      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+      //   ],
+      // }),
     ],
     pubsub: gossipsub({
       allowPublishToZeroPeers: true,
       allowedTopics: [CHAT_TOPIC],
     }),
+    // connectionManager: {
+    //   minConnections: 0,
+    //   maxConnections: 3,
+    // },
     // peerRouters: [delegatedPeerRouting(client)],
   })
 
@@ -154,9 +149,9 @@ export const connectToMultiaddr =
   (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {
     console.log(`dialling: ${multiaddr.toString()}`)
     try {
-      const stream = await libp2p.dialProtocol(multiaddr, ["/meshsub/1.1.0", "/ipfs/ping/1.0.0"])
-      console.info('connected to', stream)
-      return stream
+      const conn = await libp2p.dial(multiaddr)
+      console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
+      return conn
     } catch (e) {
       console.error(e)
       throw e
