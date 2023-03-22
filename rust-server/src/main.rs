@@ -8,7 +8,7 @@ use libp2p::{
     multiaddr::Protocol,
     ping,
     swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
-    webrtc, PeerId, Transport,
+    webrtc, Multiaddr, PeerId, Transport,
 };
 use rand::thread_rng;
 use std::collections::hash_map::DefaultHasher;
@@ -29,8 +29,13 @@ async fn main() -> Result<()> {
     env_logger::init();
 
     let mut swarm = create_swarm()?;
+    let port = std::env::var("PORT").unwrap_or("0".to_string());
 
-    swarm.listen_on("/ip4/127.0.0.1/udp/5888/webrtc".parse()?)?;
+    swarm.listen_on(format!("/ip4/127.0.0.1/udp/{port}/webrtc").parse()?)?;
+    if let Some(address) = std::env::var("ADDRESS").ok() {
+        print!("Dialing {address}... ");
+        swarm.dial(address.parse::<Multiaddr>()?)?;
+    }
 
     loop {
         let event = swarm.next().await.unwrap();
@@ -40,8 +45,27 @@ async fn main() -> Result<()> {
                 let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
                 eprintln!("p2p address: {p2p_address:?}")
             }
+            SwarmEvent::ConnectionEstablished {
+                peer_id,
+                endpoint,
+                num_established,
+                concurrent_dial_errors,
+                established_in,
+            } => {
+                swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+            }
             _ => {}
         }
+        let peers: Vec<_> = swarm.behaviour().gossipsub.all_peers().collect();
+        eprintln!("Peers: {peers:?}");
+
+        let message = "Hello world!".to_owned() + &rand::random::<u64>().to_string();
+        let topic = gossipsub::IdentTopic::new("universal-connectivity");
+
+        dbg!(swarm
+            .behaviour_mut()
+            .gossipsub
+            .publish(topic, message.as_bytes()));
     }
 }
 
@@ -82,12 +106,11 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
 
     // Set a custom gossipsub configuration
     let gossipsub_config = gossipsub::ConfigBuilder::default()
-        .heartbeat_interval(Duration::from_secs(10)) // This is set to aid debugging by not cluttering the log space
         .validation_mode(gossipsub::ValidationMode::Permissive) // This sets the kind of message validation. The default is Strict (enforce message signing)
         .message_id_fn(message_id_fn) // content-address messages. No two messages of the same content will be propagated.
         .mesh_outbound_min(1)
-        .idle_timeout(Duration::from_secs(360))
         .mesh_n_low(1)
+        .flood_publish(true)
         // .mesh_n(1)
         .build()
         .expect("Valid config");
@@ -119,7 +142,6 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))
         .boxed();
 
-    // let behaviour = Behaviour { gossipsub, identify: identify_config, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default(), ping: ping::Behaviour::default() };
     let behaviour = Behaviour {
         gossipsub,
         identify: identify_config,
@@ -127,5 +149,12 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         keep_alive: keep_alive::Behaviour::default(),
         ping: ping::Behaviour::default(),
     };
+    // let behaviour = Behaviour {
+    //     gossipsub,
+    //     identify: identify_config,
+    //     kademlia: kad_behaviour,
+    //     keep_alive: keep_alive::Behaviour::default(),
+    //     ping: ping::Behaviour::default(),
+    // };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }

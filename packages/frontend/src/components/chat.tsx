@@ -40,10 +40,14 @@ export default function ChatContainer() {
   const sendMessage = useCallback(async () => {
     if (input === '') return
 
+    console.log('peers in gossip:', libp2p.pubsub.getSubscribers(CHAT_TOPIC).toString())
+
     const res = await libp2p.pubsub.publish(
       CHAT_TOPIC,
       new TextEncoder().encode(input),
     )
+    console.log('sent message to: ', res)
+
     setMessages([...messages, { msg: input, from: 'me' }])
     setInput('')
   }, [input, messages, setInput, libp2p])
@@ -79,7 +83,7 @@ export default function ChatContainer() {
         <div className="lg:col-span-3 lg:block">
           <div className="w-full">
             <div className="relative flex items-center p-3 border-b border-gray-300">
-              {/* disable 
+              {/* disable
               <img
                 className="object-cover w-10 h-10 rounded-full"
                 src="https://github.com/achingbrain.png"
@@ -97,9 +101,8 @@ export default function ChatContainer() {
                 {messages.map(({ msg, from }, idx) => (
                   <li
                     key={idx}
-                    className={`flex ${
-                      from === 'me' ? 'justify-end' : 'justify-start'
-                    }`}
+                    className={`flex ${from === 'me' ? 'justify-end' : 'justify-start'
+                      }`}
                   >
                     <div className="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
                       <span className="block">{msg}</span>

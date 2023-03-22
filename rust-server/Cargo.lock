@@ -1433,15 +1433,16 @@ checksum = "7fc7aa29613bd6a620df431842069224d8bc9011086b1db4c0e0cd47fa03ec9a"
 
 [[package]]
 name = "libp2p"
-version = "0.51.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53e068bb83ef4e0bed45de5ca4a4118018ac1f70ea3ecb1f4878742d08a97473"
+version = "0.51.2"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "bytes",
  "futures",
  "futures-timer",
  "getrandom 0.2.8",
  "instant",
+ "libp2p-allow-block-list",
+ "libp2p-connection-limits",
  "libp2p-core",
  "libp2p-dns",
  "libp2p-gossipsub",
@@ -1460,10 +1461,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "libp2p-allow-block-list"
+version = "0.1.0"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
+dependencies = [
+ "libp2p-core",
+ "libp2p-identity",
+ "libp2p-swarm",
+ "void",
+]
+
+[[package]]
+name = "libp2p-connection-limits"
+version = "0.1.0"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
+dependencies = [
+ "libp2p-core",
+ "libp2p-identity",
+ "libp2p-swarm",
+ "void",
+]
+
+[[package]]
 name = "libp2p-core"
 version = "0.39.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b7f8b7d65c070a5a1b5f8f0510648189da08f787b8963f8e21219e0710733af"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "either",
  "fnv",
@@ -1490,11 +1512,11 @@ dependencies = [
 [[package]]
 name = "libp2p-dns"
 version = "0.39.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "146ff7034daae62077c415c2376b8057368042df6ab95f5432ad5e88568b1554"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "futures",
  "libp2p-core",
+ "libp2p-identity",
  "log",
  "parking_lot 0.12.1",
  "smallvec",
@@ -1504,8 +1526,7 @@ dependencies = [
 [[package]]
 name = "libp2p-gossipsub"
 version = "0.44.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "708235886ca7c8f3792a8683ef81f9b7fb0a952bbd15fe5038b7610689a88390"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "asynchronous-codec",
  "base64 0.21.0",
@@ -1528,14 +1549,14 @@ dependencies = [
  "smallvec",
  "thiserror",
  "unsigned-varint",
+ "void",
  "wasm-timer",
 ]
 
 [[package]]
 name = "libp2p-identify"
 version = "0.42.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40d1da1f75baf824cfdc80f6aced51f7cbf8dc14e32363e9443570a80d4ee337"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "asynchronous-codec",
  "either",
@@ -1556,8 +1577,7 @@ dependencies = [
 [[package]]
 name = "libp2p-identity"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a8ea433ae0cea7e3315354305237b9897afe45278b2118a7a57ca744e70fd27"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "asn1_der",
  "bs58",
@@ -1576,8 +1596,7 @@ dependencies = [
 [[package]]
 name = "libp2p-kad"
 version = "0.43.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5bc57e02d7ad49a63792370f24b829af38f34982ff56556e59e4cb325a4dbf6b"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "arrayvec",
  "asynchronous-codec",
@@ -1604,13 +1623,13 @@ dependencies = [
 [[package]]
 name = "libp2p-mdns"
 version = "0.43.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "687a0b54ee8f7106be36f012b32bd30faceeb4cd857ebad96e512566886ffea5"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "data-encoding",
  "futures",
  "if-watch",
  "libp2p-core",
+ "libp2p-identity",
  "libp2p-swarm",
  "log",
  "rand 0.8.5",
@@ -1624,12 +1643,12 @@ dependencies = [
 [[package]]
 name = "libp2p-metrics"
 version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a42ec91e227d7d0dafa4ce88b333cdf5f277253873ab087555c92798db2ddd46"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "libp2p-core",
  "libp2p-gossipsub",
  "libp2p-identify",
+ "libp2p-identity",
  "libp2p-kad",
  "libp2p-ping",
  "libp2p-swarm",
@@ -1639,8 +1658,7 @@ dependencies = [
 [[package]]
 name = "libp2p-noise"
 version = "0.42.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c87c2803deffeae94108072a0387f8c9ff494af68a4908454c11c811e27b5e5"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "bytes",
  "curve25519-dalek 3.2.0",
@@ -1662,14 +1680,14 @@ dependencies = [
 [[package]]
 name = "libp2p-ping"
 version = "0.42.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e57759c19c28a73ef1eb3585ca410cefb72c1a709fcf6de1612a378e4219202"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "either",
  "futures",
  "futures-timer",
  "instant",
  "libp2p-core",
+ "libp2p-identity",
  "libp2p-swarm",
  "log",
  "rand 0.8.5",
@@ -1679,8 +1697,7 @@ dependencies = [
 [[package]]
 name = "libp2p-quic"
 version = "0.7.0-alpha.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6b26abd81cd2398382a1edfe739b539775be8a90fa6914f39b2ab49571ec735"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "bytes",
  "futures",
@@ -1700,9 +1717,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-swarm"
-version = "0.42.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92c22a83d70703d140092c969c1ca06ecdffff8ca7ce8ac2fd3b7eb2c1f0da86"
+version = "0.42.1"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "either",
  "fnv",
@@ -1710,12 +1726,11 @@ dependencies = [
  "futures-timer",
  "instant",
  "libp2p-core",
+ "libp2p-identity",
  "libp2p-swarm-derive",
  "log",
- "pin-project",
  "rand 0.8.5",
  "smallvec",
- "thiserror",
  "tokio",
  "void",
 ]
@@ -1723,25 +1738,24 @@ dependencies = [
 [[package]]
 name = "libp2p-swarm-derive"
 version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fba456131824ab6acd4c7bf61e9c0f0a3014b5fc9868ccb8e10d344594cdc4f"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "heck",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.4",
 ]
 
 [[package]]
 name = "libp2p-tcp"
 version = "0.39.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33d33698596d7722d85d3ab0c86c2c322254fce1241e91208e3679b4eb3026cf"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "futures",
  "futures-timer",
  "if-watch",
  "libc",
  "libp2p-core",
+ "libp2p-identity",
  "log",
  "socket2",
  "tokio",
@@ -1750,8 +1764,7 @@ dependencies = [
 [[package]]
 name = "libp2p-tls"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff08d13d0dc66e5e9ba6279c1de417b84fa0d0adc3b03e5732928c180ec02781"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "futures",
  "futures-rustls",
@@ -1762,15 +1775,14 @@ dependencies = [
  "rustls 0.20.8",
  "thiserror",
  "webpki 0.22.0",
- "x509-parser 0.14.0",
+ "x509-parser 0.15.0",
  "yasna",
 ]
 
 [[package]]
 name = "libp2p-webrtc"
-version = "0.4.0-alpha.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffd0c3af5921e3bdd5fecdf3eef3be5a197def64c1d23cd3ea79abcadbd461f7"
+version = "0.4.0-alpha.4"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "async-trait",
  "asynchronous-codec",
@@ -1959,8 +1971,7 @@ dependencies = [
 [[package]]
 name = "multistream-select"
 version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8552ab875c1313b97b8d20cb857b9fd63e2d1d6a0a1b53ce9821e575405f27a"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "bytes",
  "futures",
@@ -2456,8 +2467,7 @@ dependencies = [
 [[package]]
 name = "quick-protobuf-codec"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1693116345026436eb2f10b677806169c1a1260c1c60eaaffe3fb5a29ae23d8b"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "asynchronous-codec",
  "bytes",
@@ -2771,8 +2781,7 @@ dependencies = [
 [[package]]
 name = "rw-stream-sink"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26338f5e09bb721b85b135ea05af7767c90b52f6de4f087d4f4a3a9d64e7dc04"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#fef9751ee6567eb82f7ea3db7ef1effe82564e3d"
 dependencies = [
  "futures",
  "pin-project",
@@ -4014,12 +4023,11 @@ dependencies = [
 
 [[package]]
 name = "x509-parser"
-version = "0.14.0"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0ecbeb7b67ce215e40e3cc7f2ff902f94a223acf44995934763467e7b1febc8"
+checksum = "bab0c2f54ae1d92f4fcb99c0b7ccf0b1e3451cbd395e5f115ccbdbcb18d4f634"
 dependencies = [
  "asn1-rs 0.5.2",
- "base64 0.13.1",
  "data-encoding",
  "der-parser 8.2.0",
  "lazy_static",
