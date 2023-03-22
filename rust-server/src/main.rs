@@ -1,9 +1,17 @@
 use anyhow::Result;
 use futures::StreamExt;
 use libp2p::{
+<<<<<<< HEAD
     core::muxing::StreamMuxerBox,
     gossipsub, identity,
     kad::record::store::{MemoryStore, RecordStore},
+=======
+    core::{muxing::StreamMuxerBox},
+    gossipsub,
+    identity,
+    identify,
+    kad::record::store::{RecordStore, MemoryStore},
+>>>>>>> 9aa0cbc (add identify)
     kad::{GetClosestPeersError, Kademlia, KademliaConfig, KademliaEvent, QueryResult},
     multiaddr::Protocol,
     ping,
@@ -48,9 +56,15 @@ async fn main() -> Result<()> {
 #[derive(NetworkBehaviour)]
 struct Behaviour {
     gossipsub: gossipsub::Behaviour,
+<<<<<<< HEAD
     kademlia: Kademlia<MemoryStore>,
+=======
+    identify: identify::Behaviour,
+    kademlia: Kademlia<T>,
+>>>>>>> 9aa0cbc (add identify)
     keep_alive: keep_alive::Behaviour,
-    ping: ping::Behaviour,
+    // ping: ping::Behaviour,
+
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
@@ -84,6 +98,9 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         .heartbeat_interval(Duration::from_secs(10)) // This is set to aid debugging by not cluttering the log space
         .validation_mode(gossipsub::ValidationMode::Permissive) // This sets the kind of message validation. The default is Strict (enforce message signing)
         .message_id_fn(message_id_fn) // content-address messages. No two messages of the same content will be propagated.
+        .mesh_outbound_min(1)
+        .mesh_n_low(1)
+        // .mesh_n(1)
         .build()
         .expect("Valid config");
 
@@ -94,16 +111,21 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
     )
     .expect("Correct configuration");
 
-    // // Create a Gossipsub topic
+    // Create a Gossipsub topic
     let topic = gossipsub::IdentTopic::new("universal-connectivity");
 
-    // // subscribes to our topic
+    // subscribes to our topic
     gossipsub.subscribe(&topic)?;
 
     let transport = webrtc::tokio::Transport::new(
         local_key.clone(),
         webrtc::tokio::Certificate::generate(&mut thread_rng())?,
     );
+
+    let identify_config = identify::Behaviour::new(identify::Config::new(
+        "/ipfs/0.1.0".into(),
+        local_key.public().clone(),
+    ));
 
     let transport = transport
         .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))
@@ -115,5 +137,7 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         keep_alive: keep_alive::Behaviour::default(),
         ping: ping::Behaviour::default(),
     };
+    // let behaviour = Behaviour { gossipsub, identify: identify_config, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default(), ping: ping::Behaviour::default() };
+    let behaviour = Behaviour { gossipsub, identify: identify_config, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default() };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
