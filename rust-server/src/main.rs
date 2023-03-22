@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
 
     let mut swarm = create_swarm()?;
 
-    swarm.listen_on("/ip4/127.0.0.1/udp/0/webrtc".parse()?)?;
+    swarm.listen_on("/ip4/127.0.0.1/udp/5888/webrtc".parse()?)?;
 
     loop {
         let event = swarm.next().await.unwrap();
