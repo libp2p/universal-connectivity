@@ -1,16 +1,14 @@
 use anyhow::Result;
 use futures::StreamExt;
 use libp2p::{
-    core::{muxing::StreamMuxerBox},
-    gossipsub,
-    identity,
-    kad::record::store::{RecordStore, MemoryStore},
+    core::muxing::StreamMuxerBox,
+    gossipsub, identity,
+    kad::record::store::{MemoryStore, RecordStore},
     kad::{GetClosestPeersError, Kademlia, KademliaConfig, KademliaEvent, QueryResult},
-    PeerId,
+    multiaddr::Protocol,
     ping,
-    swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder},
-    Transport,
-    webrtc,
+    swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
+    webrtc, PeerId, Transport,
 };
 use rand::thread_rng;
 use std::collections::hash_map::DefaultHasher;
@@ -30,25 +28,32 @@ const BOOTNODES: [&str; 1] = [
 async fn main() -> Result<()> {
     env_logger::init();
 
-    let mut swarm = create_swarm::<MemoryStore>()?;
+    let mut swarm = create_swarm()?;
 
     swarm.listen_on("/ip4/127.0.0.1/udp/0/webrtc".parse()?)?;
 
     loop {
         let event = swarm.next().await.unwrap();
-        eprintln!("New event: {event:?}")
+        eprintln!("New event: {event:?}");
+        match event {
+            SwarmEvent::NewListenAddr { address, .. } => {
+                let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
+                eprintln!("p2p address: {p2p_address:?}")
+            }
+            _ => {}
+        }
     }
 }
 
 #[derive(NetworkBehaviour)]
-struct Behaviour<T: RecordStore + std::marker::Send + 'static> {
+struct Behaviour {
     gossipsub: gossipsub::Behaviour,
-    kademlia: Kademlia<T>,
+    kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
     ping: ping::Behaviour,
 }
 
-fn create_swarm<T: RecordStore + std::marker::Send + 'static>() -> Result<Swarm<Behaviour<MemoryStore>>> {
+fn create_swarm() -> Result<Swarm<Behaviour>> {
     let local_key = identity::Keypair::generate_ed25519();
     let local_peer_id = PeerId::from(local_key.public());
     println!("Local peer id: {local_peer_id}");
@@ -63,7 +68,7 @@ fn create_swarm<T: RecordStore + std::marker::Send + 'static>() -> Result<Swarm<
     // into the `transport` resolves the `dnsaddr` when Kademlia tries
     // to dial these nodes.
     for peer in &BOOTNODES {
-                                                    // TODO: update this
+        // TODO: update this
         kad_behaviour.add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
     }
 
@@ -90,10 +95,10 @@ fn create_swarm<T: RecordStore + std::marker::Send + 'static>() -> Result<Swarm<
     .expect("Correct configuration");
 
     // // Create a Gossipsub topic
-    // let topic = gossipsub::IdentTopic::new("universal-connectivity");
+    let topic = gossipsub::IdentTopic::new("universal-connectivity");
 
     // // subscribes to our topic
-    // gossipsub.subscribe(&topic)?;
+    gossipsub.subscribe(&topic)?;
 
     let transport = webrtc::tokio::Transport::new(
         local_key.clone(),
@@ -104,6 +109,11 @@ fn create_swarm<T: RecordStore + std::marker::Send + 'static>() -> Result<Swarm<
         .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))
         .boxed();
 
-    let behaviour = Behaviour { gossipsub, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default(), ping: ping::Behaviour::default() };
+    let behaviour = Behaviour {
+        gossipsub,
+        kademlia: kad_behaviour,
+        keep_alive: keep_alive::Behaviour::default(),
+        ping: ping::Behaviour::default(),
+    };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
