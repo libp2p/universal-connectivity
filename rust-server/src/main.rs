@@ -1,17 +1,11 @@
 use anyhow::Result;
 use futures::StreamExt;
 use libp2p::{
-<<<<<<< HEAD
-    core::muxing::StreamMuxerBox,
-    gossipsub, identity,
-    kad::record::store::{MemoryStore, RecordStore},
-=======
     core::{muxing::StreamMuxerBox},
     gossipsub,
     identity,
     identify,
     kad::record::store::{RecordStore, MemoryStore},
->>>>>>> 9aa0cbc (add identify)
     kad::{GetClosestPeersError, Kademlia, KademliaConfig, KademliaEvent, QueryResult},
     multiaddr::Protocol,
     ping,
@@ -56,15 +50,10 @@ async fn main() -> Result<()> {
 #[derive(NetworkBehaviour)]
 struct Behaviour {
     gossipsub: gossipsub::Behaviour,
-<<<<<<< HEAD
-    kademlia: Kademlia<MemoryStore>,
-=======
     identify: identify::Behaviour,
-    kademlia: Kademlia<T>,
->>>>>>> 9aa0cbc (add identify)
+    kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
     // ping: ping::Behaviour,
-
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
@@ -131,12 +120,6 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))
         .boxed();
 
-    let behaviour = Behaviour {
-        gossipsub,
-        kademlia: kad_behaviour,
-        keep_alive: keep_alive::Behaviour::default(),
-        ping: ping::Behaviour::default(),
-    };
     // let behaviour = Behaviour { gossipsub, identify: identify_config, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default(), ping: ping::Behaviour::default() };
     let behaviour = Behaviour { gossipsub, identify: identify_config, kademlia: kad_behaviour, keep_alive: keep_alive::Behaviour::default() };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
