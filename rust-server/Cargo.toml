@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
+env_logger = "0.10.0"
 futures = "0.3.27"
 libp2p = {version="0.51.1", features = ["ping", "tokio", "gossipsub", "webrtc", "macros", "kad", "rsa", "ed25519"]}
 rand = "0.8.5"

@@ -28,6 +28,8 @@ const BOOTNODES: [&str; 1] = [
 /// An example WebRTC server that will accept connections
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::init();
+
     let mut swarm = create_swarm::<MemoryStore>()?;
 
     swarm.listen_on("/ip4/127.0.0.1/udp/0/webrtc".parse()?)?;
