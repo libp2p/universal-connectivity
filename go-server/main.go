@@ -31,7 +31,7 @@ func main() {
 	ctx := context.Background()
 
 	// create a new libp2p Host that listens on a random TCP port
-	h, err := libp2p.New(libp2p.Transport(quicTransport.NewTransport), libp2p.Transport(webtransport.New), libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/0.0.0.0/udp/0/quic-v1", "/ip6/0.0.0.0/udp/0/quic-v1/webtransport"))
+	h, err := libp2p.New(libp2p.Transport(quicTransport.NewTransport), libp2p.Transport(webtransport.New), libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/::/udp/0/quic-v1", "/ip6/::/udp/0/quic-v1/webtransport"))
 	if err != nil {
 		panic(err)
 	}
