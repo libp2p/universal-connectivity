@@ -62,8 +62,9 @@ func main() {
 		panic(err)
 	}
 
+	cr.Messages <- &ChatMessage{Message: fmt.Sprint("PeerID: ", h.ID().String()), SenderID: "system", SenderNick: "system"}
 	for _, addr := range(h.Addrs()) {
-		cr.Messages <- &ChatMessage{Message: fmt.Sprint("Listening on:", addr.String()), SenderID: "system", SenderNick: "system"}
+		cr.Messages <- &ChatMessage{Message: fmt.Sprint("Listening on: ", addr.String()), SenderID: "system", SenderNick: "system"}
 	}
 
 	// draw the UI
