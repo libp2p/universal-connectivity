@@ -13,32 +13,25 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
+	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
 )
 
 // DiscoveryInterval is how often we re-publish our mDNS records.
 const DiscoveryInterval = time.Hour
 
 // DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
-const DiscoveryServiceTag = "pubsub-chat-example"
+const DiscoveryServiceTag = "universal-connectivity"
 
 func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
-	roomFlag := flag.String("room", "awesome-chat-room", "name of chat room to join")
+	roomFlag := flag.String("room", "universal-connectivity", "name of chat room to join")
 	flag.Parse()
 
 	ctx := context.Background()
 
 	// create a new libp2p Host that listens on a random TCP port
-	//h, err := libp2p.New(libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/4002/quic/webtransport")) // This doesn't work
-	h, err := libp2p.New(libp2p.Transport(webtransport.New), libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/4002/quic/webtransport")) // This doesn't work, same error
-	/* 
-		panic: failed to listen on any addresses: [cannot listen on non-WebTransport addr: /ip4/0.0.0.0/udp/4002/quic/webtransport]
-
-goroutine 1 [running]:
-main.main()
-        /Users/disco/Programming/universal-connectivity/go-server/main.go:36 +0x320
-    */
+	h, err := libp2p.New(libp2p.Transport(quicTransport.NewTransport), libp2p.Transport(webtransport.New), libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic","/ip4/0.0.0.0/udp/0/quic/webtransport"))
 	if err != nil {
 		panic(err)
 	}
@@ -64,16 +57,20 @@ main.main()
 	room := *roomFlag
 
 	// join the chat room
-	cr, err := JoinChatRoom(ctx, ps, h.ID(), nick, room)
+	_, err = JoinChatRoom(ctx, ps, h.ID(), nick, room)
 	if err != nil {
 		panic(err)
 	}
 
-	// draw the UI
-	ui := NewChatUI(cr)
-	if err = ui.Run(); err != nil {
-		printErr("error running text UI: %s", err)
+	for _, addr := range(h.Addrs()) {
+		fmt.Println("Listening on:", addr.String())
 	}
+
+	// draw the UI
+	//ui := NewChatUI(cr)
+	//if err = ui.Run(); err != nil {
+	//	printErr("error running text UI: %s", err)
+	//}
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
