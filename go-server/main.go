@@ -31,7 +31,7 @@ func main() {
 	ctx := context.Background()
 
 	// create a new libp2p Host that listens on a random TCP port
-	h, err := libp2p.New(libp2p.Transport(quicTransport.NewTransport), libp2p.Transport(webtransport.New), libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic","/ip4/0.0.0.0/udp/0/quic/webtransport"))
+	h, err := libp2p.New(libp2p.Transport(quicTransport.NewTransport), libp2p.Transport(webtransport.New), libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1","/ip4/0.0.0.0/udp/0/quic-v1/webtransport"))
 	if err != nil {
 		panic(err)
 	}
@@ -57,20 +57,20 @@ func main() {
 	room := *roomFlag
 
 	// join the chat room
-	_, err = JoinChatRoom(ctx, ps, h.ID(), nick, room)
+	cr, err := JoinChatRoom(ctx, ps, h.ID(), nick, room)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, addr := range(h.Addrs()) {
-		fmt.Println("Listening on:", addr.String())
+		cr.Messages <- &ChatMessage{Message: fmt.Sprint("Listening on:", addr.String()), SenderID: "system", SenderNick: "system"}
 	}
 
 	// draw the UI
-	//ui := NewChatUI(cr)
-	//if err = ui.Run(); err != nil {
-	//	printErr("error running text UI: %s", err)
-	//}
+	ui := NewChatUI(cr)
+	if err = ui.Run(); err != nil {
+		printErr("error running text UI: %s", err)
+	}
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
