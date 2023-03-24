@@ -34,23 +34,23 @@ async fn main() -> Result<()> {
             },
             _ => {}
         }
-        let peers: Vec<_> = swarm.behaviour().gossipsub.all_peers().collect();
-        eprintln!("Peers: {peers:?}");
-        let peers: Vec<_> = swarm.behaviour().gossipsub.all_mesh_peers().collect();
-        eprintln!("Mesh peers: {peers:?}");
+        // let peers: Vec<_> = swarm.behaviour().gossipsub.all_peers().collect();
+        // eprintln!("Peers: {peers:?}");
+        // let peers: Vec<_> = swarm.behaviour().gossipsub.all_mesh_peers().collect();
+        // eprintln!("Mesh peers: {peers:?}");
 
 
         let elapsed_secs = now.elapsed().as_secs();
-        eprintln!("elapsed seconds: {}", elapsed_secs);
+        // eprintln!("elapsed seconds: {}", elapsed_secs);
 
         let message = "Hello world! sent at : ".to_owned() + &elapsed_secs.clone().to_string() + " seconds.";
 
-        if elapsed_secs % 2 == 0 {
-            dbg!(swarm
+        // if elapsed_secs % 2 == 0 {
+            swarm
                 .behaviour_mut()
                 .gossipsub
-                .publish(gossipsub::IdentTopic::new("universal-connectivity"), message.as_bytes()));
-        }
+                .publish(gossipsub::IdentTopic::new("universal-connectivity"), message.as_bytes());
+        // }
     }
 }
 

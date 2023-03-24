@@ -21,9 +21,10 @@ export default function ChatContainer() {
   // Effect hook to subscribe to pubsub events and update the message state hook
   useEffect(() => {
     const messageCB = (message: CustomEvent<Message>) => {
+      console.log("gossipsub console log", message)
       const { topic, data } = message.detail
       const msg = new TextDecoder().decode(data)
-      console.log(`${topic}: ${msg}`)
+      console.error(`${topic}: ${msg}`)
       // Append new message
       setMessages([...messages, { msg, from: 'other' }])
     }
