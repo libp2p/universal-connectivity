@@ -72,6 +72,7 @@ export async function startLibp2p(options: {} = {}) {
       allowPublishToZeroPeers: true,
       // allowedTopics: [CHAT_TOPIC],
       msgIdFn: msgIdFnStrictNoSign,
+      ignoreDuplicatePublishError: true,
     }),
     // connectionManager: {
     //   minConnections: 0,

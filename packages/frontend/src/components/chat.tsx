@@ -24,7 +24,7 @@ export default function ChatContainer() {
       console.log("gossipsub console log", message)
       const { topic, data } = message.detail
       const msg = new TextDecoder().decode(data)
-      console.error(`${topic}: ${msg}`)
+      console.log(`${topic}: ${msg}`)
       // Append new message
       setMessages([...messages, { msg, from: 'other' }])
     }
@@ -47,7 +47,7 @@ export default function ChatContainer() {
       CHAT_TOPIC,
       new TextEncoder().encode(input),
     )
-    console.log('sent message to: ', res)
+    console.log('sent message to: ', res.recipients.map((peerId) => peerId.toString()))
 
     setMessages([...messages, { msg: input, from: 'me' }])
     setInput('')
