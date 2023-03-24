@@ -3,8 +3,6 @@ use futures::StreamExt;
 use libp2p::{
     core::muxing::StreamMuxerBox,
     gossipsub, identify, identity,
-    kad::record::store::{MemoryStore, RecordStore},
-    kad::{GetClosestPeersError, Kademlia, KademliaConfig, KademliaEvent, QueryResult},
     multiaddr::Protocol,
     ping,
     swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
@@ -13,15 +11,9 @@ use libp2p::{
 use rand::thread_rng;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::time::Duration;
+use std::io;
+use std::time::{Duration, Instant};
 
-// TODO: replace with our private bootstrap node
-const BOOTNODES: [&str; 1] = [
-    "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    // "QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-    // "QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-    // "QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-];
 
 /// An example WebRTC server that will accept connections
 #[tokio::main]
@@ -29,14 +21,9 @@ async fn main() -> Result<()> {
     env_logger::init();
 
     let mut swarm = create_swarm()?;
-    let port = std::env::var("PORT").unwrap_or("0".to_string());
+    swarm.listen_on(format!("/ip4/127.0.0.1/udp/0/webrtc").parse()?)?;
 
-    swarm.listen_on(format!("/ip4/127.0.0.1/udp/{port}/webrtc").parse()?)?;
-    if let Some(address) = std::env::var("ADDRESS").ok() {
-        print!("Dialing {address}... ");
-        swarm.dial(address.parse::<Multiaddr>()?)?;
-    }
-
+    let now = Instant::now();
     loop {
         let event = swarm.next().await.unwrap();
         eprintln!("New event: {event:?}");
@@ -44,28 +31,26 @@ async fn main() -> Result<()> {
             SwarmEvent::NewListenAddr { address, .. } => {
                 let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
                 eprintln!("p2p address: {p2p_address:?}")
-            }
-            SwarmEvent::ConnectionEstablished {
-                peer_id,
-                endpoint,
-                num_established,
-                concurrent_dial_errors,
-                established_in,
-            } => {
-                swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
-            }
+            },
             _ => {}
         }
         let peers: Vec<_> = swarm.behaviour().gossipsub.all_peers().collect();
         eprintln!("Peers: {peers:?}");
+        let peers: Vec<_> = swarm.behaviour().gossipsub.all_mesh_peers().collect();
+        eprintln!("Mesh peers: {peers:?}");
 
-        let message = "Hello world!".to_owned() + &rand::random::<u64>().to_string();
-        let topic = gossipsub::IdentTopic::new("universal-connectivity");
 
-        dbg!(swarm
-            .behaviour_mut()
-            .gossipsub
-            .publish(topic, message.as_bytes()));
+        let elapsed_secs = now.elapsed().as_secs();
+        eprintln!("elapsed seconds: {}", elapsed_secs);
+
+        let message = "Hello world! sent at : ".to_owned() + &elapsed_secs.clone().to_string() + " seconds.";
+
+        if elapsed_secs % 2 == 0 {
+            dbg!(swarm
+                .behaviour_mut()
+                .gossipsub
+                .publish(gossipsub::IdentTopic::new("universal-connectivity"), message.as_bytes()));
+        }
     }
 }
 
@@ -73,7 +58,7 @@ async fn main() -> Result<()> {
 struct Behaviour {
     gossipsub: gossipsub::Behaviour,
     identify: identify::Behaviour,
-    kademlia: Kademlia<MemoryStore>,
+    // kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
     ping: ping::Behaviour,
 }
@@ -82,20 +67,6 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
     let local_key = identity::Keypair::generate_ed25519();
     let local_peer_id = PeerId::from(local_key.public());
     println!("Local peer id: {local_peer_id}");
-
-    // Create a Kademlia behaviour.
-    let mut cfg = KademliaConfig::default();
-    cfg.set_query_timeout(Duration::from_secs(5 * 60));
-    let store = MemoryStore::new(local_peer_id);
-    let mut kad_behaviour = Kademlia::with_config(local_peer_id, store, cfg);
-
-    // Add the bootnodes to the local routing table. `libp2p-dns` built
-    // into the `transport` resolves the `dnsaddr` when Kademlia tries
-    // to dial these nodes.
-    for peer in &BOOTNODES {
-        // TODO: update this
-        kad_behaviour.add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
-    }
 
     // To content-address message, we can take the hash of message and use it as an ID.
     let message_id_fn = |message: &gossipsub::Message| {
@@ -111,7 +82,6 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         .mesh_outbound_min(1)
         .mesh_n_low(1)
         .flood_publish(true)
-        // .mesh_n(1)
         .build()
         .expect("Valid config");
 
@@ -145,16 +115,8 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
     let behaviour = Behaviour {
         gossipsub,
         identify: identify_config,
-        kademlia: kad_behaviour,
         keep_alive: keep_alive::Behaviour::default(),
         ping: ping::Behaviour::default(),
     };
-    // let behaviour = Behaviour {
-    //     gossipsub,
-    //     identify: identify_config,
-    //     kademlia: kad_behaviour,
-    //     keep_alive: keep_alive::Behaviour::default(),
-    //     ping: ping::Behaviour::default(),
-    // };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
