@@ -5,15 +5,21 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
+	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
-	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
+	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
+	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
+	"github.com/multiformats/go-multiaddr"
 )
 
 // DiscoveryInterval is how often we re-publish our mDNS records.
@@ -21,6 +27,82 @@ const DiscoveryInterval = time.Hour
 
 // DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
 const DiscoveryServiceTag = "universal-connectivity"
+
+// Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
+// NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
+// If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
+func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Multiaddr) (*dht.IpfsDHT, error) {
+	var options []dht.Option
+
+	// if no bootstrap peers give this peer act as a bootstraping node
+	// other peers can use this peers ipfs address for peer discovery via dht
+	if len(bootstrapPeers) == 0 {
+		options = append(options, dht.Mode(dht.ModeServer))
+	}
+
+	kdht, err := dht.New(ctx, host, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = kdht.Bootstrap(ctx); err != nil {
+		return nil, err
+	}
+
+	var wg sync.WaitGroup
+	for _, peerAddr := range bootstrapPeers {
+		peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := host.Connect(ctx, *peerinfo); err != nil {
+				fmt.Printf("Error while connecting to node %q: %-v\n", peerinfo, err)
+			} else {
+				fmt.Printf("Connection established with bootstrap node: %q\n", *peerinfo)
+			}
+		}()
+	}
+	wg.Wait()
+
+	return kdht, nil
+}
+
+// Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
+func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous string) {
+	var routingDiscovery = routing.NewRoutingDiscovery(dht)
+
+	discovery.Advertise(ctx, routingDiscovery, rendezvous)
+
+	ticker := time.NewTicker(time.Second * 1)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+
+			peers, err := discovery.FindPeers(ctx, routingDiscovery, rendezvous)
+			if err != nil {
+				panic(err)
+			}
+
+			for _, p := range peers {
+				if p.ID == h.ID() {
+					continue
+				}
+				if h.Network().Connectedness(p.ID) != network.Connected {
+					_, err = h.Network().DialPeer(ctx, p.ID)
+					fmt.Printf("Connected to peer %s\n", p.ID.Pretty())
+					if err != nil {
+						continue
+					}
+				}
+			}
+		}
+	}
+}
 
 func main() {
 	// parse some flags to set our nickname and the room to join
@@ -42,6 +124,18 @@ func main() {
 		panic(err)
 	}
 
+	// setup DHT with empty discovery peers
+	// so this will be a discovery peer for others
+	// this peer should run on cloud(with public ip address)
+	discoveryPeers := dht.DefaultBootstrapPeers
+	dht, err := NewDHT(ctx, h, discoveryPeers)
+	if err != nil {
+		panic(err)
+	}
+
+	// setup peer discovery
+	go Discover(ctx, h, dht, "universal-connectivity")
+
 	// setup local mDNS discovery
 	if err := setupDiscovery(h); err != nil {
 		panic(err)
@@ -62,8 +156,19 @@ func main() {
 		panic(err)
 	}
 
+	// addrInfo, err := peer.AddrInfoFromString("/dns4/universal.thedisco.zone/udp/40218/quic-v1/webtransport/certhash/uEiCL77ktMDMDCWnb7swiiR-aE7h2e_d_pPFg1c4gWF0Z8g/certhash/uEiACZMdNmhIYS1lmYY5Jd0Na6udCbl8Dar0KJlxkT94eFg/p2p/12D3KooWAUy4xNnyZwakzhF4vbTzBp4jHXmt4FwHd5tggjr8vRJM")
+	/*addrInfo, err := peer.AddrInfoFromString("/dns4/universal.thedisco.zone/udp/45127/quic-v1/p2p/12D3KooWAUy4xNnyZwakzhF4vbTzBp4jHXmt4FwHd5tggjr8vRJM")
+
+	if err != nil {
+		panic(err)
+	}
+	err = h.Connect(ctx, *addrInfo)
+	if err != nil {
+		panic(err)
+	}*/
+
 	cr.Messages <- &ChatMessage{Message: fmt.Sprint("PeerID: ", h.ID().String()), SenderID: "system", SenderNick: "system"}
-	for _, addr := range(h.Addrs()) {
+	for _, addr := range h.Addrs() {
 		cr.Messages <- &ChatMessage{Message: fmt.Sprint("Listening on: ", addr.String()), SenderID: "system", SenderNick: "system"}
 	}
 
