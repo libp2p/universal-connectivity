@@ -20,7 +20,7 @@ import { delegatedPeerRouting } from '@libp2p/delegated-peer-routing'
 import { create as KuboClient } from 'kubo-rpc-client'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
-// import { webTransport } from '@libp2p/webtransport'
+import { webTransport } from '@libp2p/webtransport'
 import { webRTC } from '@libp2p/webrtc'
 import { PeerId } from 'kubo-rpc-client/dist/src/types'
 import { CHAT_TOPIC } from './constants'
@@ -43,8 +43,8 @@ export async function startLibp2p(options: {} = {}) {
   const libp2p = await createLibp2p({
     // dht: kadDHT(),
     datastore,
-    // transports: [webTransport(), webSockets(), webRTC()],
-    transports: [webRTC()],
+    transports: [webTransport(), webSockets(), webRTC()],
+    // transports: [webRTC()],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
     // connectionGater: {
@@ -138,18 +138,18 @@ export const connectToMultiaddrs =
 
     const conns = []
     const errs = []
-    // for (let multiaddr of publicWebTransportMultiaddrs) {
-    //   multiaddr = addPeerIdToWebTransportMultiAddr(multiaddr, peerId)
-    //   console.log(`dialling: ${multiaddr.toString()}`)
-    //   try {
-    //     const conn = await libp2p.dial(multiaddr)
-    //     conns.push(conn)
-    //     console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
-    //   } catch (e) {
-    //     errs.push(e)
-    //     console.error(e)
-    //   }
-    // }
+    for (let multiaddr of publicWebTransportMultiaddrs) {
+      multiaddr = addPeerIdToWebTransportMultiAddr(multiaddr, peerId)
+      console.log(`dialling: ${multiaddr.toString()}`)
+      try {
+        const conn = await libp2p.dial(multiaddr)
+        conns.push(conn)
+        console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
+      } catch (e) {
+        errs.push(e)
+        console.error(e)
+      }
+    }
     if (conns.length === 0) {
       throw new Libp2pDialError('Failed to connect to peer', errs)
     }
