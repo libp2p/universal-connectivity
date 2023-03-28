@@ -108,5 +108,5 @@ func (cr *ChatRoom) readLoop() {
 }
 
 func topicName(roomName string) string {
-	return "chat-room:" + roomName
+	return roomName
 }

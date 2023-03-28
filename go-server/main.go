@@ -28,6 +28,8 @@ const DiscoveryInterval = time.Hour
 // DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
 const DiscoveryServiceTag = "universal-connectivity"
 
+var ChatMsgChan chan *ChatMessage
+
 // Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
 // If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
@@ -57,9 +59,9 @@ func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Mult
 		go func() {
 			defer wg.Done()
 			if err := host.Connect(ctx, *peerinfo); err != nil {
-				fmt.Printf("Error while connecting to node %q: %-v\n", peerinfo, err)
+				LogMsgf("Error while connecting to node %q: %-v", peerinfo, err)
 			} else {
-				fmt.Printf("Connection established with bootstrap node: %q\n", *peerinfo)
+				LogMsgf("Connection established with bootstrap node: %q", *peerinfo)
 			}
 		}()
 	}
@@ -94,7 +96,7 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 				}
 				if h.Network().Connectedness(p.ID) != network.Connected {
 					_, err = h.Network().DialPeer(ctx, p.ID)
-					fmt.Printf("Connected to peer %s\n", p.ID.Pretty())
+					LogMsgf("Connected to peer %s", p.ID.Pretty())
 					if err != nil {
 						continue
 					}
@@ -102,6 +104,10 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 			}
 		}
 	}
+}
+
+func LogMsgf(f string, msg ...any) {
+	ChatMsgChan <- &ChatMessage{Message: fmt.Sprintf(f, msg...), SenderID: "system", SenderNick: "system"}
 }
 
 func main() {
@@ -124,6 +130,22 @@ func main() {
 		panic(err)
 	}
 
+	// use the nickname from the cli flag, or a default if blank
+	nick := *nickFlag
+	if len(nick) == 0 {
+		nick = defaultNick(h.ID())
+	}
+
+	// join the room from the cli flag, or the flag default
+	room := *roomFlag
+
+	// join the chat room
+	cr, err := JoinChatRoom(ctx, ps, h.ID(), nick, room)
+	if err != nil {
+		panic(err)
+	}
+	ChatMsgChan = cr.Messages
+
 	// setup DHT with empty discovery peers
 	// so this will be a discovery peer for others
 	// this peer should run on cloud(with public ip address)
@@ -141,21 +163,6 @@ func main() {
 		panic(err)
 	}
 
-	// use the nickname from the cli flag, or a default if blank
-	nick := *nickFlag
-	if len(nick) == 0 {
-		nick = defaultNick(h.ID())
-	}
-
-	// join the room from the cli flag, or the flag default
-	room := *roomFlag
-
-	// join the chat room
-	cr, err := JoinChatRoom(ctx, ps, h.ID(), nick, room)
-	if err != nil {
-		panic(err)
-	}
-
 	// addrInfo, err := peer.AddrInfoFromString("/dns4/universal.thedisco.zone/udp/40218/quic-v1/webtransport/certhash/uEiCL77ktMDMDCWnb7swiiR-aE7h2e_d_pPFg1c4gWF0Z8g/certhash/uEiACZMdNmhIYS1lmYY5Jd0Na6udCbl8Dar0KJlxkT94eFg/p2p/12D3KooWAUy4xNnyZwakzhF4vbTzBp4jHXmt4FwHd5tggjr8vRJM")
 	/*addrInfo, err := peer.AddrInfoFromString("/dns4/universal.thedisco.zone/udp/45127/quic-v1/p2p/12D3KooWAUy4xNnyZwakzhF4vbTzBp4jHXmt4FwHd5tggjr8vRJM")
 
@@ -167,9 +174,9 @@ func main() {
 		panic(err)
 	}*/
 
-	cr.Messages <- &ChatMessage{Message: fmt.Sprint("PeerID: ", h.ID().String()), SenderID: "system", SenderNick: "system"}
+	LogMsgf("PeerID: %s", h.ID().String())
 	for _, addr := range h.Addrs() {
-		cr.Messages <- &ChatMessage{Message: fmt.Sprint("Listening on: ", addr.String()), SenderID: "system", SenderNick: "system"}
+		LogMsgf("Listening on: %s", addr.String())
 	}
 
 	// draw the UI
@@ -205,10 +212,10 @@ type discoveryNotifee struct {
 // the PubSub system will automatically start interacting with them if they also
 // support PubSub.
 func (n *discoveryNotifee) HandlePeerFound(pi peer.AddrInfo) {
-	fmt.Printf("discovered new peer %s\n", pi.ID.Pretty())
+	LogMsgf("discovered new peer %s", pi.ID.Pretty())
 	err := n.h.Connect(context.Background(), pi)
 	if err != nil {
-		fmt.Printf("error connecting to peer %s: %s\n", pi.ID.Pretty(), err)
+		LogMsgf("error connecting to peer %s: %s", pi.ID.Pretty(), err)
 	}
 }
 
