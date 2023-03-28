@@ -98,7 +98,10 @@ func (cr *ChatRoom) readLoop() {
 			continue
 		}
 		cm := new(ChatMessage)
-		err = json.Unmarshal(msg.Data, cm)
+		cm.Message = string(msg.Data)
+		cm.SenderID = string(msg.ID)
+		cm.SenderNick = "unknown"
+
 		if err != nil {
 			continue
 		}
