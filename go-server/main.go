@@ -96,10 +96,11 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 				}
 				if h.Network().Connectedness(p.ID) != network.Connected {
 					_, err = h.Network().DialPeer(ctx, p.ID)
-					LogMsgf("Connected to peer %s", p.ID.Pretty())
 					if err != nil {
+						LogMsgf("Failed to connect to peer (%s): %s", p.ID, err.Error())
 						continue
 					}
+					LogMsgf("Connected to peer %s", p.ID.Pretty())
 				}
 			}
 		}
