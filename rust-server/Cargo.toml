@@ -7,9 +7,13 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
+clap = { version = "4.1.11", features = ["derive"] }
 env_logger = "0.10.0"
 futures = "0.3.27"
+futures-timer = "3.0.2"
 libp2p = {git = "https://github.com/vnermolaev/rust-libp2p.git", branch = "deprecate/gossipsub-close-event", version="0.51.2", features = ["identify", "ping", "tokio", "gossipsub", "webrtc", "macros", "kad", "rsa", "ed25519"]}
+libp2p-webrtc = {git = "https://github.com/vnermolaev/rust-libp2p.git", branch = "deprecate/gossipsub-close-event", version="0.4.0-alpha.4", features = ["tokio"] }
+log = "0.4.17"
 rand = "0.8.5"
 tokio = { version= "1.26.0", features=["full"] }
 tokio-util = { version = "0.7", features = ["full"] }
