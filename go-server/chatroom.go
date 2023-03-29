@@ -17,6 +17,7 @@ const ChatRoomBufSize = 128
 type ChatRoom struct {
 	// Messages is a channel of messages received from other peers in the chat room
 	Messages chan *ChatMessage
+	SysMessages chan *ChatMessage
 
 	ctx   context.Context
 	ps    *pubsub.PubSub
@@ -59,6 +60,7 @@ func JoinChatRoom(ctx context.Context, ps *pubsub.PubSub, selfID peer.ID, nickna
 		nick:     nickname,
 		roomName: roomName,
 		Messages: make(chan *ChatMessage, ChatRoomBufSize),
+		SysMessages: make(chan *ChatMessage, ChatRoomBufSize),
 	}
 
 	// start reading messages from the subscription in a loop

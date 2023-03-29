@@ -4,6 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -28,7 +30,7 @@ const DiscoveryInterval = time.Hour
 // DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
 const DiscoveryServiceTag = "universal-connectivity"
 
-var ChatMsgChan chan *ChatMessage
+var SysMsgChan chan *ChatMessage
 
 // Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
@@ -108,7 +110,7 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 }
 
 func LogMsgf(f string, msg ...any) {
-	ChatMsgChan <- &ChatMessage{Message: fmt.Sprintf(f, msg...), SenderID: "system", SenderNick: "system"}
+	SysMsgChan <- &ChatMessage{Message: fmt.Sprintf(f, msg...), SenderID: "system", SenderNick: "system"}
 }
 
 func main() {
@@ -116,7 +118,21 @@ func main() {
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	roomFlag := flag.String("room", "universal-connectivity", "name of chat room to join")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
+	useLogger := flag.Bool("logger", false, "write logs to file")
 	flag.Parse()
+
+	if *useLogger {
+		f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Println("failed to open log file", err)
+			log.SetOutput(ioutil.Discard)
+		} else {
+			defer f.Close()
+			log.SetOutput(f)
+		}
+	} else {
+		log.SetOutput(ioutil.Discard)
+	}
 
 	ctx := context.Background()
 
@@ -157,7 +173,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	ChatMsgChan = cr.Messages
+	SysMsgChan = cr.SysMessages
 
 	// setup DHT with empty discovery peers
 	// so this will be a discovery peer for others
