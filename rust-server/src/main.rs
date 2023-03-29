@@ -1,4 +1,5 @@
 use anyhow::Result;
+use clap::Parser;
 use futures::StreamExt;
 use libp2p::{
     core::muxing::StreamMuxerBox,
@@ -6,51 +7,93 @@ use libp2p::{
     multiaddr::Protocol,
     ping,
     swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
-    webrtc, Multiaddr, PeerId, Transport,
+    Multiaddr, PeerId, Transport,
 };
+use libp2p_webrtc as webrtc;
+use log::{debug, error, info, warn};
 use rand::thread_rng;
-use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::io;
-use std::time::{Duration, Instant};
+use std::time::Instant;
+use std::{collections::hash_map::DefaultHasher, time::Duration};
 
+const TICK_INTERVAL: Duration = Duration::from_secs(5);
+
+#[derive(Debug, Parser)]
+#[clap(name = "universal connectivity rust server")]
+struct Opt {
+    /// Address of a remote peer to connect to.
+    #[clap(long)]
+    remote_address: Option<Multiaddr>,
+}
 
 /// An example WebRTC server that will accept connections
 #[tokio::main]
 async fn main() -> Result<()> {
-    env_logger::init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
+    let opt = Opt::parse();
 
     let mut swarm = create_swarm()?;
     swarm.listen_on(format!("/ip4/127.0.0.1/udp/0/webrtc").parse()?)?;
 
+    if let Some(remote_address) = opt.remote_address {
+        swarm.dial(remote_address).unwrap();
+    }
+
+    let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
+
     let now = Instant::now();
     loop {
-        let event = swarm.next().await.unwrap();
-        eprintln!("New event: {event:?}");
-        match event {
-            SwarmEvent::NewListenAddr { address, .. } => {
-                let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
-                eprintln!("p2p address: {p2p_address:?}")
+        match futures::future::select(swarm.next(), &mut tick).await {
+            futures::future::Either::Left((event, _)) => match event.unwrap() {
+                SwarmEvent::NewListenAddr { address, .. } => {
+                    let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
+                    info!("Listen address: {p2p_address:?}")
+                }
+                SwarmEvent::ConnectionEstablished { peer_id, .. } => {
+                    info!("Connected to {peer_id}");
+                }
+                SwarmEvent::OutgoingConnectionError { peer_id, error } => {
+                    warn!("Failed to dial {peer_id:?}: {error}");
+                }
+                SwarmEvent::ConnectionClosed { peer_id, cause, .. } => {
+                    warn!("Connection to {peer_id} closed: {cause:?}");
+                }
+                SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(
+                    libp2p::gossipsub::Event::Message {
+                        message_id: _,
+                        propagation_source: _,
+                        message,
+                    },
+                )) => {
+                    info!(
+                        "Received message from {:?}: {}",
+                        message.source,
+                        String::from_utf8(message.data).unwrap()
+                    );
+                }
+                SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(
+                    libp2p::gossipsub::Event::Subscribed { peer_id, topic },
+                )) => {
+                    info!("{peer_id} subscribed to {topic}");
+                }
+                event => {
+                    debug!("{event:?}");
+                }
             },
-            _ => {}
+            futures::future::Either::Right(_) => {
+                tick = futures_timer::Delay::new(TICK_INTERVAL);
+
+                let message = format!("Hello world! Sent at: {:4}s", now.elapsed().as_secs_f64());
+
+                if let Err(err) = swarm.behaviour_mut().gossipsub.publish(
+                    gossipsub::IdentTopic::new("universal-connectivity"),
+                    message.as_bytes(),
+                ) {
+                    error!("Failed to publish periodic message: {err}")
+                }
+            }
         }
-        // let peers: Vec<_> = swarm.behaviour().gossipsub.all_peers().collect();
-        // eprintln!("Peers: {peers:?}");
-        // let peers: Vec<_> = swarm.behaviour().gossipsub.all_mesh_peers().collect();
-        // eprintln!("Mesh peers: {peers:?}");
-
-
-        let elapsed_secs = now.elapsed().as_secs();
-        // eprintln!("elapsed seconds: {}", elapsed_secs);
-
-        let message = "Hello world! sent at : ".to_owned() + &elapsed_secs.clone().to_string() + " seconds.";
-
-        // if elapsed_secs % 2 == 0 {
-            swarm
-                .behaviour_mut()
-                .gossipsub
-                .publish(gossipsub::IdentTopic::new("universal-connectivity"), message.as_bytes());
-        // }
     }
 }
 
@@ -66,7 +109,7 @@ struct Behaviour {
 fn create_swarm() -> Result<Swarm<Behaviour>> {
     let local_key = identity::Keypair::generate_ed25519();
     let local_peer_id = PeerId::from(local_key.public());
-    println!("Local peer id: {local_peer_id}");
+    debug!("Local peer id: {local_peer_id}");
 
     // To content-address message, we can take the hash of message and use it as an ID.
     let message_id_fn = |message: &gossipsub::Message| {
@@ -103,10 +146,10 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         webrtc::tokio::Certificate::generate(&mut thread_rng())?,
     );
 
-    let identify_config = identify::Behaviour::new(identify::Config::new(
-        "/ipfs/0.1.0".into(),
-        local_key.public().clone(),
-    ));
+    let identify_config = identify::Behaviour::new(
+        identify::Config::new("/ipfs/0.1.0".into(), local_key.public().clone())
+            .with_initial_delay(Duration::ZERO),
+    );
 
     let transport = transport
         .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))

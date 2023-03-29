@@ -278,7 +278,7 @@ checksum = "86ea188f25f0255d8f92797797c97ebf5631fa88178beb1a46fdf5622c9a00e4"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.4",
+ "syn 2.0.10",
 ]
 
 [[package]]
@@ -492,6 +492,42 @@ checksum = "773f3b9af64447d2ce9850330c473515014aa235e6a783b02db81ff39e4a3dad"
 dependencies = [
  "crypto-common",
  "inout",
+]
+
+[[package]]
+name = "clap"
+version = "4.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c911b090850d79fc64fe9ea01e28e465f65e821e08813ced95bced72f7a8a9b"
+dependencies = [
+ "bitflags",
+ "clap_derive",
+ "clap_lex",
+ "is-terminal",
+ "once_cell",
+ "strsim",
+ "termcolor",
+]
+
+[[package]]
+name = "clap_derive"
+version = "4.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a932373bab67b984c790ddf2c9ca295d8e3af3b7ef92de5a5bacdccdee4b09b"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.10",
+]
+
+[[package]]
+name = "clap_lex"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "033f6b7a4acb1f358c742aaca805c939ee73b4c6209ae4318ec7aca81c42e646"
+dependencies = [
+ "os_str_bytes",
 ]
 
 [[package]]
@@ -1434,7 +1470,7 @@ checksum = "7fc7aa29613bd6a620df431842069224d8bc9011086b1db4c0e0cd47fa03ec9a"
 [[package]]
 name = "libp2p"
 version = "0.51.2"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "bytes",
  "futures",
@@ -1463,7 +1499,7 @@ dependencies = [
 [[package]]
 name = "libp2p-allow-block-list"
 version = "0.1.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "libp2p-core",
  "libp2p-identity",
@@ -1474,7 +1510,7 @@ dependencies = [
 [[package]]
 name = "libp2p-connection-limits"
 version = "0.1.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "libp2p-core",
  "libp2p-identity",
@@ -1485,7 +1521,7 @@ dependencies = [
 [[package]]
 name = "libp2p-core"
 version = "0.39.1"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "either",
  "fnv",
@@ -1512,7 +1548,7 @@ dependencies = [
 [[package]]
 name = "libp2p-dns"
 version = "0.39.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "futures",
  "libp2p-core",
@@ -1526,7 +1562,7 @@ dependencies = [
 [[package]]
 name = "libp2p-gossipsub"
 version = "0.44.1"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "asynchronous-codec",
  "base64 0.21.0",
@@ -1556,7 +1592,7 @@ dependencies = [
 [[package]]
 name = "libp2p-identify"
 version = "0.42.1"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "asynchronous-codec",
  "either",
@@ -1577,7 +1613,7 @@ dependencies = [
 [[package]]
 name = "libp2p-identity"
 version = "0.1.1"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "asn1_der",
  "bs58",
@@ -1596,7 +1632,7 @@ dependencies = [
 [[package]]
 name = "libp2p-kad"
 version = "0.43.1"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "arrayvec",
  "asynchronous-codec",
@@ -1623,7 +1659,7 @@ dependencies = [
 [[package]]
 name = "libp2p-mdns"
 version = "0.43.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "data-encoding",
  "futures",
@@ -1643,7 +1679,7 @@ dependencies = [
 [[package]]
 name = "libp2p-metrics"
 version = "0.12.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "libp2p-core",
  "libp2p-gossipsub",
@@ -1658,7 +1694,7 @@ dependencies = [
 [[package]]
 name = "libp2p-noise"
 version = "0.42.1"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "bytes",
  "curve25519-dalek 3.2.0",
@@ -1680,7 +1716,7 @@ dependencies = [
 [[package]]
 name = "libp2p-ping"
 version = "0.42.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "either",
  "futures",
@@ -1697,7 +1733,7 @@ dependencies = [
 [[package]]
 name = "libp2p-quic"
 version = "0.7.0-alpha.3"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "bytes",
  "futures",
@@ -1718,7 +1754,7 @@ dependencies = [
 [[package]]
 name = "libp2p-swarm"
 version = "0.42.1"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "either",
  "fnv",
@@ -1738,17 +1774,17 @@ dependencies = [
 [[package]]
 name = "libp2p-swarm-derive"
 version = "0.32.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "heck",
  "quote",
- "syn 2.0.4",
+ "syn 2.0.10",
 ]
 
 [[package]]
 name = "libp2p-tcp"
 version = "0.39.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "futures",
  "futures-timer",
@@ -1764,7 +1800,7 @@ dependencies = [
 [[package]]
 name = "libp2p-tls"
 version = "0.1.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "futures",
  "futures-rustls",
@@ -1782,7 +1818,7 @@ dependencies = [
 [[package]]
 name = "libp2p-webrtc"
 version = "0.4.0-alpha.4"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "async-trait",
  "asynchronous-codec",
@@ -1971,7 +2007,7 @@ dependencies = [
 [[package]]
 name = "multistream-select"
 version = "0.12.1"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "bytes",
  "futures",
@@ -2138,6 +2174,12 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
+
+[[package]]
+name = "os_str_bytes"
+version = "6.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ceedf44fb00f2d1984b0bc98102627ce622e083e49a5bacdb3e514fa4238e267"
 
 [[package]]
 name = "p256"
@@ -2467,7 +2509,7 @@ dependencies = [
 [[package]]
 name = "quick-protobuf-codec"
 version = "0.1.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "asynchronous-codec",
  "bytes",
@@ -2706,9 +2748,13 @@ name = "rust-libp2p-webrtc-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "clap",
  "env_logger",
  "futures",
+ "futures-timer",
  "libp2p",
+ "libp2p-webrtc",
+ "log",
  "rand 0.8.5",
  "tokio",
  "tokio-util",
@@ -2781,7 +2827,7 @@ dependencies = [
 [[package]]
 name = "rw-stream-sink"
 version = "0.3.0"
-source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#e28af538318c146d5b19ab7098d9e0017c356ec8"
+source = "git+https://github.com/vnermolaev/rust-libp2p.git?branch=deprecate/gossipsub-close-event#b5728952464f570c5636f5e6a4fa2448e28f3cbe"
 dependencies = [
  "futures",
  "pin-project",
@@ -2869,7 +2915,7 @@ checksum = "e801c1712f48475582b7696ac71e0ca34ebb30e09338425384269d9717c62cad"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.4",
+ "syn 2.0.10",
 ]
 
 [[package]]
@@ -3067,9 +3113,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.4"
+version = "2.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c622ae390c9302e214c31013517c2061ecb2699935882c60a9b37f82f8625ae"
+checksum = "5aad1363ed6d37b84299588d62d3a7d95b5a5c2d9aad5c85609fda12afaa1f40"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3135,7 +3181,7 @@ checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.4",
+ "syn 2.0.10",
 ]
 
 [[package]]
