@@ -10,11 +10,11 @@ the details of configuration.
 
 ## Running
 
-Clone this repo, then `cd` into the `examples/pubsub/chat` directory:
+Clone this repo, then `cd` into the `go-server` directory:
 
 ```shell
-git clone https://github.com/libp2p/go-libp2p
-cd go-libp2p/examples/pubsub/chat
+git clone https://github.com/libp2p/universal-connectivity
+cd universal-connectivity/go-server
 ```
 
 Now you can either run with `go run`, or build and run the binary:
@@ -24,7 +24,7 @@ go run .
 
 # or, build and run separately
 go build .
-./chat
+./go-server
 ```
 
 To set a nickname, use the `-nick` flag:
