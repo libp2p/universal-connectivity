@@ -96,7 +96,7 @@ export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
 }
 
 // Curried function to get multiaddresses for a peer by looking up dht
-export const getPeerMultiaddrs =
+export const getPeerMultiaddrsFromDHT =
   (libp2p: Libp2p) =>
   async (peerId: string): Promise<Multiaddr[]> => {
     const peer = peerIdFromString(peerId)
@@ -125,6 +125,29 @@ export const getPeerMultiaddrs =
     }
 
     return multiaddrs
+  }
+
+// Method that returns multiaddrs for a given peer
+export const getPeerMultiaddrs =
+  (libp2p: Libp2p) =>
+  async (peerId: string): Promise<Multiaddr[]> => {
+    const peer = peerIdFromString(peerId)
+    let peerInfo: PeerInfo
+
+    while (true) {
+      try {
+        peerInfo = await libp2p.peerRouting.findPeer(peer)
+        break
+      } catch (e) {
+        console.log(e)
+      }
+      console.log('wait 10 seconds before next dht lookup')
+      await new Promise((resolve, reject) => {
+        setTimeout(() => resolve(null), 10 * 1000)
+      })
+    }
+
+    return peerInfo.multiaddrs
   }
 
 // Attempt to connect to an array of multiaddrs
@@ -187,6 +210,7 @@ export const filterPublicMultiaddrs = (
       .filter((multiaddr) => {
         return !isIPPrivate(multiaddr.toOptions().host)
       })
+      // Could be done more easily with https://github.com/multiformats/js-mafmt
       .filter((addr) => {
         const res = addr
           .protoCodes()
