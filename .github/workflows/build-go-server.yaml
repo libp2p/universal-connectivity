@@ -1,9 +1,9 @@
 name: Build and publish go-server Docker image
 
 on:
+  workflow_dispatch:
   push:
     branches: ['main']
-  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -12,9 +12,9 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
-    # defaults:
-    #   run:
-    #     working-directory: go-server
+    defaults:
+      run:
+        working-directory: go-server
     permissions:
       contents: read
       packages: write
