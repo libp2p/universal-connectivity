@@ -10,12 +10,7 @@ interface ChatMessage {
 }
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { msg: 'Hi', from: 'me' },
-    { msg: 'Yo', from: 'other' },
-    { msg: 'Wassup?', from: 'me' },
-    { msg: 'all good!😊', from: 'other' },
-  ])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState<string>('')
 
   // Effect hook to subscribe to pubsub events and update the message state hook
