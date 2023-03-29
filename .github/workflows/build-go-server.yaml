@@ -2,8 +2,6 @@ name: Build and publish go-server Docker image
 
 on:
   workflow_dispatch:
-  push:
-    branches: ['main']
 
 env:
   REGISTRY: ghcr.io
