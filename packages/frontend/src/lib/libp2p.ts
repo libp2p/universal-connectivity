@@ -12,6 +12,8 @@ import {
   protocols,
   Protocol,
 } from '@multiformats/multiaddr'
+import { sha256 } from 'multiformats/hashes/sha2'
+import type { Message } from '@libp2p/interface-pubsub'
 import { LevelDatastore } from 'datastore-level'
 import isIPPrivate from 'private-ip'
 import { delegatedPeerRouting } from '@libp2p/delegated-peer-routing'
@@ -39,10 +41,10 @@ export async function startLibp2p(options: {} = {}) {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    // connectionManager: { autoDial: false },
-    dht: kadDHT(),
+    // dht: kadDHT(),
     datastore,
     transports: [webTransport(), webSockets(), webRTC()],
+    // transports: [webRTC()],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
     // connectionGater: {
@@ -57,26 +59,40 @@ export async function startLibp2p(options: {} = {}) {
     //   },
     // },
     peerDiscovery: [
-      bootstrap({
-        list: [
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-        ],
-      }),
+      // bootstrap({
+      //   list: [
+      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
+      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+      //   ],
+      // }),
     ],
     pubsub: gossipsub({
       allowPublishToZeroPeers: true,
-      allowedTopics: [CHAT_TOPIC],
+      // allowedTopics: [CHAT_TOPIC],
+      msgIdFn: msgIdFnStrictNoSign,
+      ignoreDuplicatePublishError: true,
     }),
+    // connectionManager: {
+    //   minConnections: 0,
+    //   maxConnections: 3,
+    // },
     // peerRouters: [delegatedPeerRouting(client)],
   })
 
   libp2p.pubsub.subscribe(CHAT_TOPIC)
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
+
   return libp2p
+}
+
+// message IDs are used to dedup inbound messages
+// every agent in network should use the same message id function
+// messages could be perceived as duplicate if this isnt added (as opposed to rust server which has unique message ids)
+export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
+  return await sha256.encode(msg.data)
 }
 
 // Curried function to get multiaddresses for a peer by looking up dht

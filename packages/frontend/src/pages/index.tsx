@@ -39,10 +39,11 @@ export default function Home() {
     }
 
     const ping = async () => {
-      if (isConnected) {
-        return await libp2p.ping(peerIdFromString(peerID))
+      if (maddr) {
+        return libp2p.ping(multiaddr(maddr))
       }
     }
+
     ping()
       .then((lat) => {
         setLatency(lat)
@@ -53,7 +54,7 @@ export default function Home() {
 
     getConnectedPeers().then((peers) => {
       // If one of the connected peers matches the one in input we're connected
-      if (peers.some((pID) => peerID === pID.toString())) {
+      if (peers.some((pID) => multiaddr(maddr).getPeerId() === pID.toString())) {
         setIsConnected(true)
       }
       setPeers(peers)
@@ -62,7 +63,7 @@ export default function Home() {
       // If one of the connected peers matches the one in input we're connected
       setConnections(conns)
     })
-  }, 1000)
+  }, 10000)
 
   // Effect hook to connect to a specific peer when the page loads
   // useEffect(() => {
