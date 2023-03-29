@@ -115,12 +115,24 @@ func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	roomFlag := flag.String("room", "universal-connectivity", "name of chat room to join")
+	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
 	flag.Parse()
 
 	ctx := context.Background()
 
+	// load our private key to generate the same peerID each time
+	privk, err := LoadIdentity(*idPath)
+	if err != nil {
+		panic(err)
+	}
+
 	// create a new libp2p Host that listens on a random TCP port
-	h, err := libp2p.New(libp2p.Transport(quicTransport.NewTransport), libp2p.Transport(webtransport.New), libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/::/udp/0/quic-v1", "/ip6/::/udp/0/quic-v1/webtransport"))
+	h, err := libp2p.New(
+		libp2p.Identity(privk),
+		libp2p.Transport(quicTransport.NewTransport),
+		libp2p.Transport(webtransport.New),
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/::/udp/0/quic-v1", "/ip6/::/udp/0/quic-v1/webtransport"),
+	)
 	if err != nil {
 		panic(err)
 	}
