@@ -20,7 +20,7 @@ on:
 
 env:
   PROJECT_ID: "universal-connectivity" #  Google Cloud project id
-  GAR_LOCATION: "europe" #  Artifact Registry location
+  GAR_LOCATION: "europe-west1" #  Artifact Registry location
   REPOSITORY: universal-connectivity-go #  Artifact Registry repository name
   SERVICE: universal-connectivity-go #  Cloud Run service name
   REGION: "europe-west1" #  Cloud Run service region
