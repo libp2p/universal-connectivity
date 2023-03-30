@@ -205,7 +205,7 @@ func main() {
 
 	LogMsgf("PeerID: %s", h.ID().String())
 	for _, addr := range h.Addrs() {
-		LogMsgf("Listening on: %s", addr.String())
+		LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
 	}
 
 	// draw the UI

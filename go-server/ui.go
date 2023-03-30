@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rivo/tview"
 )
 
@@ -20,7 +21,7 @@ type ChatUI struct {
 	peersList *tview.TextView
 
 	msgW    io.Writer
-	sysW	io.Writer
+	sysW    io.Writer
 	inputCh chan string
 	doneCh  chan struct{}
 }
@@ -151,7 +152,8 @@ func (ui *ChatUI) refreshPeers() {
 // displayChatMessage writes a ChatMessage from the room to the message window,
 // with the sender's nick highlighted in green.
 func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
-	prompt := withColor("green", fmt.Sprintf("<%s>:", cm.SenderNick))
+	p := peer.ID(cm.SenderID)
+	prompt := withColor("green", fmt.Sprintf("<%s>:", shortID(p)))
 	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
 }
 
