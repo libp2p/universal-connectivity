@@ -4,6 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -28,7 +30,7 @@ const DiscoveryInterval = time.Hour
 // DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
 const DiscoveryServiceTag = "universal-connectivity"
 
-var ChatMsgChan chan *ChatMessage
+var SysMsgChan chan *ChatMessage
 
 // Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
@@ -76,7 +78,7 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 
 	discovery.Advertise(ctx, routingDiscovery, rendezvous)
 
-	ticker := time.NewTicker(time.Second * 1)
+	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 
 	for {
@@ -108,19 +110,45 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 }
 
 func LogMsgf(f string, msg ...any) {
-	ChatMsgChan <- &ChatMessage{Message: fmt.Sprintf(f, msg...), SenderID: "system", SenderNick: "system"}
+	SysMsgChan <- &ChatMessage{Message: fmt.Sprintf(f, msg...), SenderID: "system", SenderNick: "system"}
 }
 
 func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	roomFlag := flag.String("room", "universal-connectivity", "name of chat room to join")
+	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
+	useLogger := flag.Bool("logger", false, "write logs to file")
 	flag.Parse()
+
+	if *useLogger {
+		f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Println("failed to open log file", err)
+			log.SetOutput(ioutil.Discard)
+		} else {
+			defer f.Close()
+			log.SetOutput(f)
+		}
+	} else {
+		log.SetOutput(ioutil.Discard)
+	}
 
 	ctx := context.Background()
 
+	// load our private key to generate the same peerID each time
+	privk, err := LoadIdentity(*idPath)
+	if err != nil {
+		panic(err)
+	}
+
 	// create a new libp2p Host that listens on a random TCP port
-	h, err := libp2p.New(libp2p.Transport(quicTransport.NewTransport), libp2p.Transport(webtransport.New), libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/::/udp/0/quic-v1", "/ip6/::/udp/0/quic-v1/webtransport"))
+	h, err := libp2p.New(
+		libp2p.Identity(privk),
+		libp2p.Transport(quicTransport.NewTransport),
+		libp2p.Transport(webtransport.New),
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/::/udp/0/quic-v1", "/ip6/::/udp/0/quic-v1/webtransport"),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -145,7 +173,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	ChatMsgChan = cr.Messages
+	SysMsgChan = cr.SysMessages
 
 	// setup DHT with empty discovery peers
 	// so this will be a discovery peer for others

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -19,6 +20,7 @@ type ChatUI struct {
 	peersList *tview.TextView
 
 	msgW    io.Writer
+	sysW	io.Writer
 	inputCh chan string
 	doneCh  chan struct{}
 }
@@ -38,6 +40,19 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 	// this sets a change handler to force the app to redraw when we get
 	// new messages to display.
 	msgBox.SetChangedFunc(func() {
+		app.Draw()
+	})
+
+	// make a text view to contain our error messages
+	sysBox := tview.NewTextView()
+	sysBox.SetDynamicColors(true)
+	sysBox.SetBorder(true)
+	sysBox.SetTitle("System")
+
+	// text views are io.Writers, but they don't automatically refresh.
+	// this sets a change handler to force the app to redraw when we get
+	// new messages to display.
+	sysBox.SetChangedFunc(func() {
 		app.Draw()
 	})
 
@@ -87,8 +102,9 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(chatPanel, 0, 1, false).
-		AddItem(input, 1, 1, true)
+		AddItem(chatPanel, 0, 3, false).
+		AddItem(sysBox, 0, 2, false).
+		AddItem(input, 2, 1, true)
 
 	app.SetRoot(flex, true)
 
@@ -97,6 +113,7 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 		app:       app,
 		peersList: peersList,
 		msgW:      msgBox,
+		sysW:      sysBox,
 		inputCh:   inputCh,
 		doneCh:    make(chan struct{}, 1),
 	}
@@ -138,6 +155,13 @@ func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
 }
 
+// displayChatMessage writes a ChatMessage from the room to the message window,
+// with the sender's nick highlighted in green.
+func (ui *ChatUI) displaySysMessage(cm *ChatMessage) {
+	fmt.Fprintf(ui.sysW, "%s\n", cm.Message)
+	log.Println(cm.Message)
+}
+
 // displaySelfMessage writes a message from ourself to the message window,
 // with our nick highlighted in yellow.
 func (ui *ChatUI) displaySelfMessage(msg string) {
@@ -165,6 +189,10 @@ func (ui *ChatUI) handleEvents() {
 		case m := <-ui.cr.Messages:
 			// when we receive a message from the chat room, print it to the message window
 			ui.displayChatMessage(m)
+
+		case s := <-ui.cr.SysMessages:
+			// when we receive a message from the chat room, print it to the message window
+			ui.displaySysMessage(s)
 
 		case <-peerRefreshTicker.C:
 			// refresh the list of peers in the chat room periodically

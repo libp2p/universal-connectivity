@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -18,6 +17,7 @@ const ChatRoomBufSize = 128
 type ChatRoom struct {
 	// Messages is a channel of messages received from other peers in the chat room
 	Messages chan *ChatMessage
+	SysMessages chan *ChatMessage
 
 	ctx   context.Context
 	ps    *pubsub.PubSub
@@ -60,6 +60,7 @@ func JoinChatRoom(ctx context.Context, ps *pubsub.PubSub, selfID peer.ID, nickna
 		nick:     nickname,
 		roomName: roomName,
 		Messages: make(chan *ChatMessage, ChatRoomBufSize),
+		SysMessages: make(chan *ChatMessage, ChatRoomBufSize),
 	}
 
 	// start reading messages from the subscription in a loop
@@ -69,16 +70,7 @@ func JoinChatRoom(ctx context.Context, ps *pubsub.PubSub, selfID peer.ID, nickna
 
 // Publish sends a message to the pubsub topic.
 func (cr *ChatRoom) Publish(message string) error {
-	m := ChatMessage{
-		Message:    message,
-		SenderID:   cr.self.Pretty(),
-		SenderNick: cr.nick,
-	}
-	msgBytes, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	return cr.topic.Publish(cr.ctx, msgBytes)
+	return cr.topic.Publish(cr.ctx, []byte(message))
 }
 
 func (cr *ChatRoom) ListPeers() []peer.ID {
@@ -99,12 +91,9 @@ func (cr *ChatRoom) readLoop() {
 		}
 		cm := new(ChatMessage)
 		cm.Message = string(msg.Data)
-		cm.SenderID = string(msg.ID)
-		cm.SenderNick = "unknown"
+		cm.SenderID = msg.ID
+		cm.SenderNick = string(msg.ID[len(msg.ID)-8])
 
-		if err != nil {
-			continue
-		}
 		// send valid messages onto the Messages channel
 		cr.Messages <- cm
 	}
