@@ -3,11 +3,42 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Message } from '@libp2p/interface-pubsub'
 import { CHAT_TOPIC } from '@/lib/constants'
 import { PeerId } from 'kubo-rpc-client/dist/src/types'
+import { createIcon } from '@download/blockies'
 
 interface ChatMessage {
   msg: string
   from: 'me' | 'other'
+  peerId: string
 }
+
+interface MessageProps extends ChatMessage {}
+
+function Message({ msg, from, peerId }: MessageProps) {
+  const msgref = React.useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const icon = createIcon({
+      seed: peerId,
+      size: 15,
+      scale: 3,
+    })
+    icon.className = "rounded mr-2"
+    const childrenCount = msgref.current?.childElementCount
+    // Prevent inserting an icon more than once.
+    if (childrenCount && childrenCount < 2) {
+      msgref.current?.insertBefore(icon, msgref.current?.firstChild)
+    }
+  }, [])
+
+  return (
+    <li className={`flex ${from === 'me' ? 'justify-end' : 'justify-start'}`}>
+      <div ref={msgref} className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
+        <span className="block">{msg}</span>
+      </div>
+    </li>
+  )
+}
+
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -17,11 +48,12 @@ export default function ChatContainer() {
   useEffect(() => {
     const messageCB = (message: CustomEvent<Message>) => {
       console.log("gossipsub console log", message)
-      const { topic, data } = message.detail
+      // FIXME: Why does 'from' not exist on type 'Message'?
+      const { topic, data, from } = message.detail as any
       const msg = new TextDecoder().decode(data)
       console.log(`${topic}: ${msg}`)
       // Append new message
-      setMessages([...messages, { msg, from: 'other' }])
+      setMessages([...messages, { msg, from: 'other', peerId: from.toString() }])
     }
 
     libp2p.pubsub.addEventListener('message', messageCB)
@@ -44,7 +76,9 @@ export default function ChatContainer() {
     )
     console.log('sent message to: ', res.recipients.map((peerId) => peerId.toString()))
 
-    setMessages([...messages, { msg: input, from: 'me' }])
+    const myPeerId = libp2p.peerId.toString()
+
+    setMessages([...messages, { msg: input, from: 'me', peerId: myPeerId }])
     setInput('')
   }, [input, messages, setInput, libp2p])
 
@@ -94,16 +128,8 @@ export default function ChatContainer() {
             <div className="relative w-full p-6 overflow-y-auto h-[40rem]">
               <ul className="space-y-2">
                 {/* messages start */}
-                {messages.map(({ msg, from }, idx) => (
-                  <li
-                    key={idx}
-                    className={`flex ${from === 'me' ? 'justify-end' : 'justify-start'
-                      }`}
-                  >
-                    <div className="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
-                      <span className="block">{msg}</span>
-                    </div>
-                  </li>
+                {messages.map(({ msg, from, peerId }, idx) => (
+                  <Message key={idx} msg={msg} from={from} peerId={peerId} />
                 ))}
                 {/* messages end */}
               </ul>

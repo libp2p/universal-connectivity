@@ -10,6 +10,7 @@
     "@chainsafe/libp2p-gossipsub": "6.2.0",
     "@chainsafe/libp2p-noise": "^11.0.0",
     "@chainsafe/libp2p-yamux": "^3.0.5",
+    "@download/blockies": "^1.0.3",
     "@headlessui/react": "^1.7.13",
     "@heroicons/react": "^2.0.16",
     "@libp2p/bootstrap": "^6.0.0",
