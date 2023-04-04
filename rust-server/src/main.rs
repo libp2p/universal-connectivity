@@ -4,6 +4,8 @@ use futures::StreamExt;
 use libp2p::{
     core::muxing::StreamMuxerBox,
     gossipsub, identify, identity,
+    kad::record::store::MemoryStore,
+    kad::{Kademlia, KademliaConfig},
     multiaddr::Protocol,
     ping, relay,
     swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
@@ -15,6 +17,14 @@ use rand::thread_rng;
 use std::hash::{Hash, Hasher};
 use std::time::Instant;
 use std::{collections::hash_map::DefaultHasher, time::Duration};
+
+// TODO: replace with our private bootstrap node
+// const BOOTNODES: [&str; 4] = [
+//     "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+//     "QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+//     "QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+//     "QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+// ];
 
 const TICK_INTERVAL: Duration = Duration::from_secs(5);
 
@@ -104,7 +114,7 @@ async fn main() -> Result<()> {
 struct Behaviour {
     gossipsub: gossipsub::Behaviour,
     identify: identify::Behaviour,
-    // kademlia: Kademlia<MemoryStore>,
+    kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
     ping: ping::Behaviour,
     relay: relay::Behaviour,
@@ -155,6 +165,20 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
             .with_initial_delay(Duration::ZERO),
     );
 
+    // Create a Kademlia behaviour.
+    let mut cfg = KademliaConfig::default();
+    cfg.set_query_timeout(Duration::from_secs(5 * 60));
+    let store = MemoryStore::new(local_peer_id);
+    let kad_behaviour = Kademlia::with_config(local_peer_id, store, cfg);
+
+    // Add the bootnodes to the local routing table. `libp2p-dns` built
+    // into the `transport` resolves the `dnsaddr` when Kademlia tries
+    // to dial these nodes.
+    // for peer in &BOOTNODES {
+    //     // TODO: update this
+    //     kad_behaviour.add_address(&peer.parse()?, "/dnsaddr/bootstrap.libp2p.io".parse()?);
+    // }
+
     let transport = transport
         .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))
         .boxed();
@@ -162,6 +186,7 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
     let behaviour = Behaviour {
         gossipsub,
         identify: identify_config,
+        kademlia: kad_behaviour,
         keep_alive: keep_alive::Behaviour::default(),
         ping: ping::Behaviour::default(),
         relay: relay::Behaviour::new(local_peer_id, Default::default()),
