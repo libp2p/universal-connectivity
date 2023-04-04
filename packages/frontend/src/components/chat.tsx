@@ -22,17 +22,20 @@ function Message({ msg, from, peerId }: MessageProps) {
       size: 15,
       scale: 3,
     })
-    icon.className = "rounded mr-2"
+    icon.className = 'rounded mr-2'
     const childrenCount = msgref.current?.childElementCount
     // Prevent inserting an icon more than once.
     if (childrenCount && childrenCount < 2) {
       msgref.current?.insertBefore(icon, msgref.current?.firstChild)
     }
-  }, [])
+  }, [peerId])
 
   return (
     <li className={`flex ${from === 'me' ? 'justify-end' : 'justify-start'}`}>
-      <div ref={msgref} className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
+      <div
+        ref={msgref}
+        className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow"
+      >
         <span className="block">{msg}</span>
       </div>
     </li>
@@ -46,14 +49,19 @@ export default function ChatContainer() {
 
   // Effect hook to subscribe to pubsub events and update the message state hook
   useEffect(() => {
-    const messageCB = (message: CustomEvent<Message>) => {
-      console.log("gossipsub console log", message)
+    const messageCB = (evt: CustomEvent<Message>) => {
+      console.log('gossipsub console log', evt.detail)
       // FIXME: Why does 'from' not exist on type 'Message'?
-      const { topic, data, from } = message.detail as any
+      const { topic, data } = evt.detail
       const msg = new TextDecoder().decode(data)
       console.log(`${topic}: ${msg}`)
+
+      if (evt.detail.type === 'signed') {
+        const peerId = evt.detail.from.toString()
+      } else {
+        setMessages([...messages, { msg, from: 'other', peerId: 'unkonwn' }])
+      }
       // Append new message
-      setMessages([...messages, { msg, from: 'other', peerId: from.toString() }])
     }
 
     libp2p.pubsub.addEventListener('message', messageCB)
@@ -68,13 +76,19 @@ export default function ChatContainer() {
   const sendMessage = useCallback(async () => {
     if (input === '') return
 
-    console.log('peers in gossip:', libp2p.pubsub.getSubscribers(CHAT_TOPIC).toString())
+    console.log(
+      'peers in gossip:',
+      libp2p.pubsub.getSubscribers(CHAT_TOPIC).toString(),
+    )
 
     const res = await libp2p.pubsub.publish(
       CHAT_TOPIC,
       new TextEncoder().encode(input),
     )
-    console.log('sent message to: ', res.recipients.map((peerId) => peerId.toString()))
+    console.log(
+      'sent message to: ',
+      res.recipients.map((peerId) => peerId.toString()),
+    )
 
     const myPeerId = libp2p.peerId.toString()
 
