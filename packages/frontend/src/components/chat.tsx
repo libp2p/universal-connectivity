@@ -14,7 +14,7 @@ interface ChatMessage {
 interface MessageProps extends ChatMessage {}
 
 function Message({ msg, from, peerId }: MessageProps) {
-  const msgref = React.useRef<HTMLDivElement>(null)
+  const msgref = React.useRef<HTMLLIElement>(null)
 
   useEffect(() => {
     const icon = createIcon({
@@ -22,7 +22,7 @@ function Message({ msg, from, peerId }: MessageProps) {
       size: 15,
       scale: 3,
     })
-    icon.className = 'rounded mr-2'
+    icon.className = 'rounded mr-2 max-h-10 max-w-10'
     const childrenCount = msgref.current?.childElementCount
     // Prevent inserting an icon more than once.
     if (childrenCount && childrenCount < 2) {
@@ -31,9 +31,9 @@ function Message({ msg, from, peerId }: MessageProps) {
   }, [peerId])
 
   return (
-    <li className={`flex ${from === 'me' ? 'justify-end' : 'justify-start'}`}>
+    <li ref={msgref} className={`flex ${from === 'me' ? 'justify-end' : 'justify-start'}`}>
       <div
-        ref={msgref}
+
         className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow"
       >
         <span className="block">{msg}</span>
