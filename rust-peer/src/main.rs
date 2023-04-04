@@ -29,14 +29,14 @@ use std::{collections::hash_map::DefaultHasher, time::Duration};
 const TICK_INTERVAL: Duration = Duration::from_secs(5);
 
 #[derive(Debug, Parser)]
-#[clap(name = "universal connectivity rust server")]
+#[clap(name = "universal connectivity rust peer")]
 struct Opt {
     /// Address of a remote peer to connect to.
     #[clap(long)]
     remote_address: Option<Multiaddr>,
 }
 
-/// An example WebRTC server that will accept connections
+/// An example WebRTC peer that will accept connections
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();

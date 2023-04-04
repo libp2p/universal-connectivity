@@ -1,4 +1,4 @@
-name: Build and publish go-server Docker image
+name: Build and publish go-peer Docker image
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: go-server
+        working-directory: go-peer
     permissions:
       contents: read
       packages: write
@@ -37,7 +37,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ./go-server
+          context: ./go-peer
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
