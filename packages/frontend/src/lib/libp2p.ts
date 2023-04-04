@@ -90,7 +90,7 @@ export async function startLibp2p(options: {} = {}) {
 
 // message IDs are used to dedup inbound messages
 // every agent in network should use the same message id function
-// messages could be perceived as duplicate if this isnt added (as opposed to rust server which has unique message ids)
+// messages could be perceived as duplicate if this isnt added (as opposed to rust peer which has unique message ids)
 export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
   return await sha256.encode(msg.data)
 }
