@@ -4,7 +4,7 @@ Realtime highly decentralised chat app.
 
 ![libp2p topology](libp2p-hero.svg)
 
-Showcasing [libp2p](https://libp2p.io/)'s superpowers in establishing ubiquitous peer-to-peer connectivity in modern programming languages (Go, Rust, TypeScript) and runtimes (Web, native binary).
+Showcasing [libp2p](https://libp2p.io/)'s superpowers in establishing ubiquitous peer-to-peer [connectivity](https://connectivity.libp2p.io/) in modern programming languages (Go, Rust, TypeScript) and runtimes (Web, native binary).
 
 On top of this strong foundation, it layers a GossipSub: A Secure PubSub Protocol for Unstructured Decentralised P2P Overlays. By analogy, an event broker with distributed brokering, or a distributed PubSub protocol.
 
