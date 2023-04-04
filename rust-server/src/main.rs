@@ -5,7 +5,7 @@ use libp2p::{
     core::muxing::StreamMuxerBox,
     gossipsub, identify, identity,
     multiaddr::Protocol,
-    ping,
+    ping, relay,
     swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
     Multiaddr, PeerId, Transport,
 };
@@ -59,6 +59,9 @@ async fn main() -> Result<()> {
                 SwarmEvent::ConnectionClosed { peer_id, cause, .. } => {
                     warn!("Connection to {peer_id} closed: {cause:?}");
                 }
+                SwarmEvent::Behaviour(BehaviourEvent::Relay(e)) => {
+                    info!("{:?}", e);
+                }
                 SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(
                     libp2p::gossipsub::Event::Message {
                         message_id: _,
@@ -104,6 +107,7 @@ struct Behaviour {
     // kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
     ping: ping::Behaviour,
+    relay: relay::Behaviour,
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
@@ -160,6 +164,7 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         identify: identify_config,
         keep_alive: keep_alive::Behaviour::default(),
         ping: ping::Behaviour::default(),
+        relay: relay::Behaviour::new(local_peer_id, Default::default()),
     };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
