@@ -23,7 +23,8 @@ import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC } from '@libp2p/webrtc'
 import { PeerId } from 'kubo-rpc-client/dist/src/types'
-import { CHAT_TOPIC } from './constants'
+import { CHAT_TOPIC, CIRCUIT_RELAY_CODE, WEBRTC_CODE } from './constants'
+import { circuitRelayTransport } from 'libp2p/circuit'
 
 export async function startLibp2p(options: {} = {}) {
   // localStorage.debug = 'libp2p*,-*:trace'
@@ -43,8 +44,9 @@ export async function startLibp2p(options: {} = {}) {
   const libp2p = await createLibp2p({
     // dht: kadDHT(),
     datastore,
-    transports: [webTransport(), webSockets(), webRTC()],
-    // transports: [webRTC()],
+    transports: [webTransport(), webSockets(), webRTC({}), circuitRelayTransport({
+      discoverRelays: 1,
+    })],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
     // connectionGater: {
@@ -243,4 +245,20 @@ export class Libp2pDialError extends Error {
     Object.setPrototypeOf(this, Libp2pDialError.prototype)
     this.error = error
   }
+}
+
+export const getCircuitRelayAddress = (libp2p: Libp2p) => (ma: Multiaddr): Multiaddr => {
+  if (ma.protoCodes().includes(CIRCUIT_RELAY_CODE)) {
+      if (ma.protos().pop()?.name === 'p2p') {
+        ma = ma.decapsulateCode(protocols('p2p').code)
+      }
+      return multiaddr(ma.toString() + '/webrtc/p2p/' + libp2p.peerId)
+  }
+
+  throw new Error('Not a circuit relay address')
+
+}
+
+export const isWebrtc = (ma: Multiaddr): boolean => {
+  return ma.protoCodes().includes(WEBRTC_CODE)
 }
