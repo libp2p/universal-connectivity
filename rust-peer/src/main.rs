@@ -8,7 +8,7 @@ use libp2p::{
     kad::{Kademlia, KademliaConfig},
     multiaddr::Protocol,
     ping, relay,
-    swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
+    swarm::{keep_alive, AddressScore, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
     Multiaddr, PeerId, Transport,
 };
 use libp2p_webrtc as webrtc;
@@ -31,6 +31,10 @@ const TICK_INTERVAL: Duration = Duration::from_secs(5);
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
 struct Opt {
+    /// Address to listen on.
+    #[clap(long)]
+    listen_address: Option<String>,
+
     /// Address of a remote peer to connect to.
     #[clap(long)]
     remote_address: Option<Multiaddr>,
@@ -44,7 +48,15 @@ async fn main() -> Result<()> {
     let opt = Opt::parse();
 
     let mut swarm = create_swarm()?;
-    swarm.listen_on(format!("/ip4/127.0.0.1/udp/0/webrtc").parse()?)?;
+
+    swarm.listen_on(format!("/ip4/0.0.0.0/udp/9090/webrtc").parse()?)?;
+
+    if let Some(listen_address) = opt.listen_address {
+        swarm.add_external_address(
+            format!("/ip4/{}/udp/9090/webrtc", listen_address).parse()?,
+            AddressScore::Infinite,
+        );
+    }
 
     if let Some(remote_address) = opt.remote_address {
         swarm.dial(remote_address).unwrap();
