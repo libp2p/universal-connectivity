@@ -11,6 +11,7 @@ import {
   filterPublicMultiaddrs,
   getPeerMultiaddrs,
   Libp2pDialError,
+  setWebRTCDirectAddress,
 } from '@/lib/libp2p'
 import type { Multiaddr } from '@multiformats/multiaddr'
 import { multiaddr } from '@multiformats/multiaddr'
@@ -93,6 +94,7 @@ export default function Home() {
         const addrs = await getPeerMultiaddrs(libp2p)(peerID)
 
         setMultiaddrs(addrs)
+
       } catch (e) {
         console.error(e)
       }
@@ -143,6 +145,7 @@ export default function Home() {
       try {
         const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
         console.log('connection: ', connection)
+
         return connection
       } catch (e) {
         console.error(e)

@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
     let opt = Opt::parse();
 
     let mut swarm = create_swarm()?;
-    swarm.listen_on(format!("/ip4/0.0.0.0/udp/0/webrtc").parse()?)?;
+    swarm.listen_on(format!("/ip4/0.0.0.0/udp/0/webrtc-direct").parse()?)?;
 
     if let Some(remote_address) = opt.remote_address {
         swarm.dial(remote_address).unwrap();
