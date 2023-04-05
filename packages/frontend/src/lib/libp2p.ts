@@ -21,7 +21,7 @@ import { create as KuboClient } from 'kubo-rpc-client'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
-import { webRTC } from '@libp2p/webrtc'
+import { webRTC, webRTCDirect } from '@libp2p/webrtc'
 import { PeerId } from 'kubo-rpc-client/dist/src/types'
 import { CHAT_TOPIC } from './constants'
 
@@ -43,7 +43,7 @@ export async function startLibp2p(options: {} = {}) {
   const libp2p = await createLibp2p({
     // dht: kadDHT(),
     datastore,
-    transports: [webTransport(), webSockets(), webRTC()],
+    transports: [webTransport(), webSockets(), webRTC(), webRTCDirect()],
     // transports: [webRTC()],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],

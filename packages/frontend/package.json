@@ -20,6 +20,7 @@
     "@libp2p/webrtc": "github:libp2p/js-libp2p-webrtc#feat/browser-to-browser",
     "@libp2p/websockets": "^5.0.3",
     "@libp2p/webtransport": "^1.0.7",
+    "@multiformats/mafmt": "^12.0.0",
     "@multiformats/multiaddr": "^12.0.0",
     "@types/node": "18.14.6",
     "@types/react": "18.0.28",
