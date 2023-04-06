@@ -62,7 +62,7 @@ export async function startLibp2p(options: {} = {}) {
         ]
       }
     }), webRTCDirect(), circuitRelayTransport({
-      discoverRelays: 1,
+      discoverRelays: 10,
     }),],
     // transports: [webRTC()],
     connectionEncryption: [noise()],

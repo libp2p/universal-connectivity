@@ -38,19 +38,19 @@ export default function Home() {
       return await libp2p.getConnections()
     }
 
-    const ping = async () => {
-      if (maddr) {
-        return libp2p.ping(multiaddr(maddr))
-      }
-    }
+    // const ping = async () => {
+    //   if (maddr) {
+    //     return libp2p.ping(multiaddr(maddr))
+    //   }
+    // }
 
-    ping()
-      .then((lat) => {
-        setLatency(lat)
-      })
-      .catch((e) => {
-        console.error(e, e?.error)
-      })
+    // ping()
+    //   .then((lat) => {
+    //     setLatency(lat)
+    //   })
+    //   .catch((e) => {
+    //     console.error(e, e?.error)
+    //   })
 
     getConnectedPeers().then((peers) => {
       // If one of the connected peers matches the one in input we're connected
