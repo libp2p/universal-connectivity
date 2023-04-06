@@ -57,9 +57,9 @@ export default function ChatContainer() {
       console.log(`${topic}: ${msg}`)
 
       if (evt.detail.type === 'signed') {
-        const peerId = evt.detail.from.toString()
+        setMessages([...messages, { msg, from: 'other', peerId: evt.detail.from.toString() }])
       } else {
-        setMessages([...messages, { msg, from: 'other', peerId: 'unkonwn' }])
+        const peerId = evt.detail.toString()
       }
       // Append new message
     }
