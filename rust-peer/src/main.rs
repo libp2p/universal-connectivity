@@ -70,7 +70,7 @@ async fn main() -> Result<()> {
             futures::future::Either::Left((event, _)) => match event.unwrap() {
                 SwarmEvent::NewListenAddr { address, .. } => {
                     let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
-                    info!("Listen address: {p2p_address:?}")
+                    info!("Listen p2p address: {p2p_address:?}")
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     info!("Connected to {peer_id}");

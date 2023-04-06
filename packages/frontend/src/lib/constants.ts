@@ -5,4 +5,3 @@ export const DEFAULT_APP_PEER = '12D3KooWRBy97UB99e3J6hiPesre1MZeuNQvfan4gBziswr
 
 
 export const CIRCUIT_RELAY_CODE = 290
-export const WEBRTC_CODE = 281

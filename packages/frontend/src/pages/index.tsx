@@ -11,7 +11,6 @@ import {
   filterPublicMultiaddrs,
   getPeerMultiaddrs,
   Libp2pDialError,
-  setWebRTCDirectAddress,
 } from '@/lib/libp2p'
 import type { Multiaddr } from '@multiformats/multiaddr'
 import { multiaddr } from '@multiformats/multiaddr'
