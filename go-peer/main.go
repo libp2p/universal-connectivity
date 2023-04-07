@@ -44,6 +44,8 @@ func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Mult
 		options = append(options, dht.Mode(dht.ModeServer))
 	}
 
+	options = append(options, dht.ProtocolPrefix("/universal-connectivity"))
+
 	kdht, err := dht.New(ctx, host, options...)
 	if err != nil {
 		return nil, err
