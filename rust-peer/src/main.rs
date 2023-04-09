@@ -140,7 +140,7 @@ async fn main() -> Result<()> {
                 tick = futures_timer::Delay::new(TICK_INTERVAL);
 
                 if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
-                    debug!("Failed to run Kademlia bootstrap: {e:?}");
+                    error!("Failed to run Kademlia bootstrap: {e:?}");
                 }
 
                 let message = format!("Hello world! Sent at: {:4}s", now.elapsed().as_secs_f64());
