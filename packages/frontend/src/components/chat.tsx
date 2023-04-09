@@ -56,12 +56,10 @@ export default function ChatContainer() {
       const msg = new TextDecoder().decode(data)
       console.log(`${topic}: ${msg}`)
 
+      // Append signed messages, otherwise discard
       if (evt.detail.type === 'signed') {
-        const peerId = evt.detail.from.toString()
-      } else {
-        setMessages([...messages, { msg, from: 'other', peerId: 'unkonwn' }])
+        setMessages([...messages, { msg, from: 'other', peerId: evt.detail.from.toString() }])
       }
-      // Append new message
     }
 
     libp2p.pubsub.addEventListener('message', messageCB)

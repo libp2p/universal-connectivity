@@ -16,8 +16,11 @@ use libp2p::{
 use libp2p_webrtc as webrtc;
 use log::{debug, error, info, warn};
 use rand::thread_rng;
-use std::hash::{Hash, Hasher};
 use std::time::Instant;
+use std::{
+    borrow::Cow,
+    hash::{Hash, Hasher},
+};
 use std::{collections::hash_map::DefaultHasher, time::Duration};
 
 // TODO: replace with our private bootstrap node
@@ -29,6 +32,7 @@ use std::{collections::hash_map::DefaultHasher, time::Duration};
 // ];
 
 const TICK_INTERVAL: Duration = Duration::from_secs(5);
+const KADEMLIA_PROTOCOL_NAME: &'static [u8] = b"/universal-connectivity/kad/1.0.0";
 
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -105,6 +109,32 @@ async fn main() -> Result<()> {
                 )) => {
                     info!("{peer_id} subscribed to {topic}");
                 }
+                SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
+                    debug!("{:?}", e);
+
+                    if let identify::Event::Received {
+                        peer_id,
+                        info:
+                            identify::Info {
+                                listen_addrs,
+                                protocols,
+                                observed_addr,
+                                ..
+                            },
+                    } = e
+                    {
+                        swarm.add_external_address(observed_addr, AddressScore::Infinite);
+
+                        if protocols
+                            .iter()
+                            .any(|p| p.as_bytes() == KADEMLIA_PROTOCOL_NAME)
+                        {
+                            for addr in listen_addrs {
+                                swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
+                            }
+                        }
+                    }
+                }
                 event => {
                     debug!("{event:?}");
                 }
@@ -116,6 +146,10 @@ async fn main() -> Result<()> {
                     "external addrs: {:?}",
                     swarm.external_addresses().collect::<Vec<&AddressRecord>>()
                 );
+
+                if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
+                    error!("Failed to run Kademlia bootstrap: {e:?}");
+                }
 
                 let message = format!("Hello world! Sent at: {:4}s", now.elapsed().as_secs_f64());
 
@@ -187,7 +221,7 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
 
     // Create a Kademlia behaviour.
     let mut cfg = KademliaConfig::default();
-    cfg.set_query_timeout(Duration::from_secs(5 * 60));
+    cfg.set_protocol_names(vec![Cow::Owned(KADEMLIA_PROTOCOL_NAME.to_vec())]);
     let store = MemoryStore::new(local_peer_id);
     let kad_behaviour = Kademlia::with_config(local_peer_id, store, cfg);
 
