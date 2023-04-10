@@ -21,15 +21,20 @@ import { create as KuboClient } from 'kubo-rpc-client'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
-import { webRTC } from '@libp2p/webrtc'
+import { webRTC, webRTCDirect } from '@libp2p/webrtc'
 import { PeerId } from 'kubo-rpc-client/dist/src/types'
-import { CHAT_TOPIC } from './constants'
+import { CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
+import * as filters from "@libp2p/websockets/filters"
+
+// @ts-ignore
+import { circuitRelayTransport } from 'libp2p/circuit-relay'
+
 
 export async function startLibp2p(options: {} = {}) {
   // localStorage.debug = 'libp2p*,-*:trace'
   // application-specific data lives in the datastore
   // const datastore = new MemoryDatastore()
-  const datastore = new LevelDatastore('js-libp2p-nextjs-example')
+  // const datastore = new LevelDatastore('js-libp2p-nextjs-example')
 
   // default is to use ipfs.io
   const client = KuboClient({
@@ -42,8 +47,23 @@ export async function startLibp2p(options: {} = {}) {
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
     // dht: kadDHT(),
-    datastore,
-    transports: [webTransport(), webSockets(), webRTC()],
+    // datastore,
+    transports: [webTransport(), webSockets({
+      filter: filters.all,
+    }), webRTC({
+      rtcConfiguration: {
+        iceServers:[
+          {
+            urls: [
+              'stun:stun.l.google.com:19302',
+              'stun:global.stun.twilio.com:3478'
+            ]
+          }
+        ]
+      }
+    }), webRTCDirect(), circuitRelayTransport({
+      discoverRelays: 10,
+    }),],
     // transports: [webRTC()],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
@@ -82,6 +102,12 @@ export async function startLibp2p(options: {} = {}) {
   })
 
   libp2p.pubsub.subscribe(CHAT_TOPIC)
+
+  libp2p.peerStore.addEventListener('change:multiaddrs', ({detail: {peerId, multiaddrs}}) => {
+
+    console.log(`changed multiaddrs: peer ${peerId.toString()} multiaddrs: ${multiaddrs}`)
+    setWebRTCRelayAddress(multiaddrs, libp2p.peerId.toString())
+  })
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
 
@@ -244,3 +270,15 @@ export class Libp2pDialError extends Error {
     this.error = error
   }
 }
+
+export const setWebRTCRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
+  maddrs.forEach((maddr) => {
+    if (maddr.protoCodes().includes(CIRCUIT_RELAY_CODE)) {
+
+      const webRTCrelayAddress = multiaddr(maddr.toString() + '/webrtc/p2p/' + peerId)
+
+      console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
+    }
+  })
+}
+

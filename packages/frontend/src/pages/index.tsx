@@ -38,19 +38,19 @@ export default function Home() {
       return await libp2p.getConnections()
     }
 
-    const ping = async () => {
-      if (maddr) {
-        return libp2p.ping(multiaddr(maddr))
-      }
-    }
+    // const ping = async () => {
+    //   if (maddr) {
+    //     return libp2p.ping(multiaddr(maddr))
+    //   }
+    // }
 
-    ping()
-      .then((lat) => {
-        setLatency(lat)
-      })
-      .catch((e) => {
-        console.error(e, e?.error)
-      })
+    // ping()
+    //   .then((lat) => {
+    //     setLatency(lat)
+    //   })
+    //   .catch((e) => {
+    //     console.error(e, e?.error)
+    //   })
 
     getConnectedPeers().then((peers) => {
       // If one of the connected peers matches the one in input we're connected
@@ -93,6 +93,7 @@ export default function Home() {
         const addrs = await getPeerMultiaddrs(libp2p)(peerID)
 
         setMultiaddrs(addrs)
+
       } catch (e) {
         console.error(e)
       }
@@ -143,6 +144,7 @@ export default function Home() {
       try {
         const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
         console.log('connection: ', connection)
+
         return connection
       } catch (e) {
         console.error(e)

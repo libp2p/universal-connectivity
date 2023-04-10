@@ -8,7 +8,9 @@ use libp2p::{
     kad::{Kademlia, KademliaConfig},
     multiaddr::Protocol,
     ping, relay,
-    swarm::{keep_alive, AddressScore, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
+    swarm::{
+        keep_alive, AddressRecord, AddressScore, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
+    },
     Multiaddr, PeerId, Transport,
 };
 use libp2p_webrtc as webrtc;
@@ -53,11 +55,11 @@ async fn main() -> Result<()> {
 
     let mut swarm = create_swarm()?;
 
-    swarm.listen_on(format!("/ip4/0.0.0.0/udp/9090/webrtc").parse()?)?;
+    swarm.listen_on(format!("/ip4/0.0.0.0/udp/9090/webrtc-direct").parse()?)?;
 
     if let Some(listen_address) = opt.listen_address {
         swarm.add_external_address(
-            format!("/ip4/{}/udp/9090/webrtc", listen_address).parse()?,
+            format!("/ip4/{}/udp/9090/webrtc-direct", listen_address).parse()?,
             AddressScore::Infinite,
         );
     }
@@ -74,7 +76,8 @@ async fn main() -> Result<()> {
             futures::future::Either::Left((event, _)) => match event.unwrap() {
                 SwarmEvent::NewListenAddr { address, .. } => {
                     let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
-                    info!("Listen address: {p2p_address:?}")
+                    info!("Listen p2p address: {p2p_address:?}");
+                    swarm.add_external_address(p2p_address, AddressScore::Infinite);
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     info!("Connected to {peer_id}");
@@ -138,6 +141,11 @@ async fn main() -> Result<()> {
             },
             futures::future::Either::Right(_) => {
                 tick = futures_timer::Delay::new(TICK_INTERVAL);
+
+                info!(
+                    "external addrs: {:?}",
+                    swarm.external_addresses().collect::<Vec<&AddressRecord>>()
+                );
 
                 if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
                     error!("Failed to run Kademlia bootstrap: {e:?}");

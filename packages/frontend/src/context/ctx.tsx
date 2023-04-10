@@ -21,13 +21,15 @@ export const libp2pContext = createContext<Libp2pContextInterface>({
 interface WrapperProps {
   children?: ReactNode
 }
-
+let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
   const [libp2p, setLibp2p] = useState<Libp2p>()
 
   useEffect(() => {
     const init = async () => {
+      if (loaded) return
       try {
+        loaded = true
         const libp2p = await startLibp2p()
 
         // @ts-ignore
