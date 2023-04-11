@@ -118,7 +118,9 @@ export async function startLibp2p(options: {} = {}) {
 // every agent in network should use the same message id function
 // messages could be perceived as duplicate if this isnt added (as opposed to rust peer which has unique message ids)
 export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
-  return await sha256.encode(msg.data)
+  var enc = new TextEncoder();
+  const encodedSeqNum = enc.encode(msg.sequenceNumber.toString());
+  return await sha256.encode(encodedSeqNum)
 }
 
 // Curried function to get multiaddresses for a peer by looking up dht
