@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -20,7 +21,9 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	tcpTransport "github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
+	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -120,6 +123,8 @@ func main() {
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	roomFlag := flag.String("room", "universal-connectivity", "name of chat room to join")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
+	certPath := flag.String("tls-cert-path", "", "path to the tls cert file (for websockets)")
+	keyPath := flag.String("tls-key-path", "", "path to the tls key file (for websockets")
 	useLogger := flag.Bool("logger", false, "write logs to file")
 	flag.Parse()
 
@@ -144,13 +149,35 @@ func main() {
 		panic(err)
 	}
 
-	// create a new libp2p Host that listens on a random TCP port
-	h, err := libp2p.New(
+	// TLS stuff
+	var opts []libp2p.Option
+
+	if *certPath != "" && *keyPath != "" {
+		certs := make([]tls.Certificate, 1)
+		certs[0], err = tls.LoadX509KeyPair(*certPath, *keyPath)
+		if err != nil {
+			panic(err)
+		}
+
+		opts = append(opts,
+			libp2p.Transport(ws.New, ws.WithTLSConfig(&tls.Config{Certificates: certs})),
+			libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0/ws", "/ip6/::/tcp/0/ws"),
+		)
+	}
+
+	opts = append(opts,
 		libp2p.Identity(privk),
 		libp2p.Transport(quicTransport.NewTransport),
+		libp2p.Transport(tcpTransport.NewTCPTransport),
 		libp2p.Transport(webtransport.New),
-		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/::/udp/0/quic-v1", "/ip6/::/udp/0/quic-v1/webtransport"),
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/::/udp/0/quic-v1", "/ip6/::/udp/0/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/0/quic", "/ip6/::/udp/0/quic",
+			"/ip4/0.0.0.0/tcp/0", "/ip6/::/tcp/0",
+		),
 	)
+
+	// create a new libp2p Host with lots of options
+	h, err := libp2p.New(opts...)
 	if err != nil {
 		panic(err)
 	}
