@@ -94,6 +94,9 @@ export async function startLibp2p(options: {} = {}) {
       msgIdFn: msgIdFnStrictNoSign,
       ignoreDuplicatePublishError: true,
     }),
+    identify: {
+      maxPushOutgoingStreams: 2,
+    },
     // connectionManager: {
     //   minConnections: 0,
     //   maxConnections: 3,
