@@ -13,6 +13,7 @@ use libp2p::{
     },
     Multiaddr, PeerId, Transport,
 };
+use libp2p_quic as quic;
 use libp2p_webrtc as webrtc;
 use log::{debug, error, info, warn};
 use std::{
@@ -89,6 +90,7 @@ async fn main() -> Result<()> {
     let mut swarm = create_swarm()?;
 
     swarm.listen_on(format!("/ip4/0.0.0.0/udp/9090/webrtc-direct").parse()?)?;
+    swarm.listen_on(format!("/ip4/0.0.0.0/udp/9091/quic-v1").parse()?)?;
 
     if let Some(listen_address) = opt.listen_address {
         swarm.add_external_address(
@@ -131,7 +133,7 @@ async fn main() -> Result<()> {
                         message,
                     },
                 )) => {
-                    debug!(
+                    info!(
                         "Received message from {:?}: {}",
                         message.source,
                         String::from_utf8(message.data).unwrap()
@@ -274,12 +276,26 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
 
     let pem_str = std::str::from_utf8(STATIC_CERTIFICATE).unwrap();
 
-    let transport = webrtc::tokio::Transport::new(
-        local_key.clone(),
-        webrtc::tokio::Certificate::from_pem(pem_str)?,
-    )
-    .map(|(local_peer_id, conn), _| (local_peer_id, StreamMuxerBox::new(conn)))
-    .boxed();
+    let transport = {
+        let webrtc = webrtc::tokio::Transport::new(
+            local_key.clone(),
+            webrtc::tokio::Certificate::from_pem(pem_str)?,
+        );
+
+        let quic = quic::tokio::Transport::new(quic::Config::new(&local_key));
+
+        webrtc
+            .or_transport(quic)
+            .map(|fut, _| match fut {
+                futures::future::Either::Right((local_peer_id, conn)) => {
+                    (local_peer_id, StreamMuxerBox::new(conn))
+                }
+                futures::future::Either::Left((local_peer_id, conn)) => {
+                    (local_peer_id, StreamMuxerBox::new(conn))
+                }
+            })
+            .boxed()
+    };
 
     let identify_config = identify::Behaviour::new(identify::Config::new(
         "/ipfs/0.1.0".into(),
