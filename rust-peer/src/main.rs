@@ -186,7 +186,7 @@ async fn main() -> Result<()> {
                     }
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Kademlia(e)) => {
-                    info!("Kademlia event: {:?}", e);
+                    debug!("Kademlia event: {:?}", e);
                 }
                 event => {
                     debug!("Other type of event: {:?}", event);
@@ -195,7 +195,7 @@ async fn main() -> Result<()> {
             futures::future::Either::Right(_) => {
                 tick = futures_timer::Delay::new(TICK_INTERVAL);
 
-                info!(
+                debug!(
                     "external addrs: {:?}",
                     swarm.external_addresses().collect::<Vec<&AddressRecord>>()
                 );
@@ -231,7 +231,7 @@ struct Behaviour {
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
-    let f = File::open("private_key")?;
+    let f = File::open("/home/ec2-user/private_key")?;
     let mut reader = BufReader::new(f);
     let mut buffer = Vec::new();
 
