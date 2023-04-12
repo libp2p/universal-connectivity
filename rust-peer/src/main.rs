@@ -18,7 +18,9 @@ use log::{debug, error, info, warn};
 use std::{
     borrow::Cow,
     collections::hash_map::DefaultHasher,
+    fs::File,
     hash::{Hash, Hasher},
+    io::{BufReader, Read},
     time::{Duration, Instant},
 };
 
@@ -184,7 +186,7 @@ async fn main() -> Result<()> {
                     }
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Kademlia(e)) => {
-                    info!("Kademlia event: {:?}", e);
+                    debug!("Kademlia event: {:?}", e);
                 }
                 event => {
                     debug!("Other type of event: {:?}", event);
@@ -193,7 +195,7 @@ async fn main() -> Result<()> {
             futures::future::Either::Right(_) => {
                 tick = futures_timer::Delay::new(TICK_INTERVAL);
 
-                info!(
+                debug!(
                     "external addrs: {:?}",
                     swarm.external_addresses().collect::<Vec<&AddressRecord>>()
                 );
@@ -226,7 +228,14 @@ struct Behaviour {
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
-    let local_key = identity::Keypair::generate_ed25519();
+    let f = File::open("/home/ec2-user/private_key")?;
+    let mut reader = BufReader::new(f);
+    let mut buffer = Vec::new();
+
+    reader.read_to_end(&mut buffer)?;
+
+    let local_key = identity::Keypair::ed25519_from_bytes(&mut buffer)?;
+
     let local_peer_id = PeerId::from(local_key.public());
     debug!("Local peer id: {local_peer_id}");
 
