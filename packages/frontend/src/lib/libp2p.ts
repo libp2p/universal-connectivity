@@ -56,13 +56,14 @@ export async function startLibp2p(options: {} = {}) {
     }),],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
-    peerDiscovery: [
-      bootstrap({
-        list: [
-         '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBoki2Cwr_2MU6tEWgyVtybDCxfwVnpQIS-S0USQe-NlQ/p2p/12D3KooWHrKCiUVRRLxvMEy78UxD5xpFZA7MxHxvze7Xw5n3NCR2',
-        ],
-      }),
-    ],
+    // #TODO: To be set to the statically generated rust peer id
+    // peerDiscovery: [
+    //   bootstrap({
+    //     list: [
+    //      '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWPMwgZXKP6uXLoCy9ALSQeFiGJDTSggbYPHyN4dFTJpmC',
+    //     ],
+    //   }),
+    // ],
     pubsub: gossipsub({
       allowPublishToZeroPeers: true,
       msgIdFn: msgIdFnStrictNoSign,

@@ -14,6 +14,8 @@ interface MessageProps extends ChatMessage { }
 
 function Message({ msg, from, peerId }: MessageProps) {
   const msgref = React.useRef<HTMLLIElement>(null)
+  const { libp2p } = useLibp2pContext()
+
 
   useEffect(() => {
     const icon = createIcon({
@@ -35,7 +37,7 @@ function Message({ msg, from, peerId }: MessageProps) {
 
         className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow"
       >
-        <span className="flex relative mx-3 px-4 py-4"> from: {peerId.slice(-4)}</span>
+        <span className="flex relative mx-3 px-4 py-4"> {peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null} </span>
         <span className="block">{msg} </span>
       </div>
     </li>
