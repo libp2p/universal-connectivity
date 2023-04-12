@@ -10,7 +10,7 @@ interface ChatMessage {
   peerId: string
 }
 
-interface MessageProps extends ChatMessage {}
+interface MessageProps extends ChatMessage { }
 
 function Message({ msg, from, peerId }: MessageProps) {
   const msgref = React.useRef<HTMLLIElement>(null)
@@ -35,7 +35,8 @@ function Message({ msg, from, peerId }: MessageProps) {
 
         className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow"
       >
-        <span className="block">{msg}</span>
+        <span className="flex relative mx-3 px-4 py-4"> from: {peerId.slice(-4)}</span>
+        <span className="block">{msg} </span>
       </div>
     </li>
   )

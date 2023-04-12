@@ -136,8 +136,15 @@ async fn main() -> Result<()> {
                                 // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
                                 // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
 
-                                let webrtc_address = Multiaddr::try_from(addr.to_string() + "/webrtc/p2p/" + &peer_id.clone().to_string())?;
-                                swarm.behaviour_mut().kademlia.add_address(&peer_id, webrtc_address);
+                                let webrtc_address = Multiaddr::try_from(
+                                    addr.to_string()
+                                        + "/webrtc/p2p/"
+                                        + &peer_id.clone().to_string(),
+                                )?;
+                                swarm
+                                    .behaviour_mut()
+                                    .kademlia
+                                    .add_address(&peer_id, webrtc_address);
 
                                 // TODO: below is how we should be constructing the address (not string manipulation)
                                 // let webrtc_address = addr.with(Protocol::WebRTC(peer_id.clone().into()));
@@ -164,7 +171,7 @@ async fn main() -> Result<()> {
                 //     error!("Failed to run Kademlia bootstrap: {e:?}");
                 // }
 
-                let message = format!("Hello world! Sent from the rust-peer at: {:4}s", now.elapsed().as_secs_f64());
+                let message = format!("My social skills are a little rusty...");
 
                 if let Err(err) = swarm.behaviour_mut().gossipsub.publish(
                     gossipsub::IdentTopic::new("universal-connectivity"),
@@ -227,9 +234,10 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         webrtc::tokio::Certificate::generate(&mut thread_rng())?,
     );
 
-    let identify_config = identify::Behaviour::new(
-        identify::Config::new("/ipfs/0.1.0".into(), local_key.public().clone())
-    );
+    let identify_config = identify::Behaviour::new(identify::Config::new(
+        "/ipfs/0.1.0".into(),
+        local_key.public().clone(),
+    ));
 
     // Create a Kademlia behaviour.
     let mut cfg = KademliaConfig::default();
