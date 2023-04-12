@@ -187,9 +187,7 @@ func main() {
 		libp2p.Transport(quicTransport.NewTransport),
 		libp2p.Transport(tcpTransport.NewTCPTransport),
 		libp2p.Transport(webtransport.New),
-		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/0/quic-v1", "/ip4/0.0.0.0/udp/0/quic-v1/webtransport", "/ip6/::/udp/0/quic-v1", "/ip6/::/udp/0/quic-v1/webtransport",
-			"/ip4/0.0.0.0/udp/0/quic", "/ip6/::/udp/0/quic",
-			"/ip4/0.0.0.0/tcp/0", "/ip6/::/tcp/0",
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9091/quic-v1", "/ip4/0.0.0.0/udp/9092/quic-v1/webtransport", "/ip4/0.0.0.0/tcp/9090"),
 		),
 	)
 
