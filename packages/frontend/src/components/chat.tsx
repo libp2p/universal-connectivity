@@ -3,12 +3,8 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Message } from '@libp2p/interface-pubsub'
 import { CHAT_TOPIC } from '@/lib/constants'
 import { createIcon } from '@download/blockies'
+import { ChatMessage, useChatContext } from '../context/chat-ctx'
 
-interface ChatMessage {
-  msg: string
-  from: 'me' | 'other'
-  peerId: string
-}
 
 interface MessageProps extends ChatMessage { }
 
@@ -46,7 +42,7 @@ function Message({ msg, from, peerId }: MessageProps) {
 
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const { messageHistory, setMessageHistory } = useChatContext();
   const [input, setInput] = useState<string>('')
 
   // Effect hook to subscribe to pubsub events and update the message state hook
@@ -60,7 +56,7 @@ export default function ChatContainer() {
 
       // Append signed messages, otherwise discard
       if (evt.detail.type === 'signed') {
-        setMessages([...messages, { msg, from: 'other', peerId: evt.detail.from.toString() }])
+        setMessageHistory([...messageHistory, { msg, from: 'other', peerId: evt.detail.from.toString() }])
       }
     }
 
@@ -71,7 +67,7 @@ export default function ChatContainer() {
       // libp2p.pubsub.unsubscribe(CHAT_TOPIC)
       libp2p.pubsub.removeEventListener('message', messageCB)
     }
-  }, [libp2p, messages, setMessages])
+  }, [libp2p, messageHistory, setMessageHistory])
 
   const sendMessage = useCallback(async () => {
     if (input === '') return
@@ -92,9 +88,9 @@ export default function ChatContainer() {
 
     const myPeerId = libp2p.peerId.toString()
 
-    setMessages([...messages, { msg: input, from: 'me', peerId: myPeerId }])
+    setMessageHistory([...messageHistory, { msg: input, from: 'me', peerId: myPeerId }])
     setInput('')
-  }, [input, messages, setInput, libp2p])
+  }, [input, messageHistory, setInput, libp2p])
 
   const handleKeyUp = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -142,7 +138,7 @@ export default function ChatContainer() {
             <div className="relative w-full p-6 overflow-y-auto h-[40rem]">
               <ul className="space-y-2">
                 {/* messages start */}
-                {messages.map(({ msg, from, peerId }, idx) => (
+                {messageHistory.map(({ msg, from, peerId }, idx) => (
                   <Message key={idx} msg={msg} from={from} peerId={peerId} />
                 ))}
                 {/* messages end */}
@@ -159,9 +155,9 @@ export default function ChatContainer() {
                   stroke="currentColor"
                 >
                   <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
                     d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
@@ -175,9 +171,9 @@ export default function ChatContainer() {
                   stroke="currentColor"
                 >
                   <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
                     d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
                   />
                 </svg>
@@ -202,9 +198,9 @@ export default function ChatContainer() {
                   stroke="currentColor"
                 >
                   <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
                     d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
                   />
                 </svg>
@@ -236,9 +232,9 @@ export function RoomList() {
             <svg
               fill="none"
               stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
               viewBox="0 0 24 24"
               className="w-6 h-6 text-gray-300"
             >

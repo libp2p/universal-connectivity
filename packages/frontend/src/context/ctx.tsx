@@ -8,6 +8,8 @@ import React, {
 
 import type { Libp2p } from 'libp2p'
 import { startLibp2p } from '../lib/libp2p'
+import { ChatProvider } from './chat-ctx'
+import { PeerProvider } from './peer-ctx'
 
 // 👇 The context type will be avilable "anywhere" in the app
 interface Libp2pContextInterface {
@@ -54,7 +56,11 @@ export function AppWrapper({ children }: WrapperProps) {
 
   return (
     <libp2pContext.Provider value={{ libp2p }}>
-      {children}
+      <ChatProvider>
+        <PeerProvider>
+          {children}
+        </PeerProvider>
+      </ChatProvider>
     </libp2pContext.Provider>
   )
 }

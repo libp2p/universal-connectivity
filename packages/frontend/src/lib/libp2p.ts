@@ -14,7 +14,6 @@ import {
 } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
 import type { Message, SignedMessage } from '@libp2p/interface-pubsub'
-import { LevelDatastore } from 'datastore-level'
 import isIPPrivate from 'private-ip'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
@@ -30,14 +29,11 @@ import { circuitRelayTransport } from 'libp2p/circuit-relay'
 export async function startLibp2p(options: {} = {}) {
   // localStorage.debug = 'libp2p*,-*:trace'
   // application-specific data lives in the datastore
-  // const datastore = new MemoryDatastore()
-  // const datastore = new LevelDatastore('js-libp2p-nextjs-example')
-
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
     dht: kadDHT({protocolPrefix: "/universal-connectivity"}),
-    // datastore,
+    datastore: new MemoryDatastore(),
     transports: [webTransport(), webSockets({
       filter: filters.all,
     }), webRTC({
@@ -67,7 +63,7 @@ export async function startLibp2p(options: {} = {}) {
         //  '/ip4/18.195.246.16/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWGTDZj1zAjMCJ8XXx9Z88zAAd6vn3krQYLwZ67S4vMUxz',
         // ],
         list: [
-          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWA3nM2DyNTTJSPVdPzz7gvg8PHNNHPdNHxQm7KmvMbywM'
+          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWQzdxnHK66NzdjTD7xzp73Li3kr7iu9gHdKPyFEc2BAuK'
         ],
       }),
     ],

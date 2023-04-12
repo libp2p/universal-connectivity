@@ -1,8 +1,5 @@
 import Head from 'next/head'
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
-import { useLibp2pContext } from '@/context/ctx'
-import { useEffect, useState } from 'react'
 import ChatContainer from '@/components/chat'
 
 export default function Chat() {

@@ -2,21 +2,15 @@ import Head from 'next/head'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
-import { useState } from 'react'
 import { useInterval } from 'usehooks-ts'
 
-import { multiaddr } from '@multiformats/multiaddr'
-import { PeerId } from '@libp2p/interface-peer-id'
 import type { Connection } from '@libp2p/interface-connection'
+import { usePeerContext } from '../context/peer-ctx'
 
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
-  const [isConnected, setIsConnected] = useState(false)
-  const [maddr, setMultiaddr] = useState('')
-  const [peers, setPeers] = useState<PeerId[]>([])
-  const [connections, setConnections] = useState<Connection[]>([])
-  const [latency, setLatency] = useState<number>()
+  const { peerStats, setPeerStats } = usePeerContext()
 
   useInterval(() => {
     const getConnectedPeers = async () => {
@@ -27,29 +21,44 @@ export default function Home() {
     }
 
     const ping = async () => {
-      if (maddr) {
-        return libp2p.ping(multiaddr(maddr))
+      const { peerIds } = peerStats
+      if (peerIds.length > 0) {
+        return libp2p.ping(peerIds[0])
       }
+
+      return 0
     }
 
     ping()
-      .then((lat) => {
-        setLatency(lat)
+      .then((latency) => {
+        setPeerStats({ ...peerStats, latency })
       })
       .catch((e) => {
         console.error(e, e?.error)
       })
 
-    getConnectedPeers().then((peers) => {
-      setIsConnected(true)
-      setPeers(peers)
+    getConnectedPeers().then((peerIds) => {
+      setPeerStats({ ...peerStats, peerIds, connected: true })
     })
-    getConnections().then((conns) => {
-      // If one of the connected peers matches the one in input we're connected
-      setConnections(conns)
-    })
-  }, 10000)
 
+    getConnections().then((connections) => {
+      // If one of the connected peers matches the one in input we're connected
+      setPeerStats({ ...peerStats, connections })
+    })
+  }, 5000)
+
+  const getUniqueConnections = (connections: Connection[]) => {
+    const uniqueConnections: Connection[] = []
+    connections.forEach((conn) => {
+      const exists = uniqueConnections.find(
+        (c) => c.remotePeer.toString() === conn.remotePeer.toString(),
+      )
+      if (!exists) {
+        uniqueConnections.push(conn)
+      }
+    })
+    return uniqueConnections
+  }
 
   return (
     <>
@@ -76,29 +85,28 @@ export default function Home() {
               </ul>
 
 
-              <p className="my-4 inline-flex items-center text-xl">
+              <div className="my-4 inline-flex items-center text-xl">
                 Connected:{' '}
-                {isConnected ? (
+                {peerStats.connected ? (
                   <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
                 ) : (
                   <XCircleIcon className="w-6 h-6 text-red-500" />
-                )}{' '}
-                {typeof latency === 'number'
-                  ? `(latency: ${latency} ms)`
-                  : null}
-              </p>
+                )}
+                <p className='mx-auto max-w-7xl px-2 sm:px-6 lg:px-8'>
+                  {peerStats.latency > 0
+                    ? `Latency of nearest peer: ${peerStats.latency} ms`
+                    : null}
+                </p>
+              </div>
               <div>
-                {peers.length > 0 ? (
+                {peerStats.peerIds.length > 0 ? (
                   <>
                     <h3 className="text-xl">
                       {' '}
-                      Connected peers ({peers.length}) 👇
+                      Connected peers ({peerStats.peerIds.length}) 👇
                     </h3>
-                    {/* <pre className="px-2">
-                      {peers.map((peer) => peer.toString()).join('\n')}
-                    </pre> */}
                     <pre className="px-2">
-                      {connections
+                      {getUniqueConnections(peerStats.connections)
                         .map(
                           (conn) =>
                             `${conn.remotePeer.toString()} (${conn.remoteAddr.protoNames()})`,
