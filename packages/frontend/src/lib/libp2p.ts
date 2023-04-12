@@ -56,13 +56,13 @@ export async function startLibp2p(options: {} = {}) {
     }),],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
-    // peerDiscovery: [
-    //   bootstrap({
-    //     list: [
-    //      '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiAYv08CIdaiohT6PVzWkv0-grXYo2VTAy9YltZ47C7VXg/p2p/12D3KooWRGSEnLtsbcuWS7RWZhXA8mxkMPtyKGsCwwwYRiexk2Kx',
-    //     ],
-    //   }),
-    // ],
+    peerDiscovery: [
+      bootstrap({
+        list: [
+         '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWGTDZj1zAjMCJ8XXx9Z88zAAd6vn3krQYLwZ67S4vMUxz',
+        ],
+      }),
+    ],
     pubsub: gossipsub({
       allowPublishToZeroPeers: true,
       msgIdFn: msgIdFnStrictNoSign,
