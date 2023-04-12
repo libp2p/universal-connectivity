@@ -2897,6 +2897,7 @@ dependencies = [
  "futures",
  "futures-timer",
  "libp2p",
+ "libp2p-quic",
  "libp2p-webrtc",
  "log",
  "multiaddr",
