@@ -172,6 +172,16 @@ func main() {
 		)
 	}
 
+	if len(announceAddrs) > 0 {
+		var announce []multiaddr.Multiaddr
+		for _, addr := range announceAddrs {
+			announce = append(announce, multiaddr.StringCast(addr))
+		}
+		opts = append(opts, libp2p.AddrsFactory(func([]multiaddr.Multiaddr) []multiaddr.Multiaddr {
+			return announce
+		}))
+	}
+
 	opts = append(opts,
 		libp2p.Identity(privk),
 		libp2p.Transport(quicTransport.NewTransport),
