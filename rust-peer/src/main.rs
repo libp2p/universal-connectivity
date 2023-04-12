@@ -21,7 +21,7 @@ use std::{
     fs::File,
     hash::{Hash, Hasher},
     io::{BufReader, Read},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 const TICK_INTERVAL: Duration = Duration::from_secs(15);
@@ -77,6 +77,10 @@ struct Opt {
     /// Address of a remote peer to connect to.
     #[clap(long)]
     remote_address: Option<Multiaddr>,
+
+    // use certificate path
+    #[clap(long)]
+    use_cert: Option<String>,
 }
 
 /// An example WebRTC peer that will accept connections
@@ -103,7 +107,6 @@ async fn main() -> Result<()> {
 
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
 
-    let now = Instant::now();
     loop {
         match futures::future::select(swarm.next(), &mut tick).await {
             futures::future::Either::Left((event, _)) => match event.unwrap() {
@@ -223,18 +226,26 @@ struct Behaviour {
     identify: identify::Behaviour,
     kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
-    // ping: ping::Behaviour,
+    ping: ping::Behaviour,
     relay: relay::Behaviour,
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
-    let f = File::open("/home/ec2-user/private_key")?;
-    let mut reader = BufReader::new(f);
-    let mut buffer = Vec::new();
+    let local_key;
 
-    reader.read_to_end(&mut buffer)?;
+    let opt = Opt::parse();
 
-    let local_key = identity::Keypair::ed25519_from_bytes(&mut buffer)?;
+    if let Some(use_cert) = opt.use_cert {
+        let f = File::open(use_cert)?;
+        let mut reader = BufReader::new(f);
+        let mut buffer = Vec::new();
+
+        reader.read_to_end(&mut buffer)?;
+
+        local_key = identity::Keypair::ed25519_from_bytes(&mut buffer)?;
+    } else {
+        local_key = identity::Keypair::generate_ed25519();
+    }
 
     let local_peer_id = PeerId::from(local_key.public());
     debug!("Local peer id: {local_peer_id}");
@@ -294,7 +305,7 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         identify: identify_config,
         kademlia: kad_behaviour,
         keep_alive: keep_alive::Behaviour::default(),
-        // ping: ping::Behaviour::default(),
+        ping: ping::Behaviour::default(),
         relay: relay::Behaviour::new(local_peer_id, Default::default()),
     };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())

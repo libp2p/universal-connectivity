@@ -55,11 +55,19 @@ export async function startLibp2p(options: {} = {}) {
       discoverRelays: 1,
     }),],
     connectionEncryption: [noise()],
+    connectionManager: {
+      maxConnections: 10,
+      minConnections: 1,
+    },
     streamMuxers: [yamux()],
     peerDiscovery: [
       bootstrap({
+        // #TODO: change to remote address
+        // list: [
+        //  '/ip4/18.195.246.16/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWGTDZj1zAjMCJ8XXx9Z88zAAd6vn3krQYLwZ67S4vMUxz',
+        // ],
         list: [
-         '/ip4/18.195.246.16/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWGTDZj1zAjMCJ8XXx9Z88zAAd6vn3krQYLwZ67S4vMUxz',
+          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWA3nM2DyNTTJSPVdPzz7gvg8PHNNHPdNHxQm7KmvMbywM'
         ],
       }),
     ],
