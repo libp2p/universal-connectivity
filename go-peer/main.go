@@ -126,6 +126,13 @@ func main() {
 	certPath := flag.String("tls-cert-path", "", "path to the tls cert file (for websockets)")
 	keyPath := flag.String("tls-key-path", "", "path to the tls key file (for websockets")
 	useLogger := flag.Bool("logger", false, "write logs to file")
+
+	var addrsToConnectTo stringSlice
+	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
+
+	var announceAddrs stringSlice
+	flag.Var(&announceAddrs, "announce", "address to announce (can be used multiple times)")
+
 	flag.Parse()
 
 	if *useLogger {
@@ -221,16 +228,22 @@ func main() {
 		panic(err)
 	}
 
-	// addrInfo, err := peer.AddrInfoFromString("/dns4/universal.thedisco.zone/udp/40218/quic-v1/webtransport/certhash/uEiCL77ktMDMDCWnb7swiiR-aE7h2e_d_pPFg1c4gWF0Z8g/certhash/uEiACZMdNmhIYS1lmYY5Jd0Na6udCbl8Dar0KJlxkT94eFg/p2p/12D3KooWAUy4xNnyZwakzhF4vbTzBp4jHXmt4FwHd5tggjr8vRJM")
-	/*addrInfo, err := peer.AddrInfoFromString("/dns4/universal.thedisco.zone/udp/45127/quic-v1/p2p/12D3KooWAUy4xNnyZwakzhF4vbTzBp4jHXmt4FwHd5tggjr8vRJM")
+	if len(addrsToConnectTo) > 0 {
+		for _, addr := range addrsToConnectTo {
+			// convert to a peer.AddrInfo struct
+			peerinfo, err := peer.AddrInfoFromString(addr)
+			if err != nil {
+				LogMsgf("Failed to parse multiaddr: %s", err.Error())
+				continue
+			}
 
-	if err != nil {
-		panic(err)
+			// connect to the peer
+			if err := h.Connect(ctx, *peerinfo); err != nil {
+				LogMsgf("Failed to connect to peer: %s", err.Error())
+				continue
+			}
+		}
 	}
-	err = h.Connect(ctx, *addrInfo)
-	if err != nil {
-		panic(err)
-	}*/
 
 	LogMsgf("PeerID: %s", h.ID().String())
 	for _, addr := range h.Addrs() {
