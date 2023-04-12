@@ -235,7 +235,6 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
 
     let identify_config = identify::Behaviour::new(
         identify::Config::new("/ipfs/0.1.0".into(), local_key.public().clone())
-            // .with_initial_delay(Duration::ZERO),
     );
 
     // Create a Kademlia behaviour.
