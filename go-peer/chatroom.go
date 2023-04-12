@@ -16,7 +16,7 @@ const ChatRoomBufSize = 128
 // messages are pushed to the Messages channel.
 type ChatRoom struct {
 	// Messages is a channel of messages received from other peers in the chat room
-	Messages chan *ChatMessage
+	Messages    chan *ChatMessage
 	SysMessages chan *ChatMessage
 
 	ctx   context.Context
@@ -52,14 +52,14 @@ func JoinChatRoom(ctx context.Context, ps *pubsub.PubSub, selfID peer.ID, nickna
 	}
 
 	cr := &ChatRoom{
-		ctx:      ctx,
-		ps:       ps,
-		topic:    topic,
-		sub:      sub,
-		self:     selfID,
-		nick:     nickname,
-		roomName: roomName,
-		Messages: make(chan *ChatMessage, ChatRoomBufSize),
+		ctx:         ctx,
+		ps:          ps,
+		topic:       topic,
+		sub:         sub,
+		self:        selfID,
+		nick:        nickname,
+		roomName:    roomName,
+		Messages:    make(chan *ChatMessage, ChatRoomBufSize),
 		SysMessages: make(chan *ChatMessage, ChatRoomBufSize),
 	}
 
@@ -93,7 +93,7 @@ func (cr *ChatRoom) readLoop() {
 		cm.Message = string(msg.Data)
 		cm.SenderID = msg.ID
 		cm.SenderNick = string(msg.ID[len(msg.ID)-8])
-
+		printErr("New message%s: %s\n", cm.Message)
 		// send valid messages onto the Messages channel
 		cr.Messages <- cm
 	}

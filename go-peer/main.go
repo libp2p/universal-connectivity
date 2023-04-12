@@ -22,8 +22,8 @@ import (
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	tcpTransport "github.com/libp2p/go-libp2p/p2p/transport/tcp"
-	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
+	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -47,7 +47,7 @@ func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Mult
 		options = append(options, dht.Mode(dht.ModeServer))
 	}
 
-	options = append(options, dht.ProtocolPrefix("/universal-connectivity"))
+	options = append(options, dht.ProtocolPrefix("/universal-connectivity/lan"))
 
 	kdht, err := dht.New(ctx, host, options...)
 	if err != nil {
@@ -126,12 +126,10 @@ func main() {
 	certPath := flag.String("tls-cert-path", "", "path to the tls cert file (for websockets)")
 	keyPath := flag.String("tls-key-path", "", "path to the tls key file (for websockets")
 	useLogger := flag.Bool("logger", false, "write logs to file")
+	announceAddr := flag.String("announce", "", "address to announce")
 
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
-
-	var announceAddrs stringSlice
-	flag.Var(&announceAddrs, "announce", "address to announce (can be used multiple times)")
 
 	flag.Parse()
 
@@ -168,18 +166,19 @@ func main() {
 
 		opts = append(opts,
 			libp2p.Transport(ws.New, ws.WithTLSConfig(&tls.Config{Certificates: certs})),
-			libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0/ws", "/ip6/::/tcp/0/ws"),
+			libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0/ws"),
 		)
 	}
 
-	if len(announceAddrs) > 0 {
-		var announce []multiaddr.Multiaddr
-		for _, addr := range announceAddrs {
-			announce = append(announce, multiaddr.StringCast(addr))
+	addressFactory := func(addrs []multiaddr.Multiaddr) []multiaddr.Multiaddr {
+		addr := *announceAddr
+		if len(addr) != 0 {
+			// printErr("Announce address: %s\n", addr)
+			maddr := multiaddr.StringCast(addr)
+			addrs = append(addrs, maddr)
+			return addrs
 		}
-		opts = append(opts, libp2p.AddrsFactory(func([]multiaddr.Multiaddr) []multiaddr.Multiaddr {
-			return announce
-		}))
+		return addrs
 	}
 
 	opts = append(opts,
@@ -187,8 +186,8 @@ func main() {
 		libp2p.Transport(quicTransport.NewTransport),
 		libp2p.Transport(tcpTransport.NewTCPTransport),
 		libp2p.Transport(webtransport.New),
-		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9091/quic-v1", "/ip4/0.0.0.0/udp/9092/quic-v1/webtransport", "/ip4/0.0.0.0/tcp/9090"),
-		),
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9096/quic-v1/webtransport"),
+		libp2p.AddrsFactory(addressFactory),
 	)
 
 	// create a new libp2p Host with lots of options
@@ -254,14 +253,15 @@ func main() {
 
 	LogMsgf("PeerID: %s", h.ID().String())
 	for _, addr := range h.Addrs() {
-		LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
+		printErr("Listening on: %s/p2p/%s\n", addr.String(), h.ID())
 	}
 
 	// draw the UI
-	ui := NewChatUI(cr)
-	if err = ui.Run(); err != nil {
-		printErr("error running text UI: %s", err)
-	}
+	// ui := NewChatUI(cr)
+	// if err = ui.Run(); err != nil {
+	// 	printErr("error running text UI: %s", err)
+	// }
+	select {}
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
