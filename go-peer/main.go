@@ -224,8 +224,7 @@ func main() {
 	// setup DHT with empty discovery peers
 	// so this will be a discovery peer for others
 	// this peer should run on cloud(with public ip address)
-	discoveryPeers := dht.DefaultBootstrapPeers
-	dht, err := NewDHT(ctx, h, discoveryPeers)
+	dht, err := NewDHT(ctx, h, nil)
 	if err != nil {
 		panic(err)
 	}
