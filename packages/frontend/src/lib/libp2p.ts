@@ -13,7 +13,7 @@ import {
   Protocol,
 } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
-import type { Message } from '@libp2p/interface-pubsub'
+import type { Message, SignedMessage } from '@libp2p/interface-pubsub'
 import { LevelDatastore } from 'datastore-level'
 import isIPPrivate from 'private-ip'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
@@ -36,7 +36,6 @@ export async function startLibp2p(options: {} = {}) {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    // dht: kadDHT(),
     dht: kadDHT({protocolPrefix: "/universal-connectivity"}),
     // datastore,
     transports: [webTransport(), webSockets({
@@ -79,7 +78,7 @@ export async function startLibp2p(options: {} = {}) {
   libp2p.peerStore.addEventListener('change:multiaddrs', ({detail: {peerId, multiaddrs}}) => {
 
     console.log(`changed multiaddrs: peer ${peerId.toString()} multiaddrs: ${multiaddrs}`)
-    setWebRTCRelayAddress(libp2p, multiaddrs, libp2p.peerId.toString())
+    setWebRTCRelayAddress(multiaddrs, libp2p.peerId.toString())
   })
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
@@ -91,7 +90,11 @@ export async function startLibp2p(options: {} = {}) {
 // every agent in network should use the same message id function
 // messages could be perceived as duplicate if this isnt added (as opposed to rust peer which has unique message ids)
 export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
-  return await sha256.encode(msg.data)
+  var enc = new TextEncoder();
+
+  const signedMessage = msg as SignedMessage
+  const encodedSeqNum = enc.encode(signedMessage.sequenceNumber.toString());
+  return await sha256.encode(encodedSeqNum)
 }
 
 // Curried function to get multiaddresses for a peer by looking up dht
@@ -244,14 +247,13 @@ export class Libp2pDialError extends Error {
   }
 }
 
-export const setWebRTCRelayAddress = (libp2p: Libp2p, maddrs: Multiaddr[], peerId: string) => {
+export const setWebRTCRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
   maddrs.forEach((maddr) => {
     if (maddr.protoCodes().includes(CIRCUIT_RELAY_CODE)) {
 
       const webRTCrelayAddress = multiaddr(maddr.toString() + '/webrtc/p2p/' + peerId)
 
       console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
-      // libp2p.components.addressManager.announce.add(webRTCrelayAddress.toString())
     }
   })
 }
