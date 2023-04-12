@@ -2,7 +2,6 @@ import { useLibp2pContext } from '@/context/ctx'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Message } from '@libp2p/interface-pubsub'
 import { CHAT_TOPIC } from '@/lib/constants'
-import { PeerId } from 'kubo-rpc-client/dist/src/types'
 import { createIcon } from '@download/blockies'
 
 interface ChatMessage {
