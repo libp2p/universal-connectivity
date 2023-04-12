@@ -16,13 +16,10 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import type { Message, SignedMessage } from '@libp2p/interface-pubsub'
 import { LevelDatastore } from 'datastore-level'
 import isIPPrivate from 'private-ip'
-import { delegatedPeerRouting } from '@libp2p/delegated-peer-routing'
-import { create as KuboClient } from 'kubo-rpc-client'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
-import { PeerId } from 'kubo-rpc-client/dist/src/types'
 import { CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
@@ -36,17 +33,10 @@ export async function startLibp2p(options: {} = {}) {
   // const datastore = new MemoryDatastore()
   // const datastore = new LevelDatastore('js-libp2p-nextjs-example')
 
-  // default is to use ipfs.io
-  const client = KuboClient({
-    // use default api settings
-    protocol: 'https',
-    port: 443,
-    host: 'node0.delegate.ipfs.io',
-  })
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    // dht: kadDHT(),
+    dht: kadDHT({protocolPrefix: "/universal-connectivity"}),
     // datastore,
     transports: [webTransport(), webSockets({
       filter: filters.all,
@@ -62,46 +52,25 @@ export async function startLibp2p(options: {} = {}) {
         ]
       }
     }), webRTCDirect(), circuitRelayTransport({
-      discoverRelays: 10,
+      discoverRelays: 1,
     }),],
-    // transports: [webRTC()],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
-    // connectionGater: {
-    //   denyDialMultiaddr: (peerId: PeerId, multiaddr: Multiaddr) => {
-    //     const { host } = multiaddr.toOptions()
-    //     // Avoid dialing private IPs
-    //     if (isIPPrivate(host)) {
-    //       return true
-    //     }
-
-    //     return false
-    //   },
-    // },
-    peerDiscovery: [
-      // bootstrap({
-      //   list: [
-      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
-      //     // '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-      //   ],
-      // }),
-    ],
+    // peerDiscovery: [
+    //   bootstrap({
+    //     list: [
+    //      '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiAYv08CIdaiohT6PVzWkv0-grXYo2VTAy9YltZ47C7VXg/p2p/12D3KooWRGSEnLtsbcuWS7RWZhXA8mxkMPtyKGsCwwwYRiexk2Kx',
+    //     ],
+    //   }),
+    // ],
     pubsub: gossipsub({
       allowPublishToZeroPeers: true,
-      // allowedTopics: [CHAT_TOPIC],
       msgIdFn: msgIdFnStrictNoSign,
       ignoreDuplicatePublishError: true,
     }),
     identify: {
       maxPushOutgoingStreams: 2,
     },
-    // connectionManager: {
-    //   minConnections: 0,
-    //   maxConnections: 3,
-    // },
-    // peerRouters: [delegatedPeerRouting(client)],
   })
 
   libp2p.pubsub.subscribe(CHAT_TOPIC)
@@ -121,11 +90,11 @@ export async function startLibp2p(options: {} = {}) {
 // every agent in network should use the same message id function
 // messages could be perceived as duplicate if this isnt added (as opposed to rust peer which has unique message ids)
 export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
-    var enc = new TextEncoder();
+  var enc = new TextEncoder();
 
-    const signedMessage = msg as SignedMessage
-    const encodedSeqNum = enc.encode(signedMessage.sequenceNumber.toString());
-    return await sha256.encode(encodedSeqNum)
+  const signedMessage = msg as SignedMessage
+  const encodedSeqNum = enc.encode(signedMessage.sequenceNumber.toString());
+  return await sha256.encode(encodedSeqNum)
 }
 
 // Curried function to get multiaddresses for a peer by looking up dht

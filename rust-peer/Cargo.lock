@@ -1587,7 +1587,7 @@ checksum = "7fc7aa29613bd6a620df431842069224d8bc9011086b1db4c0e0cd47fa03ec9a"
 [[package]]
 name = "libp2p"
 version = "0.51.3"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "bytes",
  "futures",
@@ -1617,7 +1617,7 @@ dependencies = [
 [[package]]
 name = "libp2p-allow-block-list"
 version = "0.1.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "libp2p-core",
  "libp2p-identity",
@@ -1628,7 +1628,7 @@ dependencies = [
 [[package]]
 name = "libp2p-connection-limits"
 version = "0.1.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "libp2p-core",
  "libp2p-identity",
@@ -1639,7 +1639,7 @@ dependencies = [
 [[package]]
 name = "libp2p-core"
 version = "0.39.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "either",
  "fnv",
@@ -1666,7 +1666,7 @@ dependencies = [
 [[package]]
 name = "libp2p-dns"
 version = "0.39.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "futures",
  "libp2p-core",
@@ -1680,7 +1680,7 @@ dependencies = [
 [[package]]
 name = "libp2p-gossipsub"
 version = "0.44.3"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "asynchronous-codec",
  "base64 0.21.0",
@@ -1710,7 +1710,7 @@ dependencies = [
 [[package]]
 name = "libp2p-identify"
 version = "0.42.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "asynchronous-codec",
  "either",
@@ -1731,7 +1731,7 @@ dependencies = [
 [[package]]
 name = "libp2p-identity"
 version = "0.1.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "asn1_der",
  "bs58",
@@ -1751,7 +1751,7 @@ dependencies = [
 [[package]]
 name = "libp2p-kad"
 version = "0.43.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "arrayvec",
  "asynchronous-codec",
@@ -1778,7 +1778,7 @@ dependencies = [
 [[package]]
 name = "libp2p-mdns"
 version = "0.43.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "data-encoding",
  "futures",
@@ -1798,7 +1798,7 @@ dependencies = [
 [[package]]
 name = "libp2p-metrics"
 version = "0.12.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "libp2p-core",
  "libp2p-gossipsub",
@@ -1814,7 +1814,7 @@ dependencies = [
 [[package]]
 name = "libp2p-noise"
 version = "0.42.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "bytes",
  "curve25519-dalek 3.2.0",
@@ -1836,7 +1836,7 @@ dependencies = [
 [[package]]
 name = "libp2p-ping"
 version = "0.42.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "either",
  "futures",
@@ -1853,7 +1853,7 @@ dependencies = [
 [[package]]
 name = "libp2p-quic"
 version = "0.7.0-alpha.3"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "bytes",
  "futures",
@@ -1874,7 +1874,7 @@ dependencies = [
 [[package]]
 name = "libp2p-relay"
 version = "0.15.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "asynchronous-codec",
  "bytes",
@@ -1897,7 +1897,7 @@ dependencies = [
 [[package]]
 name = "libp2p-swarm"
 version = "0.42.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "async-std",
  "either",
@@ -1918,7 +1918,7 @@ dependencies = [
 [[package]]
 name = "libp2p-swarm-derive"
 version = "0.32.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "heck",
  "quote",
@@ -1928,7 +1928,7 @@ dependencies = [
 [[package]]
 name = "libp2p-tcp"
 version = "0.39.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "futures",
  "futures-timer",
@@ -1944,7 +1944,7 @@ dependencies = [
 [[package]]
 name = "libp2p-tls"
 version = "0.1.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "futures",
  "futures-rustls",
@@ -1962,7 +1962,7 @@ dependencies = [
 [[package]]
 name = "libp2p-webrtc"
 version = "0.4.0-alpha.4"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "async-trait",
  "asynchronous-codec",
@@ -2097,8 +2097,7 @@ dependencies = [
 [[package]]
 name = "multiaddr"
 version = "0.17.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b36f567c7099511fa8612bbbb52dda2419ce0bdbacf31714e3a5ffdb766d3bd"
+source = "git+https://github.com/p-shahi/rust-multiaddr.git?branch=support-webrtc-protocol-code#1bbec9da745e5330a10779253d3c51fefd8dd091"
 dependencies = [
  "arrayref",
  "byteorder",
@@ -2152,7 +2151,7 @@ dependencies = [
 [[package]]
 name = "multistream-select"
 version = "0.12.1"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "bytes",
  "futures",
@@ -2654,7 +2653,7 @@ dependencies = [
 [[package]]
 name = "quick-protobuf-codec"
 version = "0.1.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "asynchronous-codec",
  "bytes",
@@ -2900,6 +2899,7 @@ dependencies = [
  "libp2p",
  "libp2p-webrtc",
  "log",
+ "multiaddr",
  "rand 0.8.5",
  "tokio",
  "tokio-util",
@@ -2972,7 +2972,7 @@ dependencies = [
 [[package]]
 name = "rw-stream-sink"
 version = "0.3.0"
-source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#a006cd2623f4a0897bb7ab1b4947117af582d4c6"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=deprecate/gossipsub-close-event-update-multiaddr#201c7a88a82983bb35b409f55f85f9bf3c1947b0"
 dependencies = [
  "futures",
  "pin-project",

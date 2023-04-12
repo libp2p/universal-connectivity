@@ -31,8 +31,8 @@ use std::{collections::hash_map::DefaultHasher, time::Duration};
 //     "QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
 // ];
 
-const TICK_INTERVAL: Duration = Duration::from_secs(5);
-const KADEMLIA_PROTOCOL_NAME: &'static [u8] = b"/universal-connectivity/kad/1.0.0";
+const TICK_INTERVAL: Duration = Duration::from_secs(15);
+const KADEMLIA_PROTOCOL_NAME: &'static [u8] = b"/universal-connectivity/lan/kad/1.0.0";
 
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -89,7 +89,7 @@ async fn main() -> Result<()> {
                     warn!("Connection to {peer_id} closed: {cause:?}");
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Relay(e)) => {
-                    info!("{:?}", e);
+                    debug!("{:?}", e);
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(
                     libp2p::gossipsub::Event::Message {
@@ -98,7 +98,7 @@ async fn main() -> Result<()> {
                         message,
                     },
                 )) => {
-                    info!(
+                    debug!(
                         "Received message from {:?}: {}",
                         message.source,
                         String::from_utf8(message.data).unwrap()
@@ -107,7 +107,7 @@ async fn main() -> Result<()> {
                 SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(
                     libp2p::gossipsub::Event::Subscribed { peer_id, topic },
                 )) => {
-                    info!("{peer_id} subscribed to {topic}");
+                    debug!("{peer_id} subscribed to {topic}");
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
@@ -123,6 +123,8 @@ async fn main() -> Result<()> {
                             },
                     } = e
                     {
+                        debug!("identify::Event::Received observed_addr: {}", observed_addr);
+
                         swarm.add_external_address(observed_addr, AddressScore::Infinite);
 
                         if protocols
@@ -130,13 +132,24 @@ async fn main() -> Result<()> {
                             .any(|p| p.as_bytes() == KADEMLIA_PROTOCOL_NAME)
                         {
                             for addr in listen_addrs {
-                                swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
+                                debug!("identify::Event::Received listen addr: {}", addr);
+                                // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
+                                // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
+
+                                let webrtc_address = Multiaddr::try_from(addr.to_string() + "/webrtc/p2p/" + &peer_id.clone().to_string())?;
+                                swarm.behaviour_mut().kademlia.add_address(&peer_id, webrtc_address);
+
+                                // TODO: below is how we should be constructing the address (not string manipulation)
+                                // let webrtc_address = addr.with(Protocol::WebRTC(peer_id.clone().into()));
                             }
                         }
                     }
                 }
+                SwarmEvent::Behaviour(BehaviourEvent::Kademlia(e)) => {
+                    info!("Kademlia event: {:?}", e);
+                }
                 event => {
-                    debug!("{event:?}");
+                    debug!("Other type of event: {:?}", event);
                 }
             },
             futures::future::Either::Right(_) => {
@@ -147,11 +160,11 @@ async fn main() -> Result<()> {
                     swarm.external_addresses().collect::<Vec<&AddressRecord>>()
                 );
 
-                if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
-                    error!("Failed to run Kademlia bootstrap: {e:?}");
-                }
+                // if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
+                //     error!("Failed to run Kademlia bootstrap: {e:?}");
+                // }
 
-                let message = format!("Hello world! Sent at: {:4}s", now.elapsed().as_secs_f64());
+                let message = format!("Hello world! Sent from the rust-peer at: {:4}s", now.elapsed().as_secs_f64());
 
                 if let Err(err) = swarm.behaviour_mut().gossipsub.publish(
                     gossipsub::IdentTopic::new("universal-connectivity"),
@@ -170,7 +183,7 @@ struct Behaviour {
     identify: identify::Behaviour,
     kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
-    ping: ping::Behaviour,
+    // ping: ping::Behaviour,
     relay: relay::Behaviour,
 }
 
@@ -241,7 +254,7 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         identify: identify_config,
         kademlia: kad_behaviour,
         keep_alive: keep_alive::Behaviour::default(),
-        ping: ping::Behaviour::default(),
+        // ping: ping::Behaviour::default(),
         relay: relay::Behaviour::new(local_peer_id, Default::default()),
     };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
