@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use futures::StreamExt;
 use libp2p::{
@@ -22,7 +22,6 @@ use std::{
     borrow::Cow,
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
-    io::{BufReader, Read},
     time::{Duration, Instant},
 };
 use tokio::fs;
@@ -48,9 +47,10 @@ async fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let opt = Opt::parse();
-    let webrtc_cert = read_or_create_certificate(&Path::new("./cert.pem")).await?;
+    let local_key = read_or_create_identity(&Path::new("./local_key")).await.context("Failed to read identity")?;
+    let webrtc_cert = read_or_create_certificate(&Path::new("./cert.pem")).await.context("Failed to read certificate")?;
 
-    let mut swarm = create_swarm(webrtc_cert)?;
+    let mut swarm = create_swarm(local_key, webrtc_cert)?;
 
     swarm.listen_on(format!("/ip4/0.0.0.0/udp/9090/webrtc-direct").parse()?)?;
     swarm.listen_on(format!("/ip4/0.0.0.0/udp/9091/quic-v1").parse()?)?;
@@ -195,15 +195,7 @@ struct Behaviour {
     relay: relay::Behaviour,
 }
 
-fn create_swarm(certificate: Certificate) -> Result<Swarm<Behaviour>> {
-    let f = std::fs::File::open("/home/ec2-user/private_key")?;
-    let mut reader = BufReader::new(f);
-    let mut buffer = Vec::new();
-
-    reader.read_to_end(&mut buffer)?;
-
-    let local_key = identity::Keypair::generate_ed25519();
-
+fn create_swarm(local_key: identity::Keypair, certificate: Certificate) -> Result<Swarm<Behaviour>> {
     let local_peer_id = PeerId::from(local_key.public());
     debug!("Local peer id: {local_peer_id}");
 
@@ -277,12 +269,7 @@ fn create_swarm(certificate: Certificate) -> Result<Swarm<Behaviour>> {
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
 
-/// Attempts to read the certificate from the current working directory.
-///
-/// If the ceriticate is not present, generate a new one, write it to the directory and return it.
 async fn read_or_create_certificate(path: &Path) -> Result<Certificate> {
-    let path = path.canonicalize()?;
-
     if path.exists() {
         let pem = fs::read_to_string(&path).await?;
 
@@ -300,4 +287,25 @@ async fn read_or_create_certificate(path: &Path) -> Result<Certificate> {
     );
 
     Ok(cert)
+}
+
+async fn read_or_create_identity(path: &Path) -> Result<identity::Keypair> {
+    if path.exists() {
+        let bytes = fs::read(&path).await?;
+
+        info!("Using existing identity from {}", path.display());
+
+        return Ok(identity::Keypair::from_protobuf_encoding(&bytes)?); // This only works for ed25519 but that is what we are using.
+    }
+
+    let identity = identity::Keypair::generate_ed25519();
+
+    fs::write(&path, &identity.to_protobuf_encoding()?).await?;
+
+    info!(
+        "Generated new identity and wrote it to {}",
+        path.display()
+    );
+
+    Ok(identity)
 }
