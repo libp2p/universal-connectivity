@@ -3,9 +3,10 @@ import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
 import { useInterval } from 'usehooks-ts'
-
+import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Connection } from '@libp2p/interface-connection'
 import { usePeerContext } from '../context/peer-ctx'
+import { useEffect } from 'react'
 
 
 export default function Home() {
@@ -13,12 +14,6 @@ export default function Home() {
   const { peerStats, setPeerStats } = usePeerContext()
 
   useInterval(() => {
-    const getConnectedPeers = async () => {
-      return await libp2p.getPeers()
-    }
-    const getConnections = async () => {
-      return await libp2p.getConnections()
-    }
 
     const ping = async () => {
       const { peerIds } = peerStats
@@ -36,16 +31,20 @@ export default function Home() {
       .catch((e) => {
         console.error(e, e?.error)
       })
-
-    getConnectedPeers().then((peerIds) => {
-      setPeerStats({ ...peerStats, peerIds, connected: true })
-    })
-
-    getConnections().then((connections) => {
-      // If one of the connected peers matches the one in input we're connected
-      setPeerStats({ ...peerStats, connections })
-    })
   }, 5000)
+
+  useEffect(() => {
+    const peerConnectedCB = (evt: CustomEvent<Connection>) => {
+      const connection = evt.detail
+      setPeerStats({ ...peerStats, peerIds: [...peerStats.peerIds, connection.remotePeer], connections: [...peerStats.connections, connection], connected: true })
+    }
+
+    libp2p.addEventListener('peer:connect', peerConnectedCB)
+
+    return () => {
+      libp2p.removeEventListener('peer:connect', peerConnectedCB)
+    }
+  }, [libp2p, peerStats, setPeerStats])
 
   const getUniqueConnections = (connections: Connection[]) => {
     const uniqueConnections: Connection[] = []
@@ -121,35 +120,5 @@ export default function Home() {
         </div>
       </main>
     </>
-  )
-}
-
-export function Stats(
-  stats: { name: string; stat: string }[] = [
-    { name: 'Peer Ping Latency', stat: '' },
-    { name: 'Peer Count', stat: '' },
-  ],
-) {
-  return (
-    <div>
-      <h3 className="text-base font-semibold leading-6 text-gray-900">
-        Last 30 days
-      </h3>
-      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-        {stats.map((item) => (
-          <div
-            key={item.name}
-            className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"
-          >
-            <dt className="truncate text-sm font-medium text-gray-500">
-              {item.name}
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
-              {item.stat}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </div>
   )
 }

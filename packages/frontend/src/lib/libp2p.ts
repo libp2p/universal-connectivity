@@ -56,7 +56,7 @@ export async function startLibp2p(options: {} = {}) {
         //  '/ip4/18.195.246.16/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWGTDZj1zAjMCJ8XXx9Z88zAAd6vn3krQYLwZ67S4vMUxz',
         // ],
         list: [
-          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWHNiikdQPqM6cyESe6x5TgBJ8NhTBM5Pg1mJdm4XGLYmD'
+          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ'
         ],
       }),
     ],

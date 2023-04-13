@@ -31,10 +31,12 @@ function Message({ msg, from, peerId }: MessageProps) {
     <li ref={msgref} className={`flex ${from === 'me' ? 'justify-end' : 'justify-start'}`}>
       <div
 
-        className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow"
+        className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow bg-white"
       >
-        <span className="flex relative mx-3 px-4 py-4"> {peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null} </span>
-        <span className="block">{msg} </span>
+        <div className="block">
+          {msg}
+          <p className="italic text-gray-400">{peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null} </p>
+        </div>
       </div>
     </li>
   )
@@ -90,7 +92,7 @@ export default function ChatContainer() {
 
     setMessageHistory([...messageHistory, { msg: input, from: 'me', peerId: myPeerId }])
     setInput('')
-  }, [input, messageHistory, setInput, libp2p])
+  }, [input, messageHistory, setInput, libp2p, setMessageHistory])
 
   const handleKeyUp = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -135,7 +137,7 @@ export default function ChatContainer() {
                 Public Chat
               </span>
             </div>
-            <div className="relative w-full p-6 overflow-y-auto h-[40rem]">
+            <div className="relative w-full p-6 overflow-y-auto h-[40rem] bg-gray-100">
               <ul className="space-y-2">
                 {/* messages start */}
                 {messageHistory.map(({ msg, from, peerId }, idx) => (
