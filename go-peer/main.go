@@ -22,7 +22,6 @@ import (
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
-	tcpTransport "github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
@@ -127,7 +126,6 @@ func main() {
 	certPath := flag.String("tls-cert-path", "", "path to the tls cert file (for websockets)")
 	keyPath := flag.String("tls-key-path", "", "path to the tls key file (for websockets")
 	useLogger := flag.Bool("logger", false, "write logs to file")
-	announceAddr := flag.String("announce", "", "address to announce")
 
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
@@ -171,24 +169,11 @@ func main() {
 		)
 	}
 
-	addressFactory := func(addrs []multiaddr.Multiaddr) []multiaddr.Multiaddr {
-		addr := *announceAddr
-		if len(addr) != 0 {
-			// printErr("Announce address: %s\n", addr)
-			maddr := multiaddr.StringCast(addr)
-			addrs = append(addrs, maddr)
-			return addrs
-		}
-		return addrs
-	}
-
 	opts = append(opts,
 		libp2p.Identity(privk),
 		libp2p.Transport(quicTransport.NewTransport),
-		libp2p.Transport(tcpTransport.NewTCPTransport),
 		libp2p.Transport(webtransport.New),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport"),
-		libp2p.AddrsFactory(addressFactory),
 		libp2p.EnableRelayService(),
 	)
 
