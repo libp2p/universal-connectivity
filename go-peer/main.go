@@ -20,6 +20,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	tcpTransport "github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
@@ -188,12 +189,19 @@ func main() {
 		libp2p.Transport(webtransport.New),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9096/quic-v1/webtransport"),
 		libp2p.AddrsFactory(addressFactory),
+		libp2p.EnableRelayService(),
 	)
 
 	// create a new libp2p Host with lots of options
 	h, err := libp2p.New(opts...)
 	if err != nil {
 		panic(err)
+	}
+
+	_, err = relay.New(h)
+	if err != nil {
+		log.Printf("Failed to instantiate the relay: %v", err)
+		return
 	}
 
 	// create a new PubSub service using the GossipSub router
