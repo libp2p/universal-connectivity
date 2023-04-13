@@ -20,7 +20,7 @@ import * as filters from "@libp2p/websockets/filters"
 import { circuitRelayTransport } from 'libp2p/circuit-relay'
 
 
-export async function startLibp2p(options: {} = {}) {
+export async function startLibp2p() {
   // localStorage.debug = 'libp2p*,-*:trace'
   // application-specific data lives in the datastore
 
@@ -77,8 +77,6 @@ export async function startLibp2p(options: {} = {}) {
     console.log(`changed multiaddrs: peer ${peerId.toString()} multiaddrs: ${multiaddrs}`)
     setWebRTCRelayAddress(multiaddrs, libp2p.peerId.toString())
   })
-
-  console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
 
   return libp2p
 }
