@@ -20,7 +20,7 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
-import { CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
+import { CHAT_TOPIC, CIRCUIT_RELAY_CODE, WEBRTC_DIRECT_CODE, WEBTRANSPORT_CODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
@@ -56,13 +56,13 @@ export async function startLibp2p(options: {} = {}) {
     }),],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
-    peerDiscovery: [
-      bootstrap({
-        list: [
-         '/ip4/18.195.246.16/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWGTDZj1zAjMCJ8XXx9Z88zAAd6vn3krQYLwZ67S4vMUxz',
-        ],
-      }),
-    ],
+    // peerDiscovery: [
+    //   bootstrap({
+    //     list: [
+    //      '/ip4/127.0.0.1/udp/9096/quic-v1/webtransport/certhash/uEiD2f436OSu_e4bWAu2djQPUZdzexJanzlW92uBVz7H7qg/certhash/uEiA2o6viZT2bPiZvkgts_zeiP2JiMF1PEYjtfEYxGpEzwA/p2p/12D3KooWEMhCiXfgYuo6kzep7F5gLbj8rGnncSxvS8zShKgeEnGS',
+    //     ],
+    //   }),
+    // ],
     pubsub: gossipsub({
       allowPublishToZeroPeers: true,
       msgIdFn: msgIdFnStrictNoSign,
@@ -78,7 +78,7 @@ export async function startLibp2p(options: {} = {}) {
   libp2p.peerStore.addEventListener('change:multiaddrs', ({detail: {peerId, multiaddrs}}) => {
 
     console.log(`changed multiaddrs: peer ${peerId.toString()} multiaddrs: ${multiaddrs}`)
-    setWebRTCRelayAddress(multiaddrs, libp2p.peerId.toString())
+    setRelayAddress(multiaddrs, libp2p.peerId.toString())
   })
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
@@ -247,14 +247,23 @@ export class Libp2pDialError extends Error {
   }
 }
 
-export const setWebRTCRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
+export const setRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
   maddrs.forEach((maddr) => {
     if (maddr.protoCodes().includes(CIRCUIT_RELAY_CODE)) {
 
-      const webRTCrelayAddress = multiaddr(maddr.toString() + '/webrtc/p2p/' + peerId)
+      if (maddr.protoCodes().includes(WEBRTC_DIRECT_CODE)) {
+        const webRTCrelayAddress = multiaddr(maddr.toString() + '/webrtc/p2p/' + peerId)
 
-      console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
+        console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
+      } else if (maddr.protoCodes().includes(WEBTRANSPORT_CODE)) {
+        const webTransportRelayAddress = multiaddr(maddr.toString() + '/webtransport/p2p/' + peerId)
+
+        console.log(`Listening on '${webTransportRelayAddress.toString()}'`)
+      } else {
+        // do nothing
+      }
     }
   })
 }
+
 
