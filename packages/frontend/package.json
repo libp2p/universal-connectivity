@@ -26,7 +26,7 @@
     "debug": "^4.3.4",
     "eslint": "8.35.0",
     "eslint-config-next": "13.2.3",
-    "libp2p": "^0.43.0",
+    "libp2p": "^0.44.0",
     "next": "13.2.3",
     "private-ip": "^3.0.0",
     "react": "18.2.0",

@@ -26,7 +26,7 @@ export async function startLibp2p() {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    dht: kadDHT({ maxInboundStreams: 1000, maxOutboundStreams: 1000, protocolPrefix: "/universal-connectivity"}),
+    dht: kadDHT({protocolPrefix: "/universal-connectivity", maxInboundStreams: 100, maxOutboundStreams: 100, clientMode: true}),
     transports: [webTransport(), webSockets({
       filter: filters.all,
     }), webRTC({
