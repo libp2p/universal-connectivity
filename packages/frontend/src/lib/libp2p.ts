@@ -26,6 +26,8 @@ export async function startLibp2p() {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
+    // set the inbound and outbound stream limits to these values
+    // because we were seeing a lot of the default limits being hit
     dht: kadDHT({protocolPrefix: "/universal-connectivity", maxInboundStreams: 1000, maxOutboundStreams: 1000, clientMode: true}),
     transports: [webTransport(), webSockets({
       filter: filters.all,
@@ -63,6 +65,8 @@ export async function startLibp2p() {
       ignoreDuplicatePublishError: true,
     }),
     identify: {
+      // these are set because we were seeing a lot of identify and identify push
+      // stream limits being hit
       maxPushOutgoingStreams: 1000,
       maxPushIncomingStreams: 1000,
       maxInboundStreams: 1000,
@@ -71,6 +75,10 @@ export async function startLibp2p() {
     autonat: {
       startupDelay: 60 * 60 *24 * 1000,
     },
+    // This allows the browser node to act as a relay
+    // this is set because this seems to be the only
+    // way to set the inbound and outbound hop stream limits
+    // We were seeing the default limit of 64 being hit and resulting errors
     relay: circuitRelayServer({
         maxInboundHopStreams: 1000,
         maxOutboundHopStreams: 1000
