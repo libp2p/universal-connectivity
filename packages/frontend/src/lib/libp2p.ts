@@ -71,6 +71,9 @@ export async function startLibp2p(options: {} = {}) {
     identify: {
       maxPushOutgoingStreams: 2,
     },
+    autonat: {
+      startupDelay: 60 * 60 *24 * 1000,
+    },
   })
 
   libp2p.pubsub.subscribe(CHAT_TOPIC)
