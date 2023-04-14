@@ -11,7 +11,7 @@ clap = { version = "4.1.11", features = ["derive"] }
 env_logger = "0.10.0"
 futures = "0.3.27"
 futures-timer = "3.0.2"
-libp2p = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "deprecate/gossipsub-close-event-update-multiaddr", version = "0.51.2", features = [
+libp2p = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", version = "0.51.2", features = [
 	"identify",
 	"ping",
 	"tokio",
@@ -24,13 +24,13 @@ libp2p = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "depreca
 	"ed25519",
 	"quic",
 ] }
-libp2p-webrtc = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "deprecate/gossipsub-close-event-update-multiaddr", version = "0.4.0-alpha.4", features = [
+libp2p-webrtc = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", version = "0.4.0-alpha.4", features = [
 	"tokio",
 ] }
-libp2p-quic = {  git = "https://github.com/p-shahi/rust-libp2p.git", branch = "deprecate/gossipsub-close-event-update-multiaddr", features = ["tokio"] }
+libp2p-quic = {  git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", features = ["tokio"] }
 log = "0.4.17"
 multiaddr = { git = "https://github.com/p-shahi/rust-multiaddr.git", branch = "support-webrtc-protocol-code" }
 rand = "0.8.5"
-tokio = { version = "1.26.0", features = ["full"] }
+tokio = { version = "1.27.0", features = ["full"] }
 tokio-util = { version = "0.7", features = ["full"] }
 webrtc = { version = "0.6.0", optional = true }
