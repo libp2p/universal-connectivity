@@ -52,8 +52,7 @@ export async function startLibp2p() {
     peerDiscovery: [
       bootstrap({
         list: [
-          // BOOTSTRAP_NODE,
-          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ'
+          BOOTSTRAP_NODE,
         ],
       }),
     ],
@@ -64,6 +63,9 @@ export async function startLibp2p() {
     }),
     identify: {
       maxPushOutgoingStreams: 2,
+    },
+    autonat: {
+      startupDelay: 60 * 60 *24 * 1000,
     },
   })
 
