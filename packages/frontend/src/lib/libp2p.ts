@@ -43,10 +43,6 @@ export async function startLibp2p() {
     }), webRTCDirect(), circuitRelayTransport({
       discoverRelays: 10,
     }),],
-    relay: circuitRelayServer({
-      maxInboundHopStreams: 100,
-      maxOutboundHopStreams: 100,
-    }),
     connectionEncryption: [noise()],
     connectionManager: {
       maxConnections: 200,

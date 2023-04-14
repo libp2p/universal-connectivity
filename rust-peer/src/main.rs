@@ -288,9 +288,8 @@ fn create_swarm(
         relay: relay::Behaviour::new(
             local_peer_id,
             relay::Config {
-                max_reservations: 200,
+                max_reservations: 400,
                 max_reservations_per_peer: 10,
-                reservation_duration: Duration::from_secs(60),
                 ..Default::default()
             },
         ),
