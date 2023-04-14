@@ -17,7 +17,7 @@ import { BOOTSTRAP_NODE, CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
-import { circuitRelayTransport } from 'libp2p/circuit-relay'
+import { circuitRelayTransport, circuitRelayServer } from 'libp2p/circuit-relay'
 
 
 export async function startLibp2p() {
@@ -43,6 +43,10 @@ export async function startLibp2p() {
     }), webRTCDirect(), circuitRelayTransport({
       discoverRelays: 10,
     }),],
+    relay: circuitRelayServer({
+      maxInboundHopStreams: 100,
+      maxOutboundHopStreams: 100,
+    }),
     connectionEncryption: [noise()],
     connectionManager: {
       maxConnections: 200,
@@ -53,7 +57,8 @@ export async function startLibp2p() {
       bootstrap({
         list: [
           // BOOTSTRAP_NODE,
-          "/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ"
+          // Local Rust Peer Bootstrap node
+           "/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ"
         ],
       }),
     ],
@@ -65,6 +70,7 @@ export async function startLibp2p() {
     identify: {
       maxPushOutgoingStreams: 100,
       maxInboundStreams: 100,
+      maxOutboundStreams: 100,
     },
     autonat: {
       startupDelay: 60 * 60 *24 * 1000,
