@@ -7,7 +7,7 @@ use libp2p::{
     kad::record::store::MemoryStore,
     kad::{Kademlia, KademliaConfig},
     multiaddr::Protocol,
-    ping, relay,
+    relay,
     swarm::{
         keep_alive, AddressRecord, AddressScore, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
     },
@@ -22,7 +22,7 @@ use std::{
     borrow::Cow,
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tokio::fs;
 
@@ -39,10 +39,6 @@ struct Opt {
     /// Address of a remote peer to connect to.
     #[clap(long)]
     remote_address: Option<Multiaddr>,
-
-    // use certificate path
-    #[clap(long)]
-    use_cert: Option<String>,
 }
 
 /// An example WebRTC peer that will accept connections
@@ -76,6 +72,7 @@ async fn main() -> Result<()> {
 
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
 
+    let now = Instant::now();
     loop {
         match futures::future::select(swarm.next(), &mut tick).await {
             futures::future::Either::Left((event, _)) => match event.unwrap() {
@@ -176,7 +173,10 @@ async fn main() -> Result<()> {
                     debug!("Failed to run Kademlia bootstrap: {e:?}");
                 }
 
-                let message = format!("My social skills are a little rusty...");
+                let message = format!(
+                    "Hello world! Sent from the rust-peer at: {:4}s",
+                    now.elapsed().as_secs_f64()
+                );
 
                 if let Err(err) = swarm.behaviour_mut().gossipsub.publish(
                     gossipsub::IdentTopic::new("universal-connectivity"),
@@ -195,7 +195,6 @@ struct Behaviour {
     identify: identify::Behaviour,
     kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
-    ping: ping::Behaviour,
     relay: relay::Behaviour,
 }
 
@@ -270,12 +269,10 @@ fn create_swarm(
         identify: identify_config,
         kademlia: kad_behaviour,
         keep_alive: keep_alive::Behaviour::default(),
-        ping: ping::Behaviour::default(),
         relay: relay::Behaviour::new(
             local_peer_id,
             relay::Config {
                 max_reservations: 400,
-                max_circuit_duration: Duration::from_secs(100 * 100),
                 max_reservations_per_peer: 10,
                 ..Default::default()
             },

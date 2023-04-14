@@ -26,18 +26,34 @@ export default function Home() {
     }
   }, [libp2p, peerStats, setPeerStats])
 
-  const getUniqueConnections = (connections: Connection[]) => {
-    const uniqueConnections: Connection[] = []
+  type PeerProtoTuple = {
+    peerId: string
+    protocols: string[]
+  }
+
+  const getFormattedConnections = (connections: Connection[]): PeerProtoTuple[] => {
+    const protoNames: Map<string, string[]> = new Map()
+
     connections.forEach((conn) => {
-      const exists = uniqueConnections.find(
-        (c) => c.remotePeer.toString() === conn.remotePeer.toString(),
-      )
-      if (!exists) {
-        uniqueConnections.push(conn)
+      const exists = protoNames.get(conn.remotePeer.toString())
+
+      if (exists) {
+        const namesToAdd = exists.filter(
+          (name) => !conn.remoteAddr.protoNames().includes(name),
+        )
+        protoNames.set(conn.remotePeer.toString(), [...exists, ...namesToAdd])
+      } else {
+        protoNames.set(conn.remotePeer.toString(), conn.remoteAddr.protoNames())
       }
     })
-    return uniqueConnections
+
+    return [...protoNames.entries()].map(([peerId, protocols]) => ({
+      peerId,
+      protocols,
+    }))
+
   }
+
 
   return (
     <>
@@ -77,13 +93,13 @@ export default function Home() {
                   <>
                     <h3 className="text-xl">
                       {' '}
-                      Connected peers ({getUniqueConnections(peerStats.connections).length}) 👇
+                      Connected peers ({getFormattedConnections(peerStats.connections).length}) 👇
                     </h3>
                     <pre className="px-2">
-                      {getUniqueConnections(peerStats.connections)
+                      {getFormattedConnections(peerStats.connections)
                         .map(
-                          (conn) =>
-                            `${conn.remotePeer.toString()} (${conn.remoteAddr.protoNames()})`,
+                          (pair) =>
+                            `${pair.peerId} (${pair.protocols.join(', ')})`,
                         )
                         .join('\n')}
                     </pre>

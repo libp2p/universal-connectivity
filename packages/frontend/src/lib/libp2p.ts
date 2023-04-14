@@ -14,6 +14,7 @@ import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
 import { BOOTSTRAP_NODE, CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
+import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
 import { circuitRelayTransport } from 'libp2p/circuit-relay'
@@ -26,7 +27,9 @@ export async function startLibp2p() {
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
     dht: kadDHT({protocolPrefix: "/universal-connectivity"}),
-    transports: [webTransport(), webSockets(), webRTC({
+    transports: [webTransport(), webSockets({
+      filter: filters.all,
+    }), webRTC({
       rtcConfiguration: {
         iceServers:[
           {
@@ -50,7 +53,7 @@ export async function startLibp2p() {
       bootstrap({
         list: [
           // BOOTSTRAP_NODE,
-          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ',
+          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ'
         ],
       }),
     ],
