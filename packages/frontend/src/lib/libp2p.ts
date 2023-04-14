@@ -17,7 +17,7 @@ import { BOOTSTRAP_NODE, CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
-import { circuitRelayTransport } from 'libp2p/circuit-relay'
+import { circuitRelayTransport, circuitRelayServer } from 'libp2p/circuit-relay'
 
 
 export async function startLibp2p() {
@@ -26,7 +26,7 @@ export async function startLibp2p() {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    dht: kadDHT({protocolPrefix: "/universal-connectivity", maxInboundStreams: 100, maxOutboundStreams: 100, clientMode: true}),
+    dht: kadDHT({protocolPrefix: "/universal-connectivity", maxInboundStreams: 1000, maxOutboundStreams: 1000, clientMode: true}),
     transports: [webTransport(), webSockets({
       filter: filters.all,
     }), webRTC({
@@ -52,7 +52,8 @@ export async function startLibp2p() {
     peerDiscovery: [
       bootstrap({
         list: [
-          BOOTSTRAP_NODE,
+          // BOOTSTRAP_NODE,
+          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWSFfVyasFDa4NBQMzTmzSQBehUV92Exs9dsGjr9DL5TS3',
         ],
       }),
     ],
@@ -62,11 +63,18 @@ export async function startLibp2p() {
       ignoreDuplicatePublishError: true,
     }),
     identify: {
-      maxPushOutgoingStreams: 2,
+      maxPushOutgoingStreams: 1000,
+      maxPushIncomingStreams: 1000,
+      maxInboundStreams: 1000,
+      maxOutboundStreams: 1000,
     },
     autonat: {
       startupDelay: 60 * 60 *24 * 1000,
     },
+    relay: circuitRelayServer({
+        maxInboundHopStreams: 1000,
+        maxOutboundHopStreams: 1000
+    }),
   })
 
   libp2p.pubsub.subscribe(CHAT_TOPIC)
