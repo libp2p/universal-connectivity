@@ -7,7 +7,7 @@ use libp2p::{
     kad::record::store::MemoryStore,
     kad::{Kademlia, KademliaConfig},
     multiaddr::Protocol,
-    ping, relay,
+    relay,
     swarm::{
         keep_alive, AddressRecord, AddressScore, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
     },
@@ -47,8 +47,12 @@ async fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let opt = Opt::parse();
-    let local_key = read_or_create_identity(&Path::new("./local_key")).await.context("Failed to read identity")?;
-    let webrtc_cert = read_or_create_certificate(&Path::new("./cert.pem")).await.context("Failed to read certificate")?;
+    let local_key = read_or_create_identity(&Path::new("./local_key"))
+        .await
+        .context("Failed to read identity")?;
+    let webrtc_cert = read_or_create_certificate(&Path::new("./cert.pem"))
+        .await
+        .context("Failed to read certificate")?;
 
     let mut swarm = create_swarm(local_key, webrtc_cert)?;
 
@@ -85,6 +89,8 @@ async fn main() -> Result<()> {
                 }
                 SwarmEvent::ConnectionClosed { peer_id, cause, .. } => {
                     warn!("Connection to {peer_id} closed: {cause:?}");
+                    swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
+                    info!("Removed {peer_id} from the routing table (if it was in there).");
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Relay(e)) => {
                     debug!("{:?}", e);
@@ -110,7 +116,20 @@ async fn main() -> Result<()> {
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
 
-                    if let identify::Event::Received {
+                    if let identify::Event::Error { peer_id, error } = e {
+                        match error {
+                            libp2p::swarm::ConnectionHandlerUpgrErr::Timeout => {
+                                // When a browser tab closes, we don't get a swarm event
+                                // maybe there's a way to get this with TransportEvent
+                                // but for now remove the peer from routing table if there's an Identify timeout
+                                swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
+                                info!("Removed {peer_id} from the routing table (if it was in there).");
+                            }
+                            _ => {
+                                debug!("{error}");
+                            }
+                        }
+                    } else if let identify::Event::Received {
                         peer_id,
                         info:
                             identify::Info {
@@ -142,7 +161,8 @@ async fn main() -> Result<()> {
                                 swarm
                                     .behaviour_mut()
                                     .kademlia
-                                    .add_address(&peer_id, webrtc_address);
+                                    .add_address(&peer_id, webrtc_address.clone());
+                                info!("Added {webrtc_address} to the routing table.");
 
                                 // TODO: below is how we should be constructing the address (not string manipulation)
                                 // let webrtc_address = addr.with(Protocol::WebRTC(peer_id.clone().into()));
@@ -191,11 +211,13 @@ struct Behaviour {
     identify: identify::Behaviour,
     kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
-    // ping: ping::Behaviour,
     relay: relay::Behaviour,
 }
 
-fn create_swarm(local_key: identity::Keypair, certificate: Certificate) -> Result<Swarm<Behaviour>> {
+fn create_swarm(
+    local_key: identity::Keypair,
+    certificate: Certificate,
+) -> Result<Swarm<Behaviour>> {
     let local_peer_id = PeerId::from(local_key.public());
     debug!("Local peer id: {local_peer_id}");
 
@@ -247,10 +269,10 @@ fn create_swarm(local_key: identity::Keypair, certificate: Certificate) -> Resul
             .boxed()
     };
 
-    let identify_config = identify::Behaviour::new(identify::Config::new(
-        "/ipfs/0.1.0".into(),
-        local_key.public().clone(),
-    ));
+    let identify_config = identify::Behaviour::new(
+        identify::Config::new("/ipfs/0.1.0".into(), local_key.public().clone())
+            .with_interval(Duration::from_secs(60)), // do this so we can get timeouts for dropped WebRTC connections
+    );
 
     // Create a Kademlia behaviour.
     let mut cfg = KademliaConfig::default();
@@ -263,8 +285,14 @@ fn create_swarm(local_key: identity::Keypair, certificate: Certificate) -> Resul
         identify: identify_config,
         kademlia: kad_behaviour,
         keep_alive: keep_alive::Behaviour::default(),
-        // ping: ping::Behaviour::default(),
-        relay: relay::Behaviour::new(local_peer_id, Default::default()),
+        relay: relay::Behaviour::new(
+            local_peer_id,
+            relay::Config {
+                max_reservations: 400,
+                max_reservations_per_peer: 10,
+                ..Default::default()
+            },
+        ),
     };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
@@ -302,10 +330,7 @@ async fn read_or_create_identity(path: &Path) -> Result<identity::Keypair> {
 
     fs::write(&path, &identity.to_protobuf_encoding()?).await?;
 
-    info!(
-        "Generated new identity and wrote it to {}",
-        path.display()
-    );
+    info!("Generated new identity and wrote it to {}", path.display());
 
     Ok(identity)
 }
