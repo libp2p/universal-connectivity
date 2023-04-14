@@ -1,4 +1,4 @@
-import { createLibp2p } from 'libp2p'
+import { createLibp2p, Libp2p } from 'libp2p'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
@@ -26,7 +26,7 @@ export async function startLibp2p() {
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    dht: kadDHT({protocolPrefix: "/universal-connectivity"}),
+    dht: kadDHT({ maxInboundStreams: 1000, maxOutboundStreams: 1000, protocolPrefix: "/universal-connectivity"}),
     transports: [webTransport(), webSockets({
       filter: filters.all,
     }), webRTC({
@@ -45,14 +45,15 @@ export async function startLibp2p() {
     }),],
     connectionEncryption: [noise()],
     connectionManager: {
-      maxConnections: 100,
+      maxConnections: 200,
       minConnections: 1,
     },
     streamMuxers: [yamux()],
     peerDiscovery: [
       bootstrap({
         list: [
-          BOOTSTRAP_NODE,
+          // BOOTSTRAP_NODE,
+          "/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ"
         ],
       }),
     ],
@@ -62,7 +63,8 @@ export async function startLibp2p() {
       ignoreDuplicatePublishError: true,
     }),
     identify: {
-      maxPushOutgoingStreams: 2,
+      maxPushOutgoingStreams: 100,
+      maxInboundStreams: 100,
     },
     autonat: {
       startupDelay: 60 * 60 *24 * 1000,
@@ -101,5 +103,18 @@ export const setWebRTCRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
       console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
     }
   })
+}
+
+export const connectToMultiaddr =
+  (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {
+    console.log(`dialling: ${multiaddr.toString()}`)
+    try {
+      const conn = await libp2p.dial(multiaddr)
+      console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
+      return conn
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
 }
 
