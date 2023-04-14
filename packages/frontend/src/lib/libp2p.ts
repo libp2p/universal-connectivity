@@ -13,7 +13,7 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
-import { CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
+import { BOOTSTRAP_NODE, CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
@@ -45,18 +45,14 @@ export async function startLibp2p() {
     }),],
     connectionEncryption: [noise()],
     connectionManager: {
-      maxConnections: 10,
+      maxConnections: 100,
       minConnections: 1,
     },
     streamMuxers: [yamux()],
     peerDiscovery: [
       bootstrap({
-        // #TODO: change to remote address
-        // list: [
-        //  '/ip4/18.195.246.16/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWGTDZj1zAjMCJ8XXx9Z88zAAd6vn3krQYLwZ67S4vMUxz',
-        // ],
         list: [
-          '/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ'
+          BOOTSTRAP_NODE,
         ],
       }),
     ],

@@ -102,7 +102,7 @@ export default function Home() {
                   <>
                     <h3 className="text-xl">
                       {' '}
-                      Connected peers ({peerStats.peerIds.length}) 👇
+                      Connected peers ({getUniqueConnections(peerStats.connections).length}) 👇
                     </h3>
                     <pre className="px-2">
                       {getUniqueConnections(peerStats.connections)
