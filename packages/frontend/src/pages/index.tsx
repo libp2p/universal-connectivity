@@ -13,26 +13,6 @@ export default function Home() {
   const { libp2p } = useLibp2pContext()
   const { peerStats, setPeerStats } = usePeerContext()
 
-  useInterval(() => {
-
-    const ping = async () => {
-      const { peerIds } = peerStats
-      if (peerIds.length > 0) {
-        return libp2p.ping(peerIds[0])
-      }
-
-      return 0
-    }
-
-    ping()
-      .then((latency) => {
-        setPeerStats({ ...peerStats, latency })
-      })
-      .catch((e) => {
-        console.error(e, e?.error)
-      })
-  }, 5000)
-
   useEffect(() => {
     const peerConnectedCB = (evt: CustomEvent<Connection>) => {
       const connection = evt.detail
@@ -91,11 +71,6 @@ export default function Home() {
                 ) : (
                   <XCircleIcon className="w-6 h-6 text-red-500" />
                 )}
-                <p className='mx-auto max-w-7xl px-2 sm:px-6 lg:px-8'>
-                  {peerStats.latency > 0
-                    ? `Latency of nearest peer: ${peerStats.latency} ms`
-                    : null}
-                </p>
               </div>
               <div>
                 {peerStats.peerIds.length > 0 ? (

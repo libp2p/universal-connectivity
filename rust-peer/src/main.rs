@@ -271,7 +271,15 @@ fn create_swarm(
         kademlia: kad_behaviour,
         keep_alive: keep_alive::Behaviour::default(),
         ping: ping::Behaviour::default(),
-        relay: relay::Behaviour::new(local_peer_id, Default::default()),
+        relay: relay::Behaviour::new(
+            local_peer_id,
+            relay::Config {
+                max_reservations: 400,
+                max_circuit_duration: Duration::from_secs(100 * 100),
+                max_reservations_per_peer: 10,
+                ..Default::default()
+            },
+        ),
     };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
