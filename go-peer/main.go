@@ -20,7 +20,6 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
-	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
@@ -126,6 +125,7 @@ func main() {
 	certPath := flag.String("tls-cert-path", "", "path to the tls cert file (for websockets)")
 	keyPath := flag.String("tls-key-path", "", "path to the tls key file (for websockets")
 	useLogger := flag.Bool("logger", false, "write logs to file")
+	headless := flag.Bool("headless", false, "run without chat UI")
 
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
@@ -174,19 +174,12 @@ func main() {
 		libp2p.Transport(quicTransport.NewTransport),
 		libp2p.Transport(webtransport.New),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport"),
-		libp2p.EnableRelayService(),
 	)
 
 	// create a new libp2p Host with lots of options
 	h, err := libp2p.New(opts...)
 	if err != nil {
 		panic(err)
-	}
-
-	_, err = relay.New(h)
-	if err != nil {
-		log.Printf("Failed to instantiate the relay: %v", err)
-		return
 	}
 
 	// create a new PubSub service using the GossipSub router
@@ -246,15 +239,22 @@ func main() {
 
 	LogMsgf("PeerID: %s", h.ID().String())
 	for _, addr := range h.Addrs() {
-		printErr("Listening on: %s/p2p/%s\n", addr.String(), h.ID())
+		if *headless {
+			fmt.Printf("Listening on: %s/p2p/%s\n", addr.String(), h.ID())
+		} else {
+			LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
+		}
 	}
 
-	// draw the UI
-	// ui := NewChatUI(cr)
-	// if err = ui.Run(); err != nil {
-	// 	printErr("error running text UI: %s", err)
-	// }
-	select {}
+	if *headless {
+		select {}
+	} else {
+		// draw the UI
+		ui := NewChatUI(cr)
+		if err = ui.Run(); err != nil {
+			printErr("error running text UI: %s", err)
+		}
+	}
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
