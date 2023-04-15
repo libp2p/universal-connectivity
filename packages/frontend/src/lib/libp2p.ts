@@ -17,18 +17,22 @@ import { BOOTSTRAP_NODE, CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
-import { circuitRelayTransport, circuitRelayServer } from 'libp2p/circuit-relay'
+import { circuitRelayTransport } from 'libp2p/circuit-relay'
 
 
 export async function startLibp2p() {
   // localStorage.debug = 'libp2p*,-*:trace'
   // application-specific data lives in the datastore
 
-  // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
     // set the inbound and outbound stream limits to these values
     // because we were seeing a lot of the default limits being hit
-    dht: kadDHT({protocolPrefix: "/universal-connectivity", maxInboundStreams: 1000, maxOutboundStreams: 1000, clientMode: true}),
+    dht: kadDHT({
+      protocolPrefix: "/universal-connectivity",
+      maxInboundStreams: 5000,
+      maxOutboundStreams: 5000,
+      clientMode: true
+    }),
     transports: [webTransport(), webSockets({
       filter: filters.all,
     }), webRTC({
@@ -74,16 +78,8 @@ export async function startLibp2p() {
       maxOutboundStreams: 1000,
     },
     autonat: {
-      startupDelay: 60 * 60 *24 * 1000,
+      startupDelay: 60 * 60 * 24 * 1000,
     },
-    // This allows the browser node to act as a relay
-    // this is set because this seems to be the only
-    // way to set the inbound and outbound hop stream limits
-    // We were seeing the default limit of 64 being hit and resulting errors
-    relay: circuitRelayServer({
-        maxInboundHopStreams: 1000,
-        maxOutboundHopStreams: 1000
-    }),
   })
 
   libp2p.pubsub.subscribe(CHAT_TOPIC)
