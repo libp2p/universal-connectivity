@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use futures::StreamExt;
 use libp2p::{
@@ -7,7 +7,7 @@ use libp2p::{
     kad::record::store::MemoryStore,
     kad::{Kademlia, KademliaConfig},
     multiaddr::Protocol,
-    ping, relay,
+    relay,
     swarm::{
         keep_alive, AddressRecord, AddressScore, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
     },
@@ -15,58 +15,19 @@ use libp2p::{
 };
 use libp2p_quic as quic;
 use libp2p_webrtc as webrtc;
+use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
+use std::path::Path;
 use std::{
     borrow::Cow,
     collections::hash_map::DefaultHasher,
-    fs::File,
     hash::{Hash, Hasher},
-    io::{BufReader, Read},
     time::{Duration, Instant},
 };
+use tokio::fs;
 
 const TICK_INTERVAL: Duration = Duration::from_secs(15);
 const KADEMLIA_PROTOCOL_NAME: &'static [u8] = b"/universal-connectivity/lan/kad/1.0.0";
-const STATIC_CERTIFICATE: &'static [u8] = &[
-    45, 45, 45, 45, 45, 66, 69, 71, 73, 78, 32, 69, 88, 80, 73, 82, 69, 83, 45, 45, 45, 45, 45, 10,
-    65, 80, 102, 104, 110, 103, 56, 65, 65, 65, 65, 61, 10, 45, 45, 45, 45, 45, 69, 78, 68, 32, 69,
-    88, 80, 73, 82, 69, 83, 45, 45, 45, 45, 45, 10, 10, 45, 45, 45, 45, 45, 66, 69, 71, 73, 78, 32,
-    80, 82, 73, 86, 65, 84, 69, 95, 75, 69, 89, 45, 45, 45, 45, 45, 10, 77, 73, 71, 72, 65, 103,
-    69, 65, 77, 66, 77, 71, 66, 121, 113, 71, 83, 77, 52, 57, 65, 103, 69, 71, 67, 67, 113, 71, 83,
-    77, 52, 57, 65, 119, 69, 72, 66, 71, 48, 119, 97, 119, 73, 66, 65, 81, 81, 103, 105, 86, 56,
-    82, 72, 69, 100, 118, 85, 101, 48, 57, 108, 80, 57, 83, 10, 104, 52, 78, 70, 73, 74, 69, 70,
-    113, 88, 104, 88, 43, 68, 85, 97, 51, 76, 109, 88, 112, 79, 119, 115, 117, 76, 71, 104, 82, 65,
-    78, 67, 65, 65, 84, 115, 69, 73, 65, 53, 121, 113, 67, 119, 56, 78, 122, 73, 87, 73, 114, 117,
-    111, 86, 87, 43, 109, 116, 83, 113, 105, 70, 122, 106, 10, 50, 51, 77, 84, 43, 107, 88, 73, 52,
-    77, 77, 49, 115, 52, 109, 65, 121, 122, 100, 82, 57, 90, 113, 115, 81, 70, 72, 43, 104, 55, 86,
-    75, 106, 70, 67, 86, 122, 73, 86, 70, 52, 76, 47, 49, 97, 54, 81, 75, 47, 86, 81, 47, 53, 120,
-    102, 66, 10, 45, 45, 45, 45, 45, 69, 78, 68, 32, 80, 82, 73, 86, 65, 84, 69, 95, 75, 69, 89,
-    45, 45, 45, 45, 45, 10, 10, 45, 45, 45, 45, 45, 66, 69, 71, 73, 78, 32, 67, 69, 82, 84, 73, 70,
-    73, 67, 65, 84, 69, 45, 45, 45, 45, 45, 10, 77, 73, 73, 66, 87, 84, 67, 66, 47, 54, 65, 68, 65,
-    103, 69, 67, 65, 103, 104, 111, 117, 49, 43, 70, 77, 118, 103, 76, 88, 106, 65, 75, 66, 103,
-    103, 113, 104, 107, 106, 79, 80, 81, 81, 68, 65, 106, 65, 104, 77, 82, 56, 119, 72, 81, 89, 68,
-    86, 81, 81, 68, 68, 66, 90, 121, 10, 89, 50, 100, 108, 98, 105, 66, 122, 90, 87, 120, 109, 73,
-    72, 78, 112, 90, 50, 53, 108, 90, 67, 66, 106, 90, 88, 74, 48, 77, 67, 65, 88, 68, 84, 99, 49,
-    77, 68, 69, 119, 77, 84, 65, 119, 77, 68, 65, 119, 77, 70, 111, 89, 68, 122, 81, 119, 79, 84,
-    89, 119, 77, 84, 65, 120, 10, 77, 68, 65, 119, 77, 68, 65, 119, 87, 106, 65, 104, 77, 82, 56,
-    119, 72, 81, 89, 68, 86, 81, 81, 68, 68, 66, 90, 121, 89, 50, 100, 108, 98, 105, 66, 122, 90,
-    87, 120, 109, 73, 72, 78, 112, 90, 50, 53, 108, 90, 67, 66, 106, 90, 88, 74, 48, 77, 70, 107,
-    119, 69, 119, 89, 72, 10, 75, 111, 90, 73, 122, 106, 48, 67, 65, 81, 89, 73, 75, 111, 90, 73,
-    122, 106, 48, 68, 65, 81, 99, 68, 81, 103, 65, 69, 55, 66, 67, 65, 79, 99, 113, 103, 115, 80,
-    68, 99, 121, 70, 105, 75, 55, 113, 70, 86, 118, 112, 114, 85, 113, 111, 104, 99, 52, 57, 116,
-    122, 69, 47, 112, 70, 10, 121, 79, 68, 68, 78, 98, 79, 74, 103, 77, 115, 51, 85, 102, 87, 97,
-    114, 69, 66, 82, 47, 111, 101, 49, 83, 111, 120, 81, 108, 99, 121, 70, 82, 101, 67, 47, 57, 87,
-    117, 107, 67, 118, 49, 85, 80, 43, 99, 88, 119, 97, 77, 102, 77, 66, 48, 119, 71, 119, 89, 68,
-    86, 82, 48, 82, 10, 66, 66, 81, 119, 69, 111, 73, 81, 101, 85, 57, 76, 97, 122, 90, 84, 77,
-    107, 70, 87, 97, 70, 108, 120, 86, 106, 86, 70, 89, 84, 65, 75, 66, 103, 103, 113, 104, 107,
-    106, 79, 80, 81, 81, 68, 65, 103, 78, 74, 65, 68, 66, 71, 65, 105, 69, 65, 119, 65, 109, 109,
-    47, 114, 103, 112, 10, 84, 80, 48, 57, 88, 77, 102, 83, 49, 118, 70, 79, 84, 65, 48, 122, 79,
-    66, 75, 103, 53, 97, 56, 111, 86, 106, 83, 111, 89, 67, 48, 80, 83, 103, 52, 67, 73, 81, 68,
-    54, 73, 121, 73, 115, 56, 76, 111, 117, 106, 109, 82, 102, 78, 102, 53, 115, 57, 106, 97, 121,
-    72, 102, 107, 112, 10, 80, 67, 106, 106, 111, 104, 68, 112, 114, 122, 49, 67, 78, 75, 79, 66,
-    53, 81, 61, 61, 10, 45, 45, 45, 45, 45, 69, 78, 68, 32, 67, 69, 82, 84, 73, 70, 73, 67, 65, 84,
-    69, 45, 45, 45, 45, 45, 10,
-];
 
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -86,8 +47,14 @@ async fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let opt = Opt::parse();
+    let local_key = read_or_create_identity(&Path::new("./local_key"))
+        .await
+        .context("Failed to read identity")?;
+    let webrtc_cert = read_or_create_certificate(&Path::new("./cert.pem"))
+        .await
+        .context("Failed to read certificate")?;
 
-    let mut swarm = create_swarm()?;
+    let mut swarm = create_swarm(local_key, webrtc_cert)?;
 
     swarm.listen_on(format!("/ip4/0.0.0.0/udp/9090/webrtc-direct").parse()?)?;
     swarm.listen_on(format!("/ip4/0.0.0.0/udp/9091/quic-v1").parse()?)?;
@@ -122,6 +89,8 @@ async fn main() -> Result<()> {
                 }
                 SwarmEvent::ConnectionClosed { peer_id, cause, .. } => {
                     warn!("Connection to {peer_id} closed: {cause:?}");
+                    swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
+                    info!("Removed {peer_id} from the routing table (if it was in there).");
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Relay(e)) => {
                     debug!("{:?}", e);
@@ -147,7 +116,20 @@ async fn main() -> Result<()> {
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
 
-                    if let identify::Event::Received {
+                    if let identify::Event::Error { peer_id, error } = e {
+                        match error {
+                            libp2p::swarm::ConnectionHandlerUpgrErr::Timeout => {
+                                // When a browser tab closes, we don't get a swarm event
+                                // maybe there's a way to get this with TransportEvent
+                                // but for now remove the peer from routing table if there's an Identify timeout
+                                swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
+                                info!("Removed {peer_id} from the routing table (if it was in there).");
+                            }
+                            _ => {
+                                debug!("{error}");
+                            }
+                        }
+                    } else if let identify::Event::Received {
                         peer_id,
                         info:
                             identify::Info {
@@ -179,7 +161,8 @@ async fn main() -> Result<()> {
                                 swarm
                                     .behaviour_mut()
                                     .kademlia
-                                    .add_address(&peer_id, webrtc_address);
+                                    .add_address(&peer_id, webrtc_address.clone());
+                                info!("Added {webrtc_address} to the routing table.");
 
                                 // TODO: below is how we should be constructing the address (not string manipulation)
                                 // let webrtc_address = addr.with(Protocol::WebRTC(peer_id.clone().into()));
@@ -228,19 +211,13 @@ struct Behaviour {
     identify: identify::Behaviour,
     kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
-    // ping: ping::Behaviour,
     relay: relay::Behaviour,
 }
 
-fn create_swarm() -> Result<Swarm<Behaviour>> {
-    let f = File::open("/home/ec2-user/private_key")?;
-    let mut reader = BufReader::new(f);
-    let mut buffer = Vec::new();
-
-    reader.read_to_end(&mut buffer)?;
-
-    let local_key = identity::Keypair::ed25519_from_bytes(&mut buffer)?;
-
+fn create_swarm(
+    local_key: identity::Keypair,
+    certificate: Certificate,
+) -> Result<Swarm<Behaviour>> {
     let local_peer_id = PeerId::from(local_key.public());
     debug!("Local peer id: {local_peer_id}");
 
@@ -274,13 +251,8 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
     // subscribes to our topic
     gossipsub.subscribe(&topic)?;
 
-    let pem_str = std::str::from_utf8(STATIC_CERTIFICATE).unwrap();
-
     let transport = {
-        let webrtc = webrtc::tokio::Transport::new(
-            local_key.clone(),
-            webrtc::tokio::Certificate::from_pem(pem_str)?,
-        );
+        let webrtc = webrtc::tokio::Transport::new(local_key.clone(), certificate);
 
         let quic = quic::tokio::Transport::new(quic::Config::new(&local_key));
 
@@ -297,10 +269,10 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
             .boxed()
     };
 
-    let identify_config = identify::Behaviour::new(identify::Config::new(
-        "/ipfs/0.1.0".into(),
-        local_key.public().clone(),
-    ));
+    let identify_config = identify::Behaviour::new(
+        identify::Config::new("/ipfs/0.1.0".into(), local_key.public().clone())
+            .with_interval(Duration::from_secs(60)), // do this so we can get timeouts for dropped WebRTC connections
+    );
 
     // Create a Kademlia behaviour.
     let mut cfg = KademliaConfig::default();
@@ -313,8 +285,56 @@ fn create_swarm() -> Result<Swarm<Behaviour>> {
         identify: identify_config,
         kademlia: kad_behaviour,
         keep_alive: keep_alive::Behaviour::default(),
-        // ping: ping::Behaviour::default(),
-        relay: relay::Behaviour::new(local_peer_id, Default::default()),
+        relay: relay::Behaviour::new(
+            local_peer_id,
+            relay::Config {
+                max_reservations: usize::MAX,
+                max_reservations_per_peer: 100,
+                reservation_rate_limiters: Vec::default(),
+                circuit_src_rate_limiters: Vec::default(),
+                max_circuits: usize::MAX,
+                max_circuits_per_peer: 100,
+                ..Default::default()
+            },
+        ),
     };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
+}
+
+async fn read_or_create_certificate(path: &Path) -> Result<Certificate> {
+    if path.exists() {
+        let pem = fs::read_to_string(&path).await?;
+
+        info!("Using existing certificate from {}", path.display());
+
+        return Ok(Certificate::from_pem(&pem)?);
+    }
+
+    let cert = Certificate::generate(&mut rand::thread_rng())?;
+    fs::write(&path, &cert.serialize_pem().as_bytes()).await?;
+
+    info!(
+        "Generated new certificate and wrote it to {}",
+        path.display()
+    );
+
+    Ok(cert)
+}
+
+async fn read_or_create_identity(path: &Path) -> Result<identity::Keypair> {
+    if path.exists() {
+        let bytes = fs::read(&path).await?;
+
+        info!("Using existing identity from {}", path.display());
+
+        return Ok(identity::Keypair::from_protobuf_encoding(&bytes)?); // This only works for ed25519 but that is what we are using.
+    }
+
+    let identity = identity::Keypair::generate_ed25519();
+
+    fs::write(&path, &identity.to_protobuf_encoding()?).await?;
+
+    info!("Generated new identity and wrote it to {}", path.display());
+
+    Ok(identity)
 }
