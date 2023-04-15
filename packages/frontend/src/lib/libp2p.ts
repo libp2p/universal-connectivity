@@ -52,9 +52,9 @@ export async function startLibp2p() {
     peerDiscovery: [
       bootstrap({
         list: [
-          // BOOTSTRAP_NODE,
+          BOOTSTRAP_NODE,
           // Local Rust Peer Bootstrap node
-           "/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ"
+          //  "/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ"
         ],
       }),
     ],
