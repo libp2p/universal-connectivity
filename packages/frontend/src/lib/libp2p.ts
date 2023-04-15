@@ -20,7 +20,7 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
-import { CHAT_TOPIC, CIRCUIT_RELAY_CODE, WEBRTC_DIRECT_CODE, WEBTRANSPORT_CODE } from './constants'
+import { CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
@@ -78,7 +78,7 @@ export async function startLibp2p(options: {} = {}) {
   libp2p.peerStore.addEventListener('change:multiaddrs', ({detail: {peerId, multiaddrs}}) => {
 
     console.log(`changed multiaddrs: peer ${peerId.toString()} multiaddrs: ${multiaddrs}`)
-    setRelayAddress(multiaddrs, libp2p.peerId.toString())
+    setWebRTCRelayAddress(multiaddrs, libp2p.peerId.toString())
   })
 
   console.log(`this nodes peerID: ${libp2p.peerId.toString()}`)
@@ -247,21 +247,13 @@ export class Libp2pDialError extends Error {
   }
 }
 
-export const setRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
+export const setWebRTCRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
   maddrs.forEach((maddr) => {
     if (maddr.protoCodes().includes(CIRCUIT_RELAY_CODE)) {
 
-      if (maddr.protoCodes().includes(WEBRTC_DIRECT_CODE)) {
-        const webRTCrelayAddress = multiaddr(maddr.toString() + '/webrtc/p2p/' + peerId)
+      const webRTCrelayAddress = multiaddr(maddr.toString() + '/webrtc/p2p/' + peerId)
 
-        console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
-      } else if (maddr.protoCodes().includes(WEBTRANSPORT_CODE)) {
-        const webTransportRelayAddress = multiaddr(maddr.toString() + '/webtransport/p2p/' + peerId)
-
-        console.log(`Listening on '${webTransportRelayAddress.toString()}'`)
-      } else {
-        // do nothing
-      }
+      console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
     }
   })
 }

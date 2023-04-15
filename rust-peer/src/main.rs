@@ -97,10 +97,6 @@ async fn main() -> Result<()> {
             format!("/ip4/{}/udp/9090/webrtc-direct", listen_address).parse()?,
             AddressScore::Infinite,
         );
-        swarm.add_external_address(
-            format!("/ip4/{}/udp/9091/quic-v1", listen_address).parse()?,
-            AddressScore::Infinite,
-        );
     }
 
     if let Some(remote_address) = opt.remote_address {
@@ -171,7 +167,7 @@ async fn main() -> Result<()> {
                             .any(|p| p.as_bytes() == KADEMLIA_PROTOCOL_NAME)
                         {
                             for addr in listen_addrs {
-                                info!("identify::Event::Received listen addr: {}", addr);
+                                debug!("identify::Event::Received listen addr: {}", addr);
                                 // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
                                 // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
 
@@ -237,7 +233,7 @@ struct Behaviour {
 }
 
 fn create_swarm() -> Result<Swarm<Behaviour>> {
-    let f = File::open("./private_key")?;
+    let f = File::open("/home/ec2-user/private_key")?;
     let mut reader = BufReader::new(f);
     let mut buffer = Vec::new();
 
