@@ -42,7 +42,7 @@ export default function Home() {
 
       if (exists?.length) {
         const namesToAdd = dedupedProtonames.filter((name) => !exists.includes(name))
-        console.log('namesToAdd: ', namesToAdd)
+        // console.log('namesToAdd: ', namesToAdd)
         protoNames.set(conn.remotePeer.toString(), [...exists, ...namesToAdd])
 
       } else {
