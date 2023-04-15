@@ -17,16 +17,22 @@ import { BOOTSTRAP_NODE, CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
-import { circuitRelayTransport, circuitRelayServer } from 'libp2p/circuit-relay'
+import { circuitRelayTransport } from 'libp2p/circuit-relay'
 
 
 export async function startLibp2p() {
   // localStorage.debug = 'libp2p*,-*:trace'
   // application-specific data lives in the datastore
 
-  // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    dht: kadDHT({protocolPrefix: "/universal-connectivity", maxInboundStreams: 100, maxOutboundStreams: 100, clientMode: true}),
+    // set the inbound and outbound stream limits to these values
+    // because we were seeing a lot of the default limits being hit
+    dht: kadDHT({
+      protocolPrefix: "/universal-connectivity",
+      maxInboundStreams: 5000,
+      maxOutboundStreams: 5000,
+      clientMode: true
+    }),
     transports: [webTransport(), webSockets({
       filter: filters.all,
     }), webRTC({
@@ -44,10 +50,6 @@ export async function startLibp2p() {
       discoverRelays: 10,
     }),],
     connectionEncryption: [noise()],
-    connectionManager: {
-      maxConnections: 200,
-      minConnections: 1,
-    },
     streamMuxers: [yamux()],
     peerDiscovery: [
       bootstrap({
@@ -64,12 +66,15 @@ export async function startLibp2p() {
       ignoreDuplicatePublishError: true,
     }),
     identify: {
-      maxPushOutgoingStreams: 100,
-      maxInboundStreams: 100,
-      maxOutboundStreams: 100,
+      // these are set because we were seeing a lot of identify and identify push
+      // stream limits being hit
+      maxPushOutgoingStreams: 1000,
+      maxPushIncomingStreams: 1000,
+      maxInboundStreams: 1000,
+      maxOutboundStreams: 1000,
     },
     autonat: {
-      startupDelay: 60 * 60 *24 * 1000,
+      startupDelay: 60 * 60 * 24 * 1000,
     },
   })
 
