@@ -50,10 +50,6 @@ export async function startLibp2p() {
       discoverRelays: 10,
     }),],
     connectionEncryption: [noise()],
-    connectionManager: {
-      maxConnections: 10,
-      minConnections: 50,
-    },
     streamMuxers: [yamux()],
     peerDiscovery: [
       bootstrap({
