@@ -1,4 +1,4 @@
-import { createLibp2p } from 'libp2p'
+import { createLibp2p, Libp2p } from 'libp2p'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
@@ -47,7 +47,7 @@ export async function startLibp2p() {
     }),],
     connectionEncryption: [noise()],
     connectionManager: {
-      maxConnections: 100,
+      maxConnections: 200,
       minConnections: 1,
     },
     streamMuxers: [yamux()],
@@ -117,5 +117,18 @@ export const setWebRTCRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
       console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
     }
   })
+}
+
+export const connectToMultiaddr =
+  (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {
+    console.log(`dialling: ${multiaddr.toString()}`)
+    try {
+      const conn = await libp2p.dial(multiaddr)
+      console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
+      return conn
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
 }
 

@@ -22,8 +22,8 @@ import (
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	tcpTransport "github.com/libp2p/go-libp2p/p2p/transport/tcp"
-	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
+	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -188,7 +188,6 @@ func main() {
 		libp2p.Transport(tcpTransport.NewTCPTransport),
 		libp2p.Transport(webtransport.New),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9091/quic-v1", "/ip4/0.0.0.0/udp/9092/quic-v1/webtransport", "/ip4/0.0.0.0/tcp/9090"),
-		),
 	)
 
 	// create a new libp2p Host with lots of options
