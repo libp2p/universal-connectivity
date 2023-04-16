@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -94,7 +93,6 @@ func (cr *ChatRoom) readLoop() {
 		cm.Message = string(msg.Data)
 		cm.SenderID = msg.ID
 		cm.SenderNick = string(msg.ID[len(msg.ID)-8])
-		fmt.Printf("New message%s:\n", cm.Message)
 		// send valid messages onto the Messages channel
 		cr.Messages <- cm
 	}
