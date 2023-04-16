@@ -13,7 +13,7 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
-import { BOOTSTRAP_NODE, CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
+import { CHAT_TOPIC, CIRCUIT_RELAY_CODE, WEBRTC_BOOTSTRAP_NODE, WEBTRANSPORT_BOOTSTRAP_NODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
@@ -54,9 +54,8 @@ export async function startLibp2p() {
     peerDiscovery: [
       bootstrap({
         list: [
-          BOOTSTRAP_NODE,
-          // Local Rust Peer Bootstrap node
-          //  "/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ"
+          WEBRTC_BOOTSTRAP_NODE,
+          WEBTRANSPORT_BOOTSTRAP_NODE,
         ],
       }),
     ],
