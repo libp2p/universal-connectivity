@@ -2868,11 +2868,9 @@ dependencies = [
  "libp2p-quic",
  "libp2p-webrtc",
  "log",
- "multiaddr",
  "rand 0.8.5",
  "tokio",
  "tokio-util",
- "webrtc",
 ]
 
 [[package]]
