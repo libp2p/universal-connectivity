@@ -1,7 +1,0 @@
-# https://rust-lang.github.io/rustup/overrides.html#the-toolchain-file
-# note that ipv6.is_global() is https://github.com/rust-lang/rust/issues/27709 on nightly,
-# This shouldn't be a problem as long as all build env set the rust toolchain to 'nightly' (not stable)
-# If this turns out to be an issue, we can code around it with other logic
-
-[toolchain]
-channel = "nightly" # "stable"
