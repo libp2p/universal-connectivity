@@ -1,4 +1,4 @@
-import { createLibp2p } from 'libp2p'
+import { createLibp2p, Libp2p } from 'libp2p'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
@@ -13,7 +13,7 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
-import { BOOTSTRAP_NODE, CHAT_TOPIC, CIRCUIT_RELAY_CODE } from './constants'
+import { CHAT_TOPIC, CIRCUIT_RELAY_CODE, WEBRTC_BOOTSTRAP_NODE, WEBTRANSPORT_BOOTSTRAP_NODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 
 // @ts-ignore
@@ -24,9 +24,15 @@ export async function startLibp2p() {
   // localStorage.debug = 'libp2p*,-*:trace'
   // application-specific data lives in the datastore
 
-  // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
-    dht: kadDHT({protocolPrefix: "/universal-connectivity"}),
+    // set the inbound and outbound stream limits to these values
+    // because we were seeing a lot of the default limits being hit
+    dht: kadDHT({
+      protocolPrefix: "/universal-connectivity",
+      maxInboundStreams: 5000,
+      maxOutboundStreams: 5000,
+      clientMode: true
+    }),
     transports: [webTransport(), webSockets({
       filter: filters.all,
     }), webRTC({
@@ -44,15 +50,12 @@ export async function startLibp2p() {
       discoverRelays: 10,
     }),],
     connectionEncryption: [noise()],
-    connectionManager: {
-      maxConnections: 100,
-      minConnections: 1,
-    },
     streamMuxers: [yamux()],
     peerDiscovery: [
       bootstrap({
         list: [
-          BOOTSTRAP_NODE,
+          WEBRTC_BOOTSTRAP_NODE,
+          WEBTRANSPORT_BOOTSTRAP_NODE,
         ],
       }),
     ],
@@ -62,10 +65,15 @@ export async function startLibp2p() {
       ignoreDuplicatePublishError: true,
     }),
     identify: {
-      maxPushOutgoingStreams: 2,
+      // these are set because we were seeing a lot of identify and identify push
+      // stream limits being hit
+      maxPushOutgoingStreams: 1000,
+      maxPushIncomingStreams: 1000,
+      maxInboundStreams: 1000,
+      maxOutboundStreams: 1000,
     },
     autonat: {
-      startupDelay: 60 * 60 *24 * 1000,
+      startupDelay: 60 * 60 * 24 * 1000,
     },
   })
 
@@ -101,5 +109,18 @@ export const setWebRTCRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
       console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
     }
   })
+}
+
+export const connectToMultiaddr =
+  (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {
+    console.log(`dialling: ${multiaddr.toString()}`)
+    try {
+      const conn = await libp2p.dial(multiaddr)
+      console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
+      return conn
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
 }
 

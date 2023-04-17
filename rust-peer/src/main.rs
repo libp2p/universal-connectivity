@@ -334,8 +334,12 @@ fn create_swarm(
         relay: relay::Behaviour::new(
             local_peer_id,
             relay::Config {
-                max_reservations: 400,
-                max_reservations_per_peer: 10,
+                max_reservations: usize::MAX,
+                max_reservations_per_peer: 100,
+                reservation_rate_limiters: Vec::default(),
+                circuit_src_rate_limiters: Vec::default(),
+                max_circuits: usize::MAX,
+                max_circuits_per_peer: 100,
                 ..Default::default()
             },
         ),

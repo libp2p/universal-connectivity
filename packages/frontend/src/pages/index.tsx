@@ -2,16 +2,18 @@ import Head from 'next/head'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
-import { useInterval } from 'usehooks-ts'
-import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Connection } from '@libp2p/interface-connection'
 import { usePeerContext } from '../context/peer-ctx'
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import Image from 'next/image'
+import { multiaddr } from '@multiformats/multiaddr'
+import { connectToMultiaddr } from '../lib/libp2p'
 
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
   const { peerStats, setPeerStats } = usePeerContext()
+  const [maddr, setMultiaddr] = useState('')
 
   useEffect(() => {
     const peerConnectedCB = (evt: CustomEvent<Connection>) => {
@@ -36,14 +38,15 @@ export default function Home() {
 
     connections.forEach((conn) => {
       const exists = protoNames.get(conn.remotePeer.toString())
+      const dedupedProtonames = [...new Set(conn.remoteAddr.protoNames())]
 
-      if (exists) {
-        const namesToAdd = exists.filter(
-          (name) => !conn.remoteAddr.protoNames().includes(name),
-        )
+      if (exists?.length) {
+        const namesToAdd = dedupedProtonames.filter((name) => !exists.includes(name))
+        // console.log('namesToAdd: ', namesToAdd)
         protoNames.set(conn.remotePeer.toString(), [...exists, ...namesToAdd])
+
       } else {
-        protoNames.set(conn.remotePeer.toString(), conn.remoteAddr.protoNames())
+        protoNames.set(conn.remotePeer.toString(), dedupedProtonames)
       }
     })
 
@@ -54,12 +57,38 @@ export default function Home() {
 
   }
 
+  const handleConnectToMultiaddr = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!maddr) {
+        return
+      }
+
+      try {
+        const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
+        console.log('connection: ', connection)
+
+        return connection
+      } catch (e) {
+        console.error(e)
+      }
+    },
+    [libp2p, maddr],
+  )
+
+  // handleConnectToMultiaddr
+
+  const handleMultiaddrChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setMultiaddr(e.target.value)
+    },
+    [setMultiaddr],
+  )
 
   return (
     <>
       <Head>
-        <title>js-libp2p-nextjs-example</title>
-        <meta name="description" content="js-libp2p-nextjs-example" />
+        <title>Universal Connectivity</title>
+        <meta name="description" content="universal connectivity" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -68,8 +97,14 @@ export default function Home() {
         <div className="py-10">
           <header>
             <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-              <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
-                Libp2p WebTransport Example
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900 flex flex-row">
+                <p className="mr-4">Universal Connectivity</p>
+                <Image
+                  src="/libp2p-hero.svg"
+                  alt="libp2p logo"
+                  height="46"
+                  width="46"
+                />
               </h1>
             </div>
           </header>
@@ -78,6 +113,33 @@ export default function Home() {
               <ul className="my-2 space-y-2 break-all">
                 <li className="">This PeerID: {libp2p.peerId.toString()}</li>
               </ul>
+              <div className="my-6 w-1/2">
+                <label
+                  htmlFor="peer-id"
+                  className="block text-sm font-medium leading-6 text-gray-900"
+                >
+                  multiaddr to connect to
+                </label>
+                <div className="mt-2">
+                  <input
+                    value={maddr}
+                    type="text"
+                    name="peer-id"
+                    id="peer-id"
+                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    placeholder="12D3Koo..."
+                    aria-describedby="multiaddr-id-description"
+                    onChange={handleMultiaddrChange}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  onClick={handleConnectToMultiaddr}
+                >
+                  Connect to multiaddr
+                </button>
+              </div>
 
 
               <div className="my-4 inline-flex items-center text-xl">

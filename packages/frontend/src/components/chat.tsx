@@ -132,7 +132,7 @@ export default function ChatContainer() {
                 alt="username"
               />
               <span className="absolute w-3 h-3 bg-green-600 rounded-full left-10 top-3"></span> */}
-              <span className="text-3xl">💁‍♀️💁</span>
+              <span className="text-3xl">💁🏽‍♀️💁🏿‍♂️</span>
               <span className="block ml-2 font-bold text-gray-600">
                 Public Chat
               </span>
