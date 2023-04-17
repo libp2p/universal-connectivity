@@ -1,5 +1,3 @@
-#![feature(ip)] // Enable matching on ip6.is_global(), see: https://doc.rust-lang.org/std/net/enum.IpAddr.html#method.is_global
-
 use anyhow::{Context, Result};
 use clap::Parser;
 use futures::future::{select, Either};
@@ -112,19 +110,13 @@ async fn main() -> Result<()> {
                 SwarmEvent::NewListenAddr { address, .. } => {
                     // closure shortcut to sift through address response
                     let mut add_addr = |address: Multiaddr| {
-                        let p2p_address = address
-                            .clone()
-                            .with(Protocol::P2p((*swarm.local_peer_id()).into()));
+                        let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
                         info!("Listen p2p address: {p2p_address:?}");
-                        // if not our own addresses (address_webrtc, address_quic) then add to external addresses
-                        if address != address_webrtc && address != address_quic {
-                            swarm.add_external_address(p2p_address, AddressScore::Infinite);
-                        };
+                        swarm.add_external_address(p2p_address, AddressScore::Infinite);
                     };
                     // Only add globally available IPv6 addresses to the external addresses list.
                     if let Protocol::Ip6(ip6) = address.iter().next().unwrap() {
-                        // Since 2015, Rust nightly enables matching on ip6.is_global(), see: https://doc.rust-lang.org/std/net/enum.IpAddr.html#method.is_global
-                        if ip6.is_global() {
+                        if !ip6.is_loopback() && !ip6.is_unspecified() {
                             add_addr(address.clone());
                         }
                     } else {
