@@ -27,9 +27,7 @@ libp2p = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-
 libp2p-webrtc = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", version = "0.4.0-alpha.4", features = [
 	"tokio",
 ] }
-libp2p-quic = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", features = [
-	"tokio",
-] }
+libp2p-quic = {  git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", features = ["tokio"] }
 log = "0.4.17"
 multiaddr = { git = "https://github.com/p-shahi/rust-multiaddr.git", branch = "support-webrtc-protocol-code" }
 rand = "0.8.5"
