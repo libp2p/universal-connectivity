@@ -1,22 +1,24 @@
 use anyhow::{Context, Result};
 use clap::Parser;
+use futures::future::{select, Either};
 use futures::StreamExt;
 use libp2p::{
     core::muxing::StreamMuxerBox,
     gossipsub, identify, identity,
     kad::record::store::MemoryStore,
     kad::{Kademlia, KademliaConfig},
-    multiaddr::Protocol,
+    multiaddr::{Multiaddr, Protocol},
     relay,
     swarm::{
         keep_alive, AddressRecord, AddressScore, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
     },
-    Multiaddr, PeerId, Transport,
+    PeerId, Transport,
 };
 use libp2p_quic as quic;
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
+use std::net::{IpAddr, Ipv6Addr};
 use std::path::Path;
 use std::{
     borrow::Cow,
@@ -27,7 +29,11 @@ use std::{
 use tokio::fs;
 
 const TICK_INTERVAL: Duration = Duration::from_secs(15);
-const KADEMLIA_PROTOCOL_NAME: &'static [u8] = b"/universal-connectivity/lan/kad/1.0.0";
+const KADEMLIA_PROTOCOL_NAME: &[u8] = b"/universal-connectivity/lan/kad/1.0.0";
+const PORT_WEBRTC: u16 = 9090;
+const PORT_QUIC: u16 = 9091;
+const LOCAL_KEY_PATH: &str = "./local_key";
+const LOCAL_CERT_PATH: &str = "./cert.pem";
 
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -47,39 +53,75 @@ async fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let opt = Opt::parse();
-    let local_key = read_or_create_identity(&Path::new("./local_key"))
+    let local_key = read_or_create_identity(Path::new(LOCAL_KEY_PATH))
         .await
         .context("Failed to read identity")?;
-    let webrtc_cert = read_or_create_certificate(&Path::new("./cert.pem"))
+    let webrtc_cert = read_or_create_certificate(Path::new(LOCAL_CERT_PATH))
         .await
         .context("Failed to read certificate")?;
 
     let mut swarm = create_swarm(local_key, webrtc_cert)?;
 
-    swarm.listen_on(format!("/ip4/0.0.0.0/udp/9090/webrtc-direct").parse()?)?;
-    swarm.listen_on(format!("/ip4/0.0.0.0/udp/9091/quic-v1").parse()?)?;
+    let address_webrtc = Multiaddr::from(Ipv6Addr::UNSPECIFIED)
+        .with(Protocol::Udp(PORT_WEBRTC))
+        .with(Protocol::WebRTCDirect);
+
+    let address_quic = Multiaddr::from(Ipv6Addr::UNSPECIFIED)
+        .with(Protocol::Udp(PORT_QUIC))
+        .with(Protocol::QuicV1);
+
+    swarm
+        .listen_on(address_webrtc.clone())
+        .expect("listen on webrtc");
+    swarm
+        .listen_on(address_quic.clone())
+        .expect("listen on quic");
 
     if let Some(listen_address) = opt.listen_address {
-        swarm.add_external_address(
-            format!("/ip4/{}/udp/9090/webrtc-direct", listen_address).parse()?,
-            AddressScore::Infinite,
-        );
+        // match on whether the listen address string is an IP address or not (do nothing if not)
+        match listen_address.parse::<IpAddr>() {
+            Ok(ip) => {
+                let opt_address_webrtc = Multiaddr::from(ip)
+                    .with(Protocol::Udp(PORT_WEBRTC))
+                    .with(Protocol::WebRTCDirect);
+                swarm.add_external_address(opt_address_webrtc, AddressScore::Infinite);
+            }
+            Err(_) => {
+                debug!(
+                    "listen_address provided is not an IP address: {}",
+                    listen_address
+                )
+            }
+        }
     }
 
     if let Some(remote_address) = opt.remote_address {
-        swarm.dial(remote_address).unwrap();
+        swarm
+            .dial(remote_address)
+            .expect("a valid remote address to be provided");
     }
 
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
 
     let now = Instant::now();
     loop {
-        match futures::future::select(swarm.next(), &mut tick).await {
-            futures::future::Either::Left((event, _)) => match event.unwrap() {
+        match select(swarm.next(), &mut tick).await {
+            Either::Left((event, _)) => match event.unwrap() {
                 SwarmEvent::NewListenAddr { address, .. } => {
-                    let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
-                    info!("Listen p2p address: {p2p_address:?}");
-                    swarm.add_external_address(p2p_address, AddressScore::Infinite);
+                    // closure shortcut to sift through address response
+                    let mut add_addr = |address: Multiaddr| {
+                        let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
+                        info!("Listen p2p address: {p2p_address:?}");
+                        swarm.add_external_address(p2p_address, AddressScore::Infinite);
+                    };
+                    // Only add globally available IPv6 addresses to the external addresses list.
+                    if let Protocol::Ip6(ip6) = address.iter().next().unwrap() {
+                        if !ip6.is_loopback() && !ip6.is_unspecified() {
+                            add_addr(address.clone());
+                        }
+                    } else {
+                        add_addr(address.clone());
+                    }
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     info!("Connected to {peer_id}");
@@ -153,19 +195,15 @@ async fn main() -> Result<()> {
                                 // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
                                 // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
 
-                                let webrtc_address = Multiaddr::try_from(
-                                    addr.to_string()
-                                        + "/webrtc/p2p/"
-                                        + &peer_id.clone().to_string(),
-                                )?;
+                                let webrtc_address = addr
+                                    .with(Protocol::WebRTCDirect)
+                                    .with(Protocol::P2p(peer_id.into()));
+
                                 swarm
                                     .behaviour_mut()
                                     .kademlia
                                     .add_address(&peer_id, webrtc_address.clone());
                                 info!("Added {webrtc_address} to the routing table.");
-
-                                // TODO: below is how we should be constructing the address (not string manipulation)
-                                // let webrtc_address = addr.with(Protocol::WebRTC(peer_id.clone().into()));
                             }
                         }
                     }
@@ -177,7 +215,7 @@ async fn main() -> Result<()> {
                     debug!("Other type of event: {:?}", event);
                 }
             },
-            futures::future::Either::Right(_) => {
+            Either::Right(_) => {
                 tick = futures_timer::Delay::new(TICK_INTERVAL);
 
                 debug!(
@@ -270,7 +308,7 @@ fn create_swarm(
     };
 
     let identify_config = identify::Behaviour::new(
-        identify::Config::new("/ipfs/0.1.0".into(), local_key.public().clone())
+        identify::Config::new("/ipfs/0.1.0".into(), local_key.public())
             .with_interval(Duration::from_secs(60)), // do this so we can get timeouts for dropped WebRTC connections
     );
 
