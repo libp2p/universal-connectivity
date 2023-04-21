@@ -110,15 +110,6 @@ async fn main() -> Result<()> {
                 SwarmEvent::NewListenAddr { address, .. } => {
                     let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
                     info!("Listen p2p address: {p2p_address:?}");
-                    // Only add globally available IPv6 addresses to the external addresses list.
-                    if let Protocol::Ip6(ip6) = p2p_address.iter().next().unwrap() {
-                        if !ip6.is_loopback() && !ip6.is_unspecified() {
-                            swarm.add_external_address(p2p_address.clone(), AddressScore::Infinite);
-                        }
-                    } else {
-                        // Add all IPv4 addresses
-                        swarm.add_external_address(p2p_address.clone(), AddressScore::Infinite);
-                    }
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     info!("Connected to {peer_id}");
@@ -193,7 +184,7 @@ async fn main() -> Result<()> {
                                 // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
 
                                 let webrtc_address = addr
-                                    .with(Protocol::WebRTCDirect)
+                                    .with(Protocol::WebRTC)
                                     .with(Protocol::P2p(peer_id.into()));
 
                                 swarm
