@@ -108,19 +108,16 @@ async fn main() -> Result<()> {
         match select(swarm.next(), &mut tick).await {
             Either::Left((event, _)) => match event.unwrap() {
                 SwarmEvent::NewListenAddr { address, .. } => {
-                    // closure shortcut to sift through address response
-                    let mut add_addr = |address: Multiaddr| {
-                        let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
-                        info!("Listen p2p address: {p2p_address:?}");
-                        swarm.add_external_address(p2p_address, AddressScore::Infinite);
-                    };
+                    let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
+                    info!("Listen p2p address: {p2p_address:?}");
                     // Only add globally available IPv6 addresses to the external addresses list.
-                    if let Protocol::Ip6(ip6) = address.iter().next().unwrap() {
+                    if let Protocol::Ip6(ip6) = p2p_address.iter().next().unwrap() {
                         if !ip6.is_loopback() && !ip6.is_unspecified() {
-                            add_addr(address.clone());
+                            swarm.add_external_address(p2p_address.clone(), AddressScore::Infinite);
                         }
                     } else {
-                        add_addr(address.clone());
+                        // Add all IPv4 addresses
+                        swarm.add_external_address(p2p_address.clone(), AddressScore::Infinite);
                     }
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {

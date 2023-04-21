@@ -54,8 +54,9 @@ export async function startLibp2p() {
     peerDiscovery: [
       bootstrap({
         list: [
-          WEBRTC_BOOTSTRAP_NODE,
-          WEBTRANSPORT_BOOTSTRAP_NODE,
+          // WEBRTC_BOOTSTRAP_NODE,
+          // WEBTRANSPORT_BOOTSTRAP_NODE,
+          '/ip6/::1/udp/9090/webrtc-direct/certhash/uEiBy_U1UNQ0IDvot_PKlQM_QeU3yx-zCAVaMxxVm2JxWBg/p2p/12D3KooWSFfVyasFDa4NBQMzTmzSQBehUV92Exs9dsGjr9DL5TS3',
         ],
       }),
     ],
