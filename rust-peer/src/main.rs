@@ -18,7 +18,7 @@ use libp2p_quic as quic;
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
-use std::net::{IpAddr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
 use std::{
     borrow::Cow,
@@ -62,11 +62,11 @@ async fn main() -> Result<()> {
 
     let mut swarm = create_swarm(local_key, webrtc_cert)?;
 
-    let address_webrtc = Multiaddr::from(Ipv6Addr::UNSPECIFIED)
+    let address_webrtc = Multiaddr::from(Ipv4Addr::UNSPECIFIED)
         .with(Protocol::Udp(PORT_WEBRTC))
         .with(Protocol::WebRTCDirect);
 
-    let address_quic = Multiaddr::from(Ipv6Addr::UNSPECIFIED)
+    let address_quic = Multiaddr::from(Ipv4Addr::UNSPECIFIED)
         .with(Protocol::Udp(PORT_QUIC))
         .with(Protocol::QuicV1);
 
