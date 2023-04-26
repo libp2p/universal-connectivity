@@ -16,7 +16,7 @@ export default function Home() {
   const [maddr, setMultiaddr] = useState('')
 
   useEffect(() => {
-    const peerConnectedCB = (evt: CustomEvent<Connection>) => {
+    const peerConnectedCB = (evt: any) => {
       const connection = evt.detail
       setPeerStats({ ...peerStats, peerIds: [...peerStats.peerIds, connection.remotePeer], connections: [...peerStats.connections, connection], connected: true })
     }

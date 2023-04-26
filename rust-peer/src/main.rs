@@ -18,7 +18,7 @@ use libp2p_quic as quic;
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
-use std::net::{IpAddr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
 use std::{
     borrow::Cow,
@@ -62,11 +62,11 @@ async fn main() -> Result<()> {
 
     let mut swarm = create_swarm(local_key, webrtc_cert)?;
 
-    let address_webrtc = Multiaddr::from(Ipv6Addr::UNSPECIFIED)
+    let address_webrtc = Multiaddr::from(Ipv4Addr::UNSPECIFIED)
         .with(Protocol::Udp(PORT_WEBRTC))
         .with(Protocol::WebRTCDirect);
 
-    let address_quic = Multiaddr::from(Ipv6Addr::UNSPECIFIED)
+    let address_quic = Multiaddr::from(Ipv4Addr::UNSPECIFIED)
         .with(Protocol::Udp(PORT_QUIC))
         .with(Protocol::QuicV1);
 
@@ -108,20 +108,8 @@ async fn main() -> Result<()> {
         match select(swarm.next(), &mut tick).await {
             Either::Left((event, _)) => match event.unwrap() {
                 SwarmEvent::NewListenAddr { address, .. } => {
-                    // closure shortcut to sift through address response
-                    let mut add_addr = |address: Multiaddr| {
-                        let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
-                        info!("Listen p2p address: {p2p_address:?}");
-                        swarm.add_external_address(p2p_address, AddressScore::Infinite);
-                    };
-                    // Only add globally available IPv6 addresses to the external addresses list.
-                    if let Protocol::Ip6(ip6) = address.iter().next().unwrap() {
-                        if !ip6.is_loopback() && !ip6.is_unspecified() {
-                            add_addr(address.clone());
-                        }
-                    } else {
-                        add_addr(address.clone());
-                    }
+                    let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
+                    info!("Listen p2p address: {p2p_address:?}");
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     info!("Connected to {peer_id}");
@@ -196,7 +184,7 @@ async fn main() -> Result<()> {
                                 // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
 
                                 let webrtc_address = addr
-                                    .with(Protocol::WebRTCDirect)
+                                    .with(Protocol::WebRTC)
                                     .with(Protocol::P2p(peer_id.into()));
 
                                 swarm
