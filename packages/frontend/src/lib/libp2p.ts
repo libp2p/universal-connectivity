@@ -54,6 +54,9 @@ export async function startLibp2p() {
     },
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
+    connectionGater: {
+      denyDialMultiaddr: async () => false,
+    },
     peerDiscovery: [
       bootstrap({
         list: [
@@ -61,10 +64,10 @@ export async function startLibp2p() {
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
           '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
-          // Local Rust Peer Bootstrap node
-          //  "/ip4/127.0.0.1/udp/9090/webrtc-direct/certhash/uEiA2twAWww-g6fXsJe6JPlROwCHbRj6fNgr_WHxiQGEK3g/p2p/12D3KooWLTB1SrjyF8R5Z1MKErcV8abs26eo4LpadQKWsxMUcDBJ"
           WEBRTC_BOOTSTRAP_NODE,
           WEBTRANSPORT_BOOTSTRAP_NODE,
+          // Local Rust Peer Bootstrap node
+          // "/ip4/192.168.1.6/udp/9090/webrtc-direct/certhash/uEiCJhrTNBkLa0tNIk8eAW495Oahf7P9gjfjABJcr-2m8gg/p2p/12D3KooWP4a2y9qqHNa9aEKSZYcshQ5TrJYzZv93xgFW6rmg6MbP",
         ],
       }),
     ],
