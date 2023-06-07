@@ -62,10 +62,6 @@ export async function startLibp2p() {
         list: [
           WEBRTC_BOOTSTRAP_NODE,
           WEBTRANSPORT_BOOTSTRAP_NODE,
-          // Local Rust Peer Bootstrap node
-          // "/ip4/127.0.0.1/udp/9091/webrtc-direct/certhash/uEiCJhrTNBkLa0tNIk8eAW495Oahf7P9gjfjABJcr-2m8gg/p2p/12D3KooWP4a2y9qqHNa9aEKSZYcshQ5TrJYzZv93xgFW6rmg6MbP",
-          // Local Go Peer Bootstrap node
-          // "/ip4/127.0.0.1/udp/9095/quic-v1/webtransport/certhash/uEiAzEQIlSyoWfaX1SVfYBnhsCst2S01iR_j-3GqBHkvIdA/certhash/uEiDJvJFTQ1iUmu743IZcKDzh-39bFoiz1H_749DQlPB-6A/p2p/12D3KooWLGL5JxewBRKDTqZHrDthqrJe1xasVehyEqbJ8bfXRLb5"
         ],
       }),
     ],
