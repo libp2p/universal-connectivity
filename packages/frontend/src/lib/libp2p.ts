@@ -67,7 +67,9 @@ export async function startLibp2p() {
           WEBRTC_BOOTSTRAP_NODE,
           WEBTRANSPORT_BOOTSTRAP_NODE,
           // Local Rust Peer Bootstrap node
-          // "/ip4/192.168.1.6/udp/9090/webrtc-direct/certhash/uEiCJhrTNBkLa0tNIk8eAW495Oahf7P9gjfjABJcr-2m8gg/p2p/12D3KooWP4a2y9qqHNa9aEKSZYcshQ5TrJYzZv93xgFW6rmg6MbP",
+          // "/ip4/127.0.0.1/udp/9091/webrtc-direct/certhash/uEiCJhrTNBkLa0tNIk8eAW495Oahf7P9gjfjABJcr-2m8gg/p2p/12D3KooWP4a2y9qqHNa9aEKSZYcshQ5TrJYzZv93xgFW6rmg6MbP",
+          // Local Go Peer Bootstrap node
+          // "/ip4/127.0.0.1/udp/9095/quic-v1/webtransport/certhash/uEiAzEQIlSyoWfaX1SVfYBnhsCst2S01iR_j-3GqBHkvIdA/certhash/uEiDJvJFTQ1iUmu743IZcKDzh-39bFoiz1H_749DQlPB-6A/p2p/12D3KooWLGL5JxewBRKDTqZHrDthqrJe1xasVehyEqbJ8bfXRLb5"
         ],
       }),
     ],
@@ -77,7 +79,12 @@ export async function startLibp2p() {
         msgIdFn: msgIdFnStrictNoSign,
         ignoreDuplicatePublishError: true,
       }),
-      dht: kadDHT(),
+      dht: kadDHT({
+        protocolPrefix: "/universal-connectivity",
+        maxInboundStreams: 5000,
+        maxOutboundStreams: 5000,
+        clientMode: true,
+      }),
       identify: identifyService()
     }
   })
@@ -88,7 +95,6 @@ export async function startLibp2p() {
     const multiaddrs = peer.addresses.map(({ multiaddr }) => multiaddr)
 
     console.log(`changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`)
-    setWebRTCRelayAddress(multiaddrs, libp2p.peerId.toString())
   })
 
   return libp2p
@@ -105,17 +111,6 @@ export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
   return await sha256.encode(encodedSeqNum)
 }
 
-
-export const setWebRTCRelayAddress = (maddrs: Multiaddr[], peerId: string) => {
-  maddrs.forEach((maddr) => {
-    if (maddr.protoCodes().includes(CIRCUIT_RELAY_CODE)) {
-
-      const webRTCrelayAddress = multiaddr(maddr.toString() + '/webrtc/p2p/' + peerId)
-
-      console.log(`Listening on '${webRTCrelayAddress.toString()}'`)
-    }
-  })
-}
 
 export const connectToMultiaddr =
   (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {

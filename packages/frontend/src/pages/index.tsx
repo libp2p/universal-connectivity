@@ -24,7 +24,7 @@ export default function Home() {
         ...peerStats,
         peerIds: connections.map(conn => conn.remotePeer),
         connections: connections,
-        connected: true
+        connected: connections.length > 0,
       })
     }, 1000)
 
