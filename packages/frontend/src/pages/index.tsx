@@ -8,25 +8,45 @@ import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { multiaddr } from '@multiformats/multiaddr'
 import { connectToMultiaddr } from '../lib/libp2p'
-
+import { useListenAddressesContext } from '../context/listen-addresses-ctx'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
   const { peerStats, setPeerStats } = usePeerContext()
+  const { listenAddresses, setListenAddresses } = useListenAddressesContext()
   const [maddr, setMultiaddr] = useState('')
 
   useEffect(() => {
-    const peerConnectedCB = (evt: any) => {
-      const connection = evt.detail
-      setPeerStats({ ...peerStats, peerIds: [...peerStats.peerIds, connection.remotePeer], connections: [...peerStats.connections, connection], connected: true })
-    }
+    const interval = setInterval(() => {
+      const connections = libp2p.getConnections()
 
-    libp2p.addEventListener('peer:connect', peerConnectedCB)
+      setPeerStats({
+        ...peerStats,
+        peerIds: connections.map(conn => conn.remotePeer),
+        connections: connections,
+        connected: connections.length > 0,
+      })
+    }, 1000)
 
     return () => {
-      libp2p.removeEventListener('peer:connect', peerConnectedCB)
+      clearInterval(interval)
     }
   }, [libp2p, peerStats, setPeerStats])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const multiaddrs = libp2p.getMultiaddrs()
+
+      setListenAddresses({
+        ...listenAddresses,
+        multiaddrs
+      })
+    }, 1000)
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [libp2p, listenAddresses, setListenAddresses])
 
   type PeerProtoTuple = {
     peerId: string
@@ -54,7 +74,6 @@ export default function Home() {
       peerId,
       protocols,
     }))
-
   }
 
   const handleConnectToMultiaddr = useCallback(
@@ -113,6 +132,16 @@ export default function Home() {
               <ul className="my-2 space-y-2 break-all">
                 <li className="">This PeerID: {libp2p.peerId.toString()}</li>
               </ul>
+              Addresses:
+              <ul className="my-2 space-y-2 break-all">
+                {
+                  listenAddresses.multiaddrs.map((ma, index) => {
+                    return (
+                      <li key={`ma-${index}`}>{ma.toString()}</li>
+                    )
+                  })
+                }
+              </ul>
               <div className="my-6 w-1/2">
                 <label
                   htmlFor="peer-id"
@@ -140,7 +169,6 @@ export default function Home() {
                   Connect to multiaddr
                 </button>
               </div>
-
 
               <div className="my-4 inline-flex items-center text-xl">
                 Connected:{' '}
