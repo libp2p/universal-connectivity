@@ -24,7 +24,6 @@ Some of the cool and cutting-edge [transport protocols](https://connectivity.lib
 | [`frontend`](./packages/frontend/) | Next.js based browser UI of the chat app         | ✅           | ✅     | ❌   | ❌  |
 | [`go-peer`](./go-peer/)            | Chat peer implemented in Go                      | ✅           | ❌     | ✅   | ✅  |
 | [`rust-peer`](./rust-peer/)        | Chat peer implemented in Rust                    | ❌           | ✅     | ✅   | ❌  |
-| [`node`](./packages/node/)         | Chat peer implemented with TypeScript in node.js | ❌           | ❌     | ❌   | ✅  |
 
 ✅ - Protocol supported
 ❌ - Protocol not supported
