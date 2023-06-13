@@ -1,5 +1,5 @@
 import { useLibp2pContext } from '@/context/ctx'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { Message } from '@libp2p/interface-pubsub'
 import { CHAT_TOPIC } from '@/lib/constants'
 import { createIcon } from '@download/blockies'
@@ -46,6 +46,7 @@ export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
   const { messageHistory, setMessageHistory } = useChatContext();
   const [input, setInput] = useState<string>('')
+  const fileRef = useRef<HTMLInputElement>(null);
 
   // Effect hook to subscribe to pubsub events and update the message state hook
   useEffect(() => {
@@ -118,6 +119,27 @@ export default function ChatContainer() {
     [setInput],
   )
 
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(e.target.files[0]);
+        reader.onload = (readerEvent) => {
+          const result = readerEvent.target?.result as ArrayBuffer;
+          console.log(`READER_RESULT: ${result.byteLength} bytes`);
+        };
+      }
+    },
+    [],
+  )
+
+  const handleFileSend = useCallback(
+    async (_e: React.MouseEvent<HTMLButtonElement>) => {
+      fileRef?.current?.click();
+    },
+    [fileRef],
+  )
+
   return (
     <div className="container mx-auto">
       <div className="min-w-full border rounded lg:grid lg:grid-cols-3">
@@ -164,7 +186,9 @@ export default function ChatContainer() {
                   />
                 </svg>
               </button>
-              <button>
+
+              <input ref={fileRef} className="hidden" type="file" onChange={handleFileInput} />
+              <button onClick={handleFileSend}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="w-5 h-5 text-gray-500"
