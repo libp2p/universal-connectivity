@@ -21,6 +21,7 @@ use libp2p_quic as quic;
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
+use serde::{Deserialize, Serialize};
 use std::iter;
 use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
@@ -38,6 +39,8 @@ const PORT_WEBRTC: u16 = 9090;
 const PORT_QUIC: u16 = 9091;
 const LOCAL_KEY_PATH: &str = "./local_key";
 const LOCAL_CERT_PATH: &str = "./cert.pem";
+const GOSSIPSUB_CHAT_TOPIC: &str = "universal-connectivity";
+const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
 
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -49,6 +52,13 @@ struct Opt {
     /// Address of a remote peer to connect to.
     #[clap(long)]
     remote_address: Option<Multiaddr>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ChatFileMessage {
+    file_id: String,
+    provider: String,
 }
 
 /// An example WebRTC peer that will accept connections
@@ -105,6 +115,8 @@ async fn main() -> Result<()> {
             .expect("a valid remote address to be provided");
     }
 
+    let file_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC).hash();
+
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
 
     let now = Instant::now();
@@ -136,17 +148,44 @@ async fn main() -> Result<()> {
                         message,
                     },
                 )) => {
-                    info!(
-                        "Received message from {:?}: {}",
-                        message.source,
-                        String::from_utf8(message.data).unwrap()
-                    );
+                    if message.topic.eq(&file_topic_hash) {
+                        let file_msg: ChatFileMessage =
+                            serde_json::from_str(String::from_utf8(message.data).unwrap().as_str())
+                                .unwrap();
+                        info!(
+                            "Received file from {:?}: {} - {}",
+                            message.source, file_msg.file_id, file_msg.provider,
+                        );
+
+                        let request_id = swarm
+                            .behaviour_mut()
+                            .request_response
+                            .send_request(&message.source.unwrap(), FileRequest(file_msg.file_id));
+                        info!("File requested: {:?}", request_id);
+                    } else {
+                        info!(
+                            "Received message from {:?}: {}",
+                            message.source,
+                            String::from_utf8(message.data).unwrap()
+                        );
+                    }
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(
                     libp2p::gossipsub::Event::Subscribed { peer_id, topic },
                 )) => {
                     debug!("{peer_id} subscribed to {topic}");
                 }
+                SwarmEvent::Behaviour(BehaviourEvent::RequestResponse(
+                    request_response::Event::Message { message, .. },
+                )) => match message {
+                    request_response::Message::Request { .. } => {
+                        todo!();
+                    }
+                    request_response::Message::Response { response, .. } => {
+                        let file_body = response.0;
+                        info!("file received. size:{}", file_body.len());
+                    }
+                },
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
 
@@ -310,9 +349,9 @@ fn create_swarm(
     .expect("Correct configuration");
 
     // Create/subscribe Gossipsub topics
-    let topic = gossipsub::IdentTopic::new("universal-connectivity");
+    let topic = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC);
     gossipsub.subscribe(&topic)?;
-    let topic = gossipsub::IdentTopic::new("universal-connectivity-file");
+    let topic = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC);
     gossipsub.subscribe(&topic)?;
 
     let transport = {
