@@ -309,10 +309,10 @@ fn create_swarm(
     )
     .expect("Correct configuration");
 
-    // Create a Gossipsub topic
+    // Create/subscribe Gossipsub topics
     let topic = gossipsub::IdentTopic::new("universal-connectivity");
-
-    // subscribes to our topic
+    gossipsub.subscribe(&topic)?;
+    let topic = gossipsub::IdentTopic::new("universal-connectivity-file");
     gossipsub.subscribe(&topic)?;
 
     let transport = {
@@ -421,7 +421,7 @@ pub struct FileResponse(Vec<u8>);
 
 impl ProtocolName for FileExchangeProtocol {
     fn protocol_name(&self) -> &[u8] {
-        "/file-exchange/1".as_bytes()
+        "/universal-connectivity-file/1".as_bytes()
     }
 }
 

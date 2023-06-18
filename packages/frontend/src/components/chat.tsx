@@ -1,10 +1,18 @@
 import { useLibp2pContext } from '@/context/ctx'
-import React, { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Message } from '@libp2p/interface-pubsub'
-import { CHAT_TOPIC } from '@/lib/constants'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL } from '@/lib/constants'
 import { createIcon } from '@download/blockies'
 import { ChatMessage, useChatContext } from '../context/chat-ctx'
-
+import { v4 as uuidv4 } from 'uuid';
+import { ChatFile, useFileChatContext } from '@/context/file-ctx'
+import { pipe } from 'it-pipe'
+import map from 'it-map'
+import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
+import { multiaddr, Multiaddr } from '@multiformats/multiaddr'
+import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
+import * as lp from 'it-length-prefixed'
+import { peerIdFromString } from '@libp2p/peer-id'
 
 interface MessageProps extends ChatMessage { }
 
@@ -45,30 +53,81 @@ function Message({ msg, from, peerId }: MessageProps) {
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
   const { messageHistory, setMessageHistory } = useChatContext();
+  const { files, setFiles } = useFileChatContext();
   const [input, setInput] = useState<string>('')
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Effect hook to subscribe to pubsub events and update the message state hook
   useEffect(() => {
-    const messageCB = (evt: CustomEvent<Message>) => {
+    const messageCB = async (evt: CustomEvent<Message>) => {
       console.log('gossipsub console log', evt.detail)
       // FIXME: Why does 'from' not exist on type 'Message'?
       const { topic, data } = evt.detail
-      const msg = new TextDecoder().decode(data)
-      console.log(`${topic}: ${msg}`)
 
-      // Append signed messages, otherwise discard
-      if (evt.detail.type === 'signed') {
-        setMessageHistory([...messageHistory, { msg, from: 'other', peerId: evt.detail.from.toString() }])
+      if (topic === CHAT_TOPIC) {
+        const msg = new TextDecoder().decode(data)
+        console.log(`${topic}: ${msg}`)
+
+        // Append signed messages, otherwise discard
+        if (evt.detail.type === 'signed') {
+          setMessageHistory([...messageHistory, { msg, from: 'other', peerId: evt.detail.from.toString() }])
+        }
+      } else if (topic === CHAT_FILE_TOPIC) {
+        const { fileId, provider } = JSON.parse(new TextDecoder().decode(data))
+        console.log(`fileId:${fileId}, provider:${provider}`)
+
+        const stream = await libp2p.dialProtocol(peerIdFromString(provider), FILE_EXCHANGE_PROTOCOL)
+        await pipe(
+          [uint8ArrayFromString(fileId)],
+          (source) => lp.encode(source),
+          stream,
+          (source) => lp.decode(source),
+          async function(source) {
+            for await (const data of source) {
+              const resp = uint8ArrayToString(data.subarray())
+              console.log(`RESPONSE RECEIVED: ${resp.length}`)
+
+              const objectUrl = window.URL.createObjectURL(new Blob([resp]))
+              const msg: ChatMessage = {
+                msg: [
+                  `File ${resp.length} bytes\n`,
+                  <a href={objectUrl} > <b>Download</b></a >],
+                from: "other",
+                peerId: provider,
+              }
+              setMessageHistory([...messageHistory, msg])
+            }
+          }
+        )
+        // stream.close()
+      } else {
+        console.log(`Unexpected gossipsub topic: ${topic}`)
       }
     }
 
     libp2p.services.pubsub.addEventListener('message', messageCB)
 
+    libp2p.handle(FILE_EXCHANGE_PROTOCOL, ({ stream }) => {
+      pipe(
+        stream.source,
+        (source) => lp.decode(source),
+        (source) => map(source, async (msg) => {
+          const fileId = uint8ArrayToString(msg.subarray())
+          console.log(`REQUEST RECEIVED: fileId:${fileId}, source:${stream.source}`)
+          const file = files.get(fileId)!
+          return file.body
+        }),
+        (source) => lp.encode(source),
+        stream.sink,
+      )
+      // stream.close()
+    })
+
     return () => {
       // Cleanup handlers 👇
       // libp2p.pubsub.unsubscribe(CHAT_TOPIC)
       libp2p.services.pubsub.removeEventListener('message', messageCB)
+      libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
     }
   }, [libp2p, messageHistory, setMessageHistory])
 
@@ -94,6 +153,35 @@ export default function ChatContainer() {
     setMessageHistory([...messageHistory, { msg: input, from: 'me', peerId: myPeerId }])
     setInput('')
   }, [input, messageHistory, setInput, libp2p, setMessageHistory])
+
+  const sendFile = useCallback(async (readerEvent: ProgressEvent<FileReader>) => {
+    const result = readerEvent.target?.result as ArrayBuffer;
+    console.log(`READER_RESULT: ${result.byteLength} bytes`);
+
+    const myPeerId = libp2p.peerId.toString()
+    const file: ChatFile = {
+      id: uuidv4(),
+      body: new Uint8Array(result),
+      provider: myPeerId,
+    }
+    setFiles(files.set(file.id, file))
+
+    console.log(
+      'peers in gossip:',
+      libp2p.services.pubsub.getSubscribers(CHAT_FILE_TOPIC).toString(),
+    )
+
+    const res = await libp2p.services.pubsub.publish(
+      CHAT_FILE_TOPIC,
+      new TextEncoder().encode(JSON.stringify({ fileId: file.id, provider: myPeerId }))
+    )
+    console.log(
+      'sent file to: ',
+      res.recipients.map((peerId) => peerId.toString()),
+    )
+
+    setMessageHistory([...messageHistory, { msg: input, from: 'me', peerId: myPeerId }])
+  }, [messageHistory, libp2p, setMessageHistory])
 
   const handleKeyUp = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -125,12 +213,11 @@ export default function ChatContainer() {
         const reader = new FileReader();
         reader.readAsArrayBuffer(e.target.files[0]);
         reader.onload = (readerEvent) => {
-          const result = readerEvent.target?.result as ArrayBuffer;
-          console.log(`READER_RESULT: ${result.byteLength} bytes`);
+          sendFile(readerEvent)
         };
       }
     },
-    [],
+    [sendFile],
   )
 
   const handleFileSend = useCallback(
