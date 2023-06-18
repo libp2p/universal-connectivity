@@ -344,9 +344,9 @@ checksum = "ecc7ab41815b3c653ccd2978ec3255c81349336702dfdf62ee6f7069b12a3aae"
 
 [[package]]
 name = "async-trait"
-version = "0.1.67"
+version = "0.1.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86ea188f25f0255d8f92797797c97ebf5631fa88178beb1a46fdf5622c9a00e4"
+checksum = "b9ccdd8f2a161be9bd5c023df56f1b2a0bd1d83872ae53b71a84a12c9bf6e842"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1598,6 +1598,7 @@ dependencies = [
  "libp2p-ping",
  "libp2p-quic",
  "libp2p-relay",
+ "libp2p-request-response",
  "libp2p-swarm",
  "libp2p-tcp",
  "libp2p-webrtc",
@@ -1883,6 +1884,21 @@ dependencies = [
  "static_assertions",
  "thiserror",
  "void",
+]
+
+[[package]]
+name = "libp2p-request-response"
+version = "0.24.0"
+source = "git+https://github.com/p-shahi/rust-libp2p.git?branch=master-plus-webrtc-code#331308802c87c2e2d5eda49d7dee1e4751029f9f"
+dependencies = [
+ "async-trait",
+ "futures",
+ "instant",
+ "libp2p-core",
+ "libp2p-identity",
+ "libp2p-swarm",
+ "rand 0.8.5",
+ "smallvec",
 ]
 
 [[package]]
@@ -2860,6 +2876,7 @@ name = "rust-libp2p-webrtc-peer"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "clap",
  "env_logger",
  "futures",

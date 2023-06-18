@@ -23,12 +23,16 @@ libp2p = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-
 	"rsa",
 	"ed25519",
 	"quic",
+	"request-response",
 ] }
 libp2p-webrtc = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", version = "0.4.0-alpha.4", features = [
 	"tokio",
 ] }
-libp2p-quic = {  git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", features = ["tokio"] }
+libp2p-quic = { git = "https://github.com/p-shahi/rust-libp2p.git", branch = "master-plus-webrtc-code", features = [
+	"tokio",
+] }
 log = "0.4.17"
 rand = "0.8.5"
 tokio = { version = "1.27.0", features = ["full"] }
 tokio-util = { version = "0.7", features = ["full"] }
+async-trait = "0.1.68"
