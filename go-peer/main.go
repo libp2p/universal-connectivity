@@ -78,7 +78,7 @@ func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Mult
 
 // Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
 func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous string) {
-	var routingDiscovery = routing.NewRoutingDiscovery(dht)
+	routingDiscovery := routing.NewRoutingDiscovery(dht)
 
 	discovery.Advertise(ctx, routingDiscovery, rendezvous)
 
@@ -198,7 +198,7 @@ func main() {
 	room := *roomFlag
 
 	// join the chat room
-	cr, err := JoinChatRoom(ctx, ps, h.ID(), nick, room)
+	cr, err := JoinChatRoom(ctx, h, ps, nick, room)
 	if err != nil {
 		panic(err)
 	}
