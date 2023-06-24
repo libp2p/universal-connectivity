@@ -21,7 +21,6 @@ use libp2p_quic as quic;
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
-use serde::{Deserialize, Serialize};
 use std::iter;
 use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
@@ -52,13 +51,6 @@ struct Opt {
     /// Address of a remote peer to connect to.
     #[clap(long)]
     remote_address: Option<Multiaddr>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ChatFileMessage {
-    file_id: String,
-    provider: String,
 }
 
 /// An example WebRTC peer that will accept connections
@@ -115,6 +107,7 @@ async fn main() -> Result<()> {
             .expect("a valid remote address to be provided");
     }
 
+    let chat_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC).hash();
     let file_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC).hash();
 
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
@@ -148,26 +141,26 @@ async fn main() -> Result<()> {
                         message,
                     },
                 )) => {
-                    if message.topic.eq(&file_topic_hash) {
-                        let file_msg: ChatFileMessage =
-                            serde_json::from_str(String::from_utf8(message.data).unwrap().as_str())
-                                .unwrap();
-                        info!(
-                            "Received file from {:?}: {} - {}",
-                            message.source, file_msg.file_id, file_msg.provider,
-                        );
-
-                        let request_id = swarm
-                            .behaviour_mut()
-                            .request_response
-                            .send_request(&message.source.unwrap(), FileRequest(file_msg.file_id));
-                        info!("File requested: {:?}", request_id);
-                    } else {
+                    if message.topic == chat_topic_hash {
                         info!(
                             "Received message from {:?}: {}",
                             message.source,
                             String::from_utf8(message.data).unwrap()
                         );
+                    } else if message.topic == file_topic_hash {
+                        let file_id = String::from_utf8(message.data).unwrap();
+                        info!("Received file {} from {:?}", file_id, message.source);
+
+                        let request_id = swarm
+                            .behaviour_mut()
+                            .request_response
+                            .send_request(&message.source.unwrap(), FileRequest(file_id.clone()));
+                        info!(
+                            "Requested file {} to {:?}: req_id:{:?}",
+                            file_id, message.source, request_id
+                        );
+                    } else {
+                        error!("Unexpected gossipsub topic hash: {:?}", message.topic);
                     }
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(
@@ -175,17 +168,6 @@ async fn main() -> Result<()> {
                 )) => {
                     debug!("{peer_id} subscribed to {topic}");
                 }
-                SwarmEvent::Behaviour(BehaviourEvent::RequestResponse(
-                    request_response::Event::Message { message, .. },
-                )) => match message {
-                    request_response::Message::Request { .. } => {
-                        todo!();
-                    }
-                    request_response::Message::Response { response, .. } => {
-                        let file_body = response.0;
-                        info!("file received. size:{}", file_body.len());
-                    }
-                },
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
 
@@ -245,20 +227,16 @@ async fn main() -> Result<()> {
                 SwarmEvent::Behaviour(BehaviourEvent::RequestResponse(
                     request_response::Event::Message { message, .. },
                 )) => match message {
-                    //TODO: https://github.com/libp2p/rust-libp2p/blob/3c5940aeadb9ed8527b6f7aa158797359085293d/examples/file-sharing/src/network.rs#L248
-                    request_response::Message::Request {
-                        request, channel, ..
-                    } => {
-                        info!("Received request: {:?}", request);
+                    request_response::Message::Request { request, .. } => {
+                        todo!("request_response::Message::Request: {:?}", request);
                     }
-                    request_response::Message::Response {
-                        request_id,
-                        response,
-                    } => {
+                    request_response::Message::Response { response, .. } => {
+                        let file_body = response.0;
                         info!(
-                            "Received response for request {:?}: {:?}",
-                            request_id, response
+                            "request_response::Message::Response: size:{}",
+                            file_body.len()
                         );
+                        // TODO: keep this file in memory and provider it via Kademlia
                     }
                 },
                 SwarmEvent::Behaviour(BehaviourEvent::RequestResponse(
@@ -267,14 +245,18 @@ async fn main() -> Result<()> {
                     },
                 )) => {
                     error!(
-                        "request_response OutboundFailure for request {:?}: {:?}",
+                        "request_response::Event::OutboundFailure for request {:?}: {:?}",
                         request_id, error
                     );
-                    //TODO: https://github.com/libp2p/rust-libp2p/blob/3c5940aeadb9ed8527b6f7aa158797359085293d/examples/file-sharing/src/network.rs#L273
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::RequestResponse(
-                    request_response::Event::ResponseSent { .. },
-                )) => {}
+                    request_response::Event::ResponseSent { peer, request_id },
+                )) => {
+                    debug!(
+                        "request_response::Event::ResponseSent for request {:?} to {:?}",
+                        request_id, peer
+                    );
+                }
                 event => {
                     debug!("Other type of event: {:?}", event);
                 }
@@ -297,7 +279,7 @@ async fn main() -> Result<()> {
                 );
 
                 if let Err(err) = swarm.behaviour_mut().gossipsub.publish(
-                    gossipsub::IdentTopic::new("universal-connectivity"),
+                    gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC),
                     message.as_bytes(),
                 ) {
                     error!("Failed to publish periodic message: {err}")
