@@ -14,7 +14,7 @@ import * as lp from 'it-length-prefixed'
 
 interface MessageProps extends ChatMessage { }
 
-function Message({ msg, from, peerId }: MessageProps) {
+function Message({ msg, fileObjectUrl, from, peerId }: MessageProps) {
   const msgref = React.useRef<HTMLLIElement>(null)
   const { libp2p } = useLibp2pContext()
 
@@ -41,6 +41,7 @@ function Message({ msg, from, peerId }: MessageProps) {
       >
         <div className="block">
           {msg}
+          <p>{fileObjectUrl ? <a href={fileObjectUrl} target="_blank"><b>Download</b></a> : ""}</p>
           <p className="italic text-gray-400">{peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null} </p>
         </div>
       </div>
@@ -84,7 +85,7 @@ export default function ChatContainer() {
 
       // Append signed messages, otherwise discard
       if (evt.detail.type === 'signed') {
-        setMessageHistory([...messageHistory, { msg, from: 'other', peerId: evt.detail.from.toString() }])
+        setMessageHistory([...messageHistory, { msg, fileObjectUrl: undefined, from: 'other', peerId: evt.detail.from.toString() }])
       }
     }
 
@@ -112,6 +113,7 @@ export default function ChatContainer() {
 
             const msg: ChatMessage = {
               msg: newChatFileMessage(fileId, body),
+              fileObjectUrl: window.URL.createObjectURL(new Blob([body])),
               from: 'other',
               peerId: senderPeerId.toString(),
             }
@@ -166,7 +168,7 @@ export default function ChatContainer() {
 
     const myPeerId = libp2p.peerId.toString()
 
-    setMessageHistory([...messageHistory, { msg: input, from: 'me', peerId: myPeerId }])
+    setMessageHistory([...messageHistory, { msg: input, fileObjectUrl: undefined, from: 'me', peerId: myPeerId }])
     setInput('')
   }, [input, messageHistory, setInput, libp2p, setMessageHistory])
 
@@ -197,6 +199,7 @@ export default function ChatContainer() {
 
     const msg: ChatMessage = {
       msg: newChatFileMessage(file.id, file.body),
+      fileObjectUrl: window.URL.createObjectURL(new Blob([file.body])),
       from: 'me',
       peerId: myPeerId,
     }
@@ -204,11 +207,7 @@ export default function ChatContainer() {
   }, [messageHistory, libp2p, setMessageHistory])
 
   const newChatFileMessage = (id: string, body: Uint8Array) => {
-    const objectUrl = window.URL.createObjectURL(new Blob([body]))
-    return [
-      `File: ${id} (${body.length} bytes): `,
-      <a href={objectUrl} target="_blank"><b>Download</b></a>
-    ]
+    return `File: ${id} (${body.length} bytes)`
   }
 
   const handleKeyUp = useCallback(
@@ -277,8 +276,8 @@ export default function ChatContainer() {
             <div className="relative w-full p-6 overflow-y-auto h-[40rem] bg-gray-100">
               <ul className="space-y-2">
                 {/* messages start */}
-                {messageHistory.map(({ msg, from, peerId }, idx) => (
-                  <Message key={idx} msg={msg} from={from} peerId={peerId} />
+                {messageHistory.map(({ msg, fileObjectUrl, from, peerId }, idx) => (
+                  <Message key={idx} msg={msg} fileObjectUrl={fileObjectUrl} from={from} peerId={peerId} />
                 ))}
                 {/* messages end */}
               </ul>

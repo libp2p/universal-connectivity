@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 
 export interface ChatMessage {
 	msg: string
+	fileObjectUrl: string | undefined
 	from: 'me' | 'other'
 	peerId: string
 }

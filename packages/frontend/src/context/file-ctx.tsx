@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 export interface ChatFile {
 	id: string
 	body: Uint8Array
-	provider: string
+	sender: string
 }
 
 export interface FileChatContextInterface {
