@@ -91,14 +91,12 @@ export default function ChatContainer() {
 
     const chatFileMessageCB = async (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
       const fileId = new TextDecoder().decode(data)
-      console.log(`${topic}: ${fileId}`)
 
       // if the message isn't signed, discard it.
       if (evt.detail.type !== 'signed') {
         return
       }
       const senderPeerId = evt.detail.from;
-      console.log(`${topic}: ${fileId} from ${senderPeerId}`)
 
       const stream = await libp2p.dialProtocol(senderPeerId, FILE_EXCHANGE_PROTOCOL)
       await pipe(
@@ -131,7 +129,6 @@ export default function ChatContainer() {
         (source) => lp.decode(source),
         (source) => map(source, async (msg) => {
           const fileId = uint8ArrayToString(msg.subarray())
-          console.log(`request_response: request received: fileId:${fileId}, source:${stream.source}`)
           const file = files.get(fileId)!
           return file.body
         }),
