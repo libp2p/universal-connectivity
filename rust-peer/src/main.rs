@@ -232,7 +232,11 @@ async fn main() -> Result<()> {
                     request_response::Event::Message { message, .. },
                 )) => match message {
                     request_response::Message::Request { request, .. } => {
-                        todo!("request_response::Message::Request: {:?}", request);
+                        //TODO: support ProtocolSupport::Full
+                        debug!(
+                            "umimplemented: request_response::Message::Request: {:?}",
+                            request
+                        );
                     }
                     request_response::Message::Response { response, .. } => {
                         let file_body = response.0;
@@ -388,7 +392,8 @@ fn create_swarm(
         ),
         request_response: request_response::Behaviour::new(
             FileExchangeCodec(),
-            iter::once((FileExchangeProtocol(), ProtocolSupport::Full)),
+            // TODO: support ProtocolSupport::Full
+            iter::once((FileExchangeProtocol(), ProtocolSupport::Outbound)),
             Default::default(),
         ),
     };
