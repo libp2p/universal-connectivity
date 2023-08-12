@@ -193,6 +193,7 @@ func chatTopicName(roomName string) string {
 	return roomName
 }
 
+// fileTopicName returns the name of the pubsub topic used for sending/recieving files in the chat room.
 func fileTopicName(roomName string) string {
 	return fmt.Sprintf("%s-file", roomName)
 }
