@@ -188,6 +188,7 @@ func (cr *ChatRoom) requestFile(toPeer peer.ID, fileID []byte) ([]byte, error) {
 	return fileBody, nil
 }
 
+// chatTopicName returns the name of the pubsub topic for the chat room.
 func chatTopicName(roomName string) string {
 	return roomName
 }
