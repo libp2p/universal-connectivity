@@ -153,6 +153,7 @@ func (cr *ChatRoom) readFileLoop() {
 	}
 }
 
+// requestFile sends a request to the peer to send the file with the given fileID.
 func (cr *ChatRoom) requestFile(toPeer peer.ID, fileID []byte) ([]byte, error) {
 	stream, err := cr.h.NewStream(context.Background(), toPeer, "/universal-connectivity-file/1")
 	if err != nil {
