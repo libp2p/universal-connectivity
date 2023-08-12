@@ -257,14 +257,6 @@ async fn main() -> Result<()> {
                         request_id, error
                     );
                 }
-                SwarmEvent::Behaviour(BehaviourEvent::RequestResponse(
-                    request_response::Event::ResponseSent { peer, request_id },
-                )) => {
-                    debug!(
-                        "request_response::Event::ResponseSent for request {:?} to {:?}",
-                        request_id, peer
-                    );
-                }
                 event => {
                     debug!("Other type of event: {:?}", event);
                 }
