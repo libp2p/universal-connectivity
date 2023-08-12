@@ -147,7 +147,10 @@ async fn main() -> Result<()> {
                             message.source,
                             String::from_utf8(message.data).unwrap()
                         );
-                    } else if message.topic == file_topic_hash {
+                        continue;
+                    }
+
+                    if message.topic == file_topic_hash {
                         let file_id = String::from_utf8(message.data).unwrap();
                         info!("Received file {} from {:?}", file_id, message.source);
 
@@ -159,9 +162,10 @@ async fn main() -> Result<()> {
                             "Requested file {} to {:?}: req_id:{:?}",
                             file_id, message.source, request_id
                         );
-                    } else {
-                        error!("Unexpected gossipsub topic hash: {:?}", message.topic);
+                        continue;
                     }
+
+                    error!("Unexpected gossipsub topic hash: {:?}", message.topic);
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(
                     libp2p::gossipsub::Event::Subscribed { peer_id, topic },
