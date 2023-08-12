@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use futures::future::{select, Either};
-use futures::{io, AsyncRead, AsyncWrite, AsyncWriteExt, StreamExt};
+use futures::{io, AsyncRead, AsyncWrite, StreamExt};
 use libp2p::core::upgrade::{read_length_prefixed, write_length_prefixed};
 use libp2p::request_response::{self, ProtocolName, ProtocolSupport};
 use libp2p::{
@@ -497,7 +497,6 @@ impl request_response::Codec for FileExchangeCodec {
         T: AsyncWrite + Unpin + Send,
     {
         write_length_prefixed(io, data).await?;
-        io.close().await?;
 
         Ok(())
     }
@@ -512,7 +511,6 @@ impl request_response::Codec for FileExchangeCodec {
         T: AsyncWrite + Unpin + Send,
     {
         write_length_prefixed(io, data).await?;
-        io.close().await?;
 
         Ok(())
     }
