@@ -244,7 +244,7 @@ async fn main() -> Result<()> {
                             "request_response::Message::Response: size:{}",
                             file_body.len()
                         );
-                        // TODO: keep this file in memory and provider it via Kademlia
+                        // TODO: store this file (in memory or disk) and provider it via Kademlia
                     }
                 },
                 SwarmEvent::Behaviour(BehaviourEvent::RequestResponse(
