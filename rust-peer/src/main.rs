@@ -331,10 +331,8 @@ fn create_swarm(
     .expect("Correct configuration");
 
     // Create/subscribe Gossipsub topics
-    let topic = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC);
-    gossipsub.subscribe(&topic)?;
-    let topic = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC);
-    gossipsub.subscribe(&topic)?;
+    gossipsub.subscribe(&gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC))?;
+    gossipsub.subscribe(&gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC))?;
 
     let transport = {
         let webrtc = webrtc::tokio::Transport::new(local_key.clone(), certificate);
