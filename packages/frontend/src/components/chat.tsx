@@ -73,8 +73,7 @@ export default function ChatContainer() {
           break
         }
         default: {
-          console.log(`Unexpected gossipsub topic: ${topic}`)
-          break
+          throw new Error(`Unexpected gossipsub topic: ${topic}`)
         }
       }
     }
