@@ -139,8 +139,8 @@ export default function ChatContainer() {
     return () => {
       (async () => {
         // Cleanup handlers 👇
-        // libp2p.pubsub.unsubscribe(CHAT_TOPIC)
-        // libp2p.pubsub.unsubscribe(CHAT_FILE_TOPIC)
+        libp2p.services.pubsub.unsubscribe(CHAT_TOPIC)
+        libp2p.services.pubsub.unsubscribe(CHAT_FILE_TOPIC)
         libp2p.services.pubsub.removeEventListener('message', messageCB)
         await libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
       })();
