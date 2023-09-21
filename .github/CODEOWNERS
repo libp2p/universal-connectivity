@@ -1,0 +1,4 @@
+rust-peer/*             @libp2p/rust-libp2p-maintainers
+go-peer/*               @libp2p/go-libp2p-maintainers
+packages/frontend/*     @libp2p/js-libp2p-chainsafe-maintainers
+
