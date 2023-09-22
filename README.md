@@ -19,12 +19,11 @@ Some of the cool and cutting-edge [transport protocols](https://connectivity.lib
 
 ## Packages
 
-| Packge                             | Description                                      | WebTransport | WebRTC | QUIC | TCP |
-| :--------------------------------- | :----------------------------------------------- | ------------ | ------ | ---- | --- |
-| [`frontend`](./packages/frontend/) | Next.js based browser UI of the chat app         | ✅           | ✅     | ❌   | ❌  |
-| [`go-peer`](./go-peer/)            | Chat peer implemented in Go                      | ✅           | ❌     | ✅   | ✅  |
-| [`rust-peer`](./rust-peer/)        | Chat peer implemented in Rust                    | ❌           | ✅     | ✅   | ❌  |
-| [`node`](./packages/node/)         | Chat peer implemented with TypeScript in node.js | ❌           | ❌     | ❌   | ✅  |
+| Packge                          | Description                                      | WebTransport | WebRTC | QUIC | TCP |
+|:--------------------------------| :----------------------------------------------- | ------------ | ------ | ---- | --- |
+| [`js-peer`](./js-peer/)         | Next.js based browser UI of the chat app         | ✅           | ✅     | ❌   | ❌  |
+| [`go-peer`](./go-peer/)         | Chat peer implemented in Go                      | ✅           | ❌     | ✅   | ✅  |
+| [`rust-peer`](./rust-peer/)     | Chat peer implemented in Rust                    | ❌           | ✅     | ✅   | ❌  |
 
 ✅ - Protocol supported
 ❌ - Protocol not supported
@@ -44,25 +43,22 @@ git
 Load the UI, and enter the multiaddr into the UI. Ensure that it includes the peerID, e.g.`/ip4/192.168.178.21/udp/61838/quic-v1/webtransport/certhash/uEiCQCALYac4V3LJ2ourLdauXOswIXpIuJ_JNT-8Wavmxyw/certhash/uEiCdYghq5FlXGkVONQXT07CteA16BDyMPI23-0GjA9Ej_w/p2p/12D3KooWF7ovRNBKPxERf6GtUbFdiqJsQviKUb7Z8a2Uuuo6MrDX`
 
 
-## Getting started: frontend
-
-The project uses [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
-
+## Getting started: JS
 
 ### 1. Install dependencies
 
-Run npm install from the root of the repo:
+Run npm install:
 
 ```
+cd js-peer
 npm i
 ```
 
 ### 2. Start Next.js dev server
 
-Enter the frontend folder, start the dev server
+Start the dev server:
 
 ```
-cd packages/frontend
 npm run dev
 ```
 

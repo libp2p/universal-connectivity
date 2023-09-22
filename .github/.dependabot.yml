@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/rust-peer"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 9999
+    commit-message:
+      prefix: "deps"
+    rebase-strategy: "disabled"
+    groups:
+      libp2p:
+        patterns:
+          - "libp2p"
+          - "libp2p-*"

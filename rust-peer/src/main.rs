@@ -12,13 +12,10 @@ use libp2p::{
     kad::record::store::MemoryStore,
     kad::{Kademlia, KademliaConfig},
     multiaddr::{Multiaddr, Protocol},
-    relay,
-    swarm::{
-        keep_alive, AddressRecord, AddressScore, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
-    },
-    PeerId, Transport,
+    quic, relay,
+    swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
+    PeerId, StreamProtocol, Transport,
 };
-use libp2p_quic as quic;
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
@@ -27,17 +24,19 @@ use std::iter;
 use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
 use std::{
-    borrow::Cow,
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
     time::{Duration, Instant},
 };
 use tokio::fs;
 
-use crate::protocol::{FileExchangeProtocol, FileRequest};
+use crate::protocol::FileRequest;
 
 const TICK_INTERVAL: Duration = Duration::from_secs(15);
-const KADEMLIA_PROTOCOL_NAME: &[u8] = b"/universal-connectivity/lan/kad/1.0.0";
+const KADEMLIA_PROTOCOL_NAME: StreamProtocol =
+    StreamProtocol::new("/universal-connectivity/lan/kad/1.0.0");
+const FILE_EXCHANGE_PROTOCOL: StreamProtocol =
+    StreamProtocol::new("/universal-connectivity-file/1");
 const PORT_WEBRTC: u16 = 9090;
 const PORT_QUIC: u16 = 9091;
 const LOCAL_KEY_PATH: &str = "./local_key";
@@ -94,7 +93,7 @@ async fn main() -> Result<()> {
                 let opt_address_webrtc = Multiaddr::from(ip)
                     .with(Protocol::Udp(PORT_WEBRTC))
                     .with(Protocol::WebRTCDirect);
-                swarm.add_external_address(opt_address_webrtc, AddressScore::Infinite);
+                swarm.add_external_address(opt_address_webrtc);
             }
             Err(_) => {
                 debug!(
@@ -127,7 +126,7 @@ async fn main() -> Result<()> {
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     info!("Connected to {peer_id}");
                 }
-                SwarmEvent::OutgoingConnectionError { peer_id, error } => {
+                SwarmEvent::OutgoingConnectionError { peer_id, error, .. } => {
                     warn!("Failed to dial {peer_id:?}: {error}");
                 }
                 SwarmEvent::ConnectionClosed { peer_id, cause, .. } => {
@@ -183,7 +182,7 @@ async fn main() -> Result<()> {
 
                     if let identify::Event::Error { peer_id, error } = e {
                         match error {
-                            libp2p::swarm::ConnectionHandlerUpgrErr::Timeout => {
+                            libp2p::swarm::StreamUpgradeError::Timeout => {
                                 // When a browser tab closes, we don't get a swarm event
                                 // maybe there's a way to get this with TransportEvent
                                 // but for now remove the peer from routing table if there's an Identify timeout
@@ -207,19 +206,17 @@ async fn main() -> Result<()> {
                     {
                         debug!("identify::Event::Received observed_addr: {}", observed_addr);
 
-                        swarm.add_external_address(observed_addr, AddressScore::Infinite);
+                        swarm.add_external_address(observed_addr);
 
-                        if protocols
-                            .iter()
-                            .any(|p| p.as_bytes() == KADEMLIA_PROTOCOL_NAME)
-                        {
+                        // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
+                        if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
                             for addr in listen_addrs {
                                 debug!("identify::Event::Received listen addr: {}", addr);
                                 // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
                                 // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
 
                                 let webrtc_address = addr
-                                    .with(Protocol::WebRTC)
+                                    .with(Protocol::WebRTCDirect)
                                     .with(Protocol::P2p(peer_id.into()));
 
                                 swarm
@@ -271,7 +268,7 @@ async fn main() -> Result<()> {
 
                 debug!(
                     "external addrs: {:?}",
-                    swarm.external_addresses().collect::<Vec<&AddressRecord>>()
+                    swarm.external_addresses().collect::<Vec<&Multiaddr>>()
                 );
 
                 if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
@@ -364,7 +361,7 @@ fn create_swarm(
 
     // Create a Kademlia behaviour.
     let mut cfg = KademliaConfig::default();
-    cfg.set_protocol_names(vec![Cow::Owned(KADEMLIA_PROTOCOL_NAME.to_vec())]);
+    cfg.set_protocol_names(vec![KADEMLIA_PROTOCOL_NAME]);
     let store = MemoryStore::new(local_peer_id);
     let kad_behaviour = Kademlia::with_config(local_peer_id, store, cfg);
 
@@ -386,9 +383,8 @@ fn create_swarm(
             },
         ),
         request_response: request_response::Behaviour::new(
-            FileExchangeCodec(),
             // TODO: support ProtocolSupport::Full
-            iter::once((FileExchangeProtocol(), ProtocolSupport::Outbound)),
+            iter::once((FILE_EXCHANGE_PROTOCOL, ProtocolSupport::Outbound)),
             Default::default(),
         ),
     };
