@@ -97,7 +97,7 @@ async fn main() -> Result<()> {
         match select(swarm.next(), &mut tick).await {
             Either::Left((event, _)) => match event.unwrap() {
                 SwarmEvent::NewListenAddr { address, .. } => {
-                    let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
+                    let p2p_address = address.with(Protocol::P2p(*swarm.local_peer_id()));
                     info!("Listen p2p address: {p2p_address:?}");
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
@@ -175,7 +175,7 @@ async fn main() -> Result<()> {
 
                                 let webrtc_address = addr
                                     .with(Protocol::WebRTCDirect)
-                                    .with(Protocol::P2p(peer_id.into()));
+                                    .with(Protocol::P2p(peer_id));
 
                                 swarm
                                     .behaviour_mut()
@@ -300,7 +300,7 @@ fn create_swarm(
         gossipsub,
         identify: identify_config,
         kademlia: kad_behaviour,
-        keep_alive: keep_alive::Behaviour::default(),
+        keep_alive: keep_alive::Behaviour,
         relay: relay::Behaviour::new(
             local_peer_id,
             relay::Config {
