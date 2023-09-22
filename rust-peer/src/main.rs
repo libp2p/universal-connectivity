@@ -2,9 +2,16 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use futures::future::{select, Either};
 use futures::StreamExt;
-use libp2p::{core::muxing::StreamMuxerBox, gossipsub, identify, identity, kad::record::store::MemoryStore, kad::{Kademlia, KademliaConfig}, multiaddr::{Multiaddr, Protocol}, relay, swarm::{
-    keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
-}, PeerId, Transport, quic, StreamProtocol};
+use libp2p::{
+    core::muxing::StreamMuxerBox,
+    gossipsub, identify, identity,
+    kad::record::store::MemoryStore,
+    kad::{Kademlia, KademliaConfig},
+    multiaddr::{Multiaddr, Protocol},
+    quic, relay,
+    swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
+    PeerId, StreamProtocol, Transport,
+};
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
@@ -18,7 +25,8 @@ use std::{
 use tokio::fs;
 
 const TICK_INTERVAL: Duration = Duration::from_secs(15);
-const KADEMLIA_PROTOCOL_NAME: StreamProtocol = StreamProtocol::new("/universal-connectivity/lan/kad/1.0.0");
+const KADEMLIA_PROTOCOL_NAME: StreamProtocol =
+    StreamProtocol::new("/universal-connectivity/lan/kad/1.0.0");
 const PORT_WEBRTC: u16 = 9090;
 const PORT_QUIC: u16 = 9091;
 const LOCAL_KEY_PATH: &str = "./local_key";
@@ -164,10 +172,7 @@ async fn main() -> Result<()> {
                         swarm.add_external_address(observed_addr);
 
                         // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
-                        if protocols
-                            .iter()
-                            .any(|p| p == &KADEMLIA_PROTOCOL_NAME)
-                        {
+                        if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
                             for addr in listen_addrs {
                                 debug!("identify::Event::Received listen addr: {}", addr);
                                 // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
