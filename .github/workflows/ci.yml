@@ -1,0 +1,17 @@
+on: pull_request
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: '-Dwarnings' # Never tolerate warnings.
+    defaults:
+      run:
+        working-directory: ./rust-peer
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt -- --check
+      - run: cargo clippy
+      - run: cargo test
