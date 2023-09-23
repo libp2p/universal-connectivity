@@ -209,7 +209,10 @@ async fn main() -> Result<()> {
                         swarm.add_external_address(observed_addr);
 
                         // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
-                        if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
+                        if protocols
+                            .iter()
+                            .any(|p| p == &KADEMLIA_PROTOCOL_NAME)
+                        {
                             for addr in listen_addrs {
                                 debug!("identify::Event::Received listen addr: {}", addr);
                                 // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
