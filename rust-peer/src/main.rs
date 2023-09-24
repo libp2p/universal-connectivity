@@ -11,7 +11,7 @@ use libp2p::{
     kad::{Behaviour as Kademlia, Config as KademliaConfig},
     memory_connection_limits,
     multiaddr::{Multiaddr, Protocol},
-    relay,
+    ping, relay,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, Swarm, SwarmEvent},
     PeerId, StreamProtocol, SwarmBuilder, Transport,
@@ -194,23 +194,27 @@ async fn main() -> Result<()> {
                 )) => {
                     debug!("{peer_id} subscribed to {topic}");
                 }
+                SwarmEvent::Behaviour(BehaviourEvent::Ping(ping::Event {
+                    peer,
+                    connection,
+                    result: Err(e),
+                    ..
+                })) => {
+                    // When a browser tab closes, we don't get a swarm event
+                    // maybe there's a way to get this with TransportEvent
+                    // but for now remove the peer from routing table if we fail to ping the other peer.
+
+                    // This isn't super clean because technically, other connections to this peer could still be functional.
+
+                    debug!("Connection {connection} to {peer} failed: {e}");
+                    swarm.close_connection(connection);
+                    swarm.behaviour_mut().kademlia.remove_peer(&peer);
+
+                    info!("Removed {peer} from routing table");
+                }
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
-
-                    if let identify::Event::Error { peer_id, error, .. } = e {
-                        match error {
-                            libp2p::swarm::StreamUpgradeError::Timeout => {
-                                // When a browser tab closes, we don't get a swarm event
-                                // maybe there's a way to get this with TransportEvent
-                                // but for now remove the peer from routing table if there's an Identify timeout
-                                swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
-                                info!("Removed {peer_id} from the routing table (if it was in there).");
-                            }
-                            _ => {
-                                debug!("{error}");
-                            }
-                        }
-                    } else if let identify::Event::Received {
+                    if let identify::Event::Received {
                         info: identify::Info { observed_addr, .. },
                         ..
                     } = e
@@ -280,6 +284,7 @@ struct Behaviour {
     relay: relay::Behaviour,
     request_response: request_response::Behaviour<FileExchangeCodec>,
     connection_limits: memory_connection_limits::Behaviour,
+    ping: ping::Behaviour,
 }
 
 fn create_swarm(
@@ -318,10 +323,10 @@ fn create_swarm(
     gossipsub.subscribe(&gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC))?;
     gossipsub.subscribe(&gossipsub::IdentTopic::new(GOSSIPSUB_PEER_DISCOVERY))?;
 
-    let identify_config = identify::Behaviour::new(
-        identify::Config::new("/ipfs/0.1.0".into(), local_key.public())
-            .with_interval(Duration::from_secs(60)), // do this so we can get timeouts for dropped WebRTC connections
-    );
+    let identify_config = identify::Behaviour::new(identify::Config::new(
+        "/ipfs/0.1.0".into(),
+        local_key.public(),
+    ));
 
     // Create a Kademlia behaviour.
     let cfg = KademliaConfig::new(KADEMLIA_PROTOCOL_NAME);
@@ -349,6 +354,7 @@ fn create_swarm(
             request_response::Config::default(),
         ),
         connection_limits: memory_connection_limits::Behaviour::with_max_percentage(0.9),
+        ping: ping::Behaviour::default(),
     };
     Ok(SwarmBuilder::with_existing_identity(local_key.clone())
         .with_tokio()
