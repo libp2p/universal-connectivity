@@ -4,7 +4,7 @@ use futures::future::{select, Either};
 use futures::StreamExt;
 use libp2p::{core::muxing::StreamMuxerBox, gossipsub, identify, identity, kad::record::store::MemoryStore, kad::{Kademlia, KademliaConfig}, multiaddr::{Multiaddr, Protocol}, relay, swarm::{
     keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
-}, PeerId, Transport, quic, StreamProtocol};
+}, PeerId, Transport, quic, StreamProtocol, ping};
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
@@ -132,23 +132,25 @@ async fn main() -> Result<()> {
                 )) => {
                     debug!("{peer_id} subscribed to {topic}");
                 }
+                SwarmEvent::Behaviour(BehaviourEvent::Ping(
+                    ping::Event { peer, connection, result: Err(e), .. },
+                )) => {
+                    // When a browser tab closes, we don't get a swarm event
+                    // maybe there's a way to get this with TransportEvent
+                    // but for now remove the peer from routing table if we fail to ping the other peer.
+
+                    // This isn't super clean because technically, other connections to this peer could still be functional.
+
+                    debug!("Connection {connection} to {peer} failed: {e}");
+                    swarm.close_connection(connection);
+                    swarm.behaviour_mut().kademlia.remove_peer(&peer);
+
+                    info!("Removed {peer} from routing table");
+                }
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
 
-                    if let identify::Event::Error { peer_id, error } = e {
-                        match error {
-                            libp2p::swarm::StreamUpgradeError::Timeout => {
-                                // When a browser tab closes, we don't get a swarm event
-                                // maybe there's a way to get this with TransportEvent
-                                // but for now remove the peer from routing table if there's an Identify timeout
-                                swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
-                                info!("Removed {peer_id} from the routing table (if it was in there).");
-                            }
-                            _ => {
-                                debug!("{error}");
-                            }
-                        }
-                    } else if let identify::Event::Received {
+                    if let identify::Event::Received {
                         peer_id,
                         info:
                             identify::Info {
@@ -228,6 +230,7 @@ struct Behaviour {
     kademlia: Kademlia<MemoryStore>,
     keep_alive: keep_alive::Behaviour,
     relay: relay::Behaviour,
+    ping: ping::Behaviour
 }
 
 fn create_swarm(
@@ -313,6 +316,7 @@ fn create_swarm(
                 ..Default::default()
             },
         ),
+        ping: ping::Behaviour::default(),
     };
     Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
 }
