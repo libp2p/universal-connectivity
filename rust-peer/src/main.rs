@@ -28,8 +28,14 @@ const LOCAL_CERT_PATH: &str = "./cert.pem";
 #[clap(name = "universal connectivity rust peer")]
 struct Opt {
     /// Address to listen on.
-    #[clap(long)]
+    #[clap(long, env)]
     listen_address: Option<String>,
+
+    /// If known, the external address of this node.
+    ///
+    /// Will be used to correctly advertise our external address across all transports.
+    #[clap(long, env)]
+    external_address: Option<IpAddr>,
 
     /// Address of a remote peer to connect to.
     #[clap(long)]
@@ -99,6 +105,12 @@ async fn main() -> Result<()> {
                 SwarmEvent::NewListenAddr { address, .. } => {
                     let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
                     info!("Listen p2p address: {p2p_address:?}");
+
+                    if let Some(external_ip) = opt.external_address {
+                        let external_address = address.replace(0, |p| Some(external_ip.into())).expect("address.len > 1 and we always return `Some`");
+
+                        swarm.add_external_address(external_address);
+                    }
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     info!("Connected to {peer_id}");

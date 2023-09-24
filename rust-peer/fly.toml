@@ -1,0 +1,28 @@
+# fly.toml app configuration file generated for universal-connectivity-rust-peer on 2023-09-24T16:20:25+10:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "universal-connectivity-rust-peer"
+primary_region = "syd"
+
+[experimental]
+# Resolve the special `fly-global-services` address before starting the container, see https://fly.io/docs/app-guides/udp-and-tcp/#the-fly-global-services-address.
+cmd = ["/bin/sh", "-c", "set -ex; LISTEN_ADDRESS=$(getent hosts fly-global-services | cut -d' ' -f1) && rust-libp2p-webrtc-peer"]
+
+[env]
+EXTERNAL_ADDRESS="149.248.215.31" # TODO: Remove this in favor of an AutoNAT setup.
+
+[[services]]
+internal_port = 9090
+protocol = "udp"
+
+[[services.ports]]
+port = "9090"
+
+[[services]]
+internal_port = 9091
+protocol = "udp"
+
+[[services.ports]]
+port = "9091"
