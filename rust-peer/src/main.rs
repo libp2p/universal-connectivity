@@ -4,7 +4,7 @@ use futures::future::{select, Either};
 use futures::StreamExt;
 use libp2p::{core::muxing::StreamMuxerBox, gossipsub, identify, identity, kad::record::store::MemoryStore, kad::{Kademlia, KademliaConfig}, multiaddr::{Multiaddr, Protocol}, relay, swarm::{
     keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent,
-}, PeerId, Transport, quic, StreamProtocol};
+}, PeerId, Transport, quic, StreamProtocol, dns};
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
@@ -269,20 +269,16 @@ fn create_swarm(
 
     let transport = {
         let webrtc = webrtc::tokio::Transport::new(local_key.clone(), certificate);
-
         let quic = quic::tokio::Transport::new(quic::Config::new(&local_key));
 
-        webrtc
+        let mapped = webrtc
             .or_transport(quic)
             .map(|fut, _| match fut {
-                futures::future::Either::Right((local_peer_id, conn)) => {
-                    (local_peer_id, StreamMuxerBox::new(conn))
-                }
-                futures::future::Either::Left((local_peer_id, conn)) => {
-                    (local_peer_id, StreamMuxerBox::new(conn))
-                }
-            })
-            .boxed()
+                Either::Right((local_peer_id, conn)) => (local_peer_id, StreamMuxerBox::new(conn)),
+                Either::Left((local_peer_id, conn)) => (local_peer_id, StreamMuxerBox::new(conn))
+            });
+
+        dns::TokioDnsConfig::system(mapped)?.boxed()
     };
 
     let identify_config = identify::Behaviour::new(
