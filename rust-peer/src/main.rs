@@ -23,6 +23,7 @@ const PORT_WEBRTC: u16 = 9090;
 const PORT_QUIC: u16 = 9091;
 const LOCAL_KEY_PATH: &str = "./local_key";
 const LOCAL_CERT_PATH: &str = "./cert.pem";
+const BOOTSTRAP_NODE: &str = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1";
 
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -36,10 +37,6 @@ struct Opt {
     /// Will be used to correctly advertise our external address across all transports.
     #[clap(long, env)]
     external_address: Option<IpAddr>,
-
-    /// Address of a remote peer to connect to.
-    #[clap(long)]
-    remote_address: Option<Multiaddr>,
 }
 
 /// An example WebRTC peer that will accept connections
@@ -90,11 +87,9 @@ async fn main() -> Result<()> {
         }
     }
 
-    if let Some(remote_address) = opt.remote_address {
-        swarm
-            .dial(remote_address)
-            .expect("a valid remote address to be provided");
-    }
+    swarm
+        .dial(BOOTSTRAP_NODE.parse::<Multiaddr>().expect("boostrap address to be valid"))
+        .expect("a valid remote address to be provided");
 
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
 

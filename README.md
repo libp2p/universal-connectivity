@@ -64,38 +64,14 @@ npm run dev
 
 ## Getting started: Rust
 
-### 1. Start your own Rust peer
-
-If you are the first peer in the network, simply run:
-
 ```
 cd rust-peer
 cargo run
 ```
 
-However, for this repo, we have a rust server already running in the cloud, and you can add your own Rust server peer to the chat network with `cargo run` from the `rust-peer` directory.
-
-To connect your rust peer to the rest of the network, you need to add the remote multiaddress of any peer already running as a the command line argument.
-
-Below we have added our already running Rust peer as the arg `remote-address`:
-
-```
-cd rust-peer
-cargo run -- --remote-address=/ip4/18.195.246.16/udp/9091/quic-v1/p2p/12D3KooWSmtsbL2ukwVwf8gDoTYZHnCd7sVNNVdMnCa4MkWjLujm
-```
-
-This will bootstrap your peer to the rest of the network, so you will see all messages sent on the chat topic in your own peer. It needs to connect via `quic-v1` because it works with all servers.
-
-You should see the multiaddr of the peer once its loaded, e.g.
-
-```
-Listen address: "/ip4/127.0.0.1/udp/49350/webrtc/certhash/uEiAs1mQgRDVdSqMsQAuEnpMW0sSj6qc5jNvx2d0r3bQoiA/p2p/12D3KooWMzXTNGDLCKy6i6eAgJPMGCxuu7NJz33T9oC5kjByY27W
-```
-
+This will automatically connect you to the bootstrap node running on [fly.io](https://fly.io).
 
 ## Getting started: Go
-
-### 1. Start peer
 
 ```
 cd go-peer
