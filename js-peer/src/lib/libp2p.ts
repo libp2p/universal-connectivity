@@ -14,7 +14,7 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
-import { CHAT_TOPIC, CIRCUIT_RELAY_CODE, WEBRTC_BOOTSTRAP_NODE, WEBTRANSPORT_BOOTSTRAP_NODE } from './constants'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC, CIRCUIT_RELAY_CODE, WEBRTC_BOOTSTRAP_NODE, WEBTRANSPORT_BOOTSTRAP_NODE } from './constants'
 import * as filters from "@libp2p/websockets/filters"
 import { circuitRelayTransport } from 'libp2p/circuit-relay'
 
@@ -82,6 +82,7 @@ export async function startLibp2p() {
   })
 
   libp2p.services.pubsub.subscribe(CHAT_TOPIC)
+  libp2p.services.pubsub.subscribe(CHAT_FILE_TOPIC)
 
   libp2p.addEventListener('self:peer:update', ({detail: { peer }}) => {
     const multiaddrs = peer.addresses.map(({ multiaddr }) => multiaddr)

@@ -1,4 +1,6 @@
 export const CHAT_TOPIC = "universal-connectivity"
+export const CHAT_FILE_TOPIC = "universal-connectivity-file"
+export const FILE_EXCHANGE_PROTOCOL = "/universal-connectivity-file/1"
 
 export const CIRCUIT_RELAY_CODE = 290
 
