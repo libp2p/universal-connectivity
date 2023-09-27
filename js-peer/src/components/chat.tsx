@@ -271,7 +271,7 @@ export default function ChatContainer() {
                 Public Chat
               </span>
             </div>
-            <div className="relative w-full p-6 overflow-y-auto h-[40rem] bg-gray-100">
+            <div className="relative w-full flex flex-col-reverse p-6 overflow-y-auto h-[40rem] bg-gray-100">
               <ul className="space-y-2">
                 {/* messages start */}
                 {messageHistory.map(({ msg, fileObjectUrl, from, peerId }, idx) => (
