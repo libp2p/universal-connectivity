@@ -13,7 +13,7 @@ use libp2p::{
     kad::{Kademlia, KademliaConfig},
     multiaddr::{Multiaddr, Protocol},
     quic, relay,
-    swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
+    swarm::{NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
     PeerId, StreamProtocol, Transport,
 };
 use libp2p_webrtc as webrtc;
@@ -120,7 +120,7 @@ async fn main() -> Result<()> {
         match select(swarm.next(), &mut tick).await {
             Either::Left((event, _)) => match event.unwrap() {
                 SwarmEvent::NewListenAddr { address, .. } => {
-                    let p2p_address = address.with(Protocol::P2p((*swarm.local_peer_id()).into()));
+                    let p2p_address = address.with(Protocol::P2p(*swarm.local_peer_id()));
                     info!("Listen p2p address: {p2p_address:?}");
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
@@ -209,10 +209,7 @@ async fn main() -> Result<()> {
                         swarm.add_external_address(observed_addr);
 
                         // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
-                        if protocols
-                            .iter()
-                            .any(|p| p == &KADEMLIA_PROTOCOL_NAME)
-                        {
+                        if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
                             for addr in listen_addrs {
                                 debug!("identify::Event::Received listen addr: {}", addr);
                                 // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
@@ -220,7 +217,7 @@ async fn main() -> Result<()> {
 
                                 let webrtc_address = addr
                                     .with(Protocol::WebRTCDirect)
-                                    .with(Protocol::P2p(peer_id.into()));
+                                    .with(Protocol::P2p(peer_id));
 
                                 swarm
                                     .behaviour_mut()
@@ -299,7 +296,6 @@ struct Behaviour {
     gossipsub: gossipsub::Behaviour,
     identify: identify::Behaviour,
     kademlia: Kademlia<MemoryStore>,
-    keep_alive: keep_alive::Behaviour,
     relay: relay::Behaviour,
     request_response: request_response::Behaviour<FileExchangeCodec>,
 }
@@ -372,7 +368,6 @@ fn create_swarm(
         gossipsub,
         identify: identify_config,
         kademlia: kad_behaviour,
-        keep_alive: keep_alive::Behaviour::default(),
         relay: relay::Behaviour::new(
             local_peer_id,
             relay::Config {
@@ -391,7 +386,11 @@ fn create_swarm(
             Default::default(),
         ),
     };
-    Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
+    Ok(
+        SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id)
+            .idle_connection_timeout(Duration::from_secs(60))
+            .build(),
+    )
 }
 
 async fn read_or_create_certificate(path: &Path) -> Result<Certificate> {
