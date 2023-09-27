@@ -13,7 +13,7 @@ use libp2p::{
     kad::{Kademlia, KademliaConfig},
     multiaddr::{Multiaddr, Protocol},
     quic, relay,
-    swarm::{keep_alive, NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
+    swarm::{NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
     PeerId, StreamProtocol, Transport,
 };
 use libp2p_webrtc as webrtc;
@@ -296,7 +296,6 @@ struct Behaviour {
     gossipsub: gossipsub::Behaviour,
     identify: identify::Behaviour,
     kademlia: Kademlia<MemoryStore>,
-    keep_alive: keep_alive::Behaviour,
     relay: relay::Behaviour,
     request_response: request_response::Behaviour<FileExchangeCodec>,
 }
@@ -369,7 +368,6 @@ fn create_swarm(
         gossipsub,
         identify: identify_config,
         kademlia: kad_behaviour,
-        keep_alive: keep_alive::Behaviour,
         relay: relay::Behaviour::new(
             local_peer_id,
             relay::Config {
@@ -388,7 +386,11 @@ fn create_swarm(
             Default::default(),
         ),
     };
-    Ok(SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build())
+    Ok(
+        SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id)
+            .idle_connection_timeout(Duration::from_secs(60))
+            .build(),
+    )
 }
 
 async fn read_or_create_certificate(path: &Path) -> Result<Certificate> {
