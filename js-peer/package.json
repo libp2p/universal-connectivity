@@ -1,7 +1,7 @@
 {
   "name": "universal-connectivity-browser",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p ${PORT}",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
