@@ -21,3 +21,11 @@ jobs:
       - run: cargo fmt -- --check
       - run: cargo clippy
       - run: cargo test
+  go-check:
+    uses: pl-strflt/uci/.github/workflows/go-check@v0.0
+    with:
+      go-version: '1.21'
+  go-test:
+    uses: pl-strflt/uci/.github/workflows/go-test@v0.0
+    with:
+      go-versions: '["1.21"]'
