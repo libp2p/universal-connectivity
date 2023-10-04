@@ -43,7 +43,6 @@ const LOCAL_KEY_PATH: &str = "./local_key";
 const LOCAL_CERT_PATH: &str = "./cert.pem";
 const GOSSIPSUB_CHAT_TOPIC: &str = "universal-connectivity";
 const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
-const BOOTSTRAP_NODE: &str = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1";
 
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -52,11 +51,13 @@ struct Opt {
     #[clap(long, env)]
     listen_address: Option<String>,
 
-    /// If known, the external address of this node.
-    ///
-    /// Will be used to correctly advertise our external address across all transports.
+    /// If known, the external address of this node. Will be used to correctly advertise our external address across all transports.
     #[clap(long, env)]
     external_address: Option<IpAddr>,
+
+    /// Nodes to connect to on startup. Can be specified several times.
+    #[clap(long, default_value = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1")]
+    connect: Vec<Multiaddr>,
 }
 
 /// An example WebRTC peer that will accept connections
@@ -107,13 +108,11 @@ async fn main() -> Result<()> {
         }
     }
 
-    swarm
-        .dial(
-            BOOTSTRAP_NODE
-                .parse::<Multiaddr>()
-                .expect("boostrap address to be valid"),
-        )
-        .expect("a valid remote address to be provided");
+    for addr in opt.connect {
+        if let Err(e) = swarm.dial(addr.clone()) {
+            debug!("Failed to dial {addr}: {e}");
+        }
+    }
 
     let chat_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC).hash();
     let file_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC).hash();

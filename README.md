@@ -71,6 +71,12 @@ cargo run
 
 This will automatically connect you to the bootstrap node running on [fly.io](https://fly.io).
 
+To explore more advanced configurations if you e.g. want to set up our own network, try:
+
+```
+cargo run -- --help
+```
+
 ## Getting started: Go
 
 ```
