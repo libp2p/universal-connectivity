@@ -55,7 +55,10 @@ struct Opt {
     external_address: Option<IpAddr>,
 
     /// Nodes to connect to on startup. Can be specified several times.
-    #[clap(long, default_value = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1")]
+    #[clap(
+        long,
+        default_value = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1"
+    )]
     connect: Vec<Multiaddr>,
 }
 
