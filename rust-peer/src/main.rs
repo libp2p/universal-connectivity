@@ -50,9 +50,16 @@ struct Opt {
     #[clap(long, default_value = "0.0.0.0")]
     listen_address: IpAddr,
 
-    /// Address of a remote peer to connect to.
-    #[clap(long)]
-    remote_address: Option<Multiaddr>,
+    /// If known, the external address of this node. Will be used to correctly advertise our external address across all transports.
+    #[clap(long, env)]
+    external_address: Option<IpAddr>,
+
+    /// Nodes to connect to on startup. Can be specified several times.
+    #[clap(
+        long,
+        default_value = "/dns/universal-connectivity-rust-peer.fly.dev/udp/9091/quic-v1"
+    )]
+    connect: Vec<Multiaddr>,
 }
 
 /// An example WebRTC peer that will accept connections
@@ -85,10 +92,10 @@ async fn main() -> Result<()> {
         .listen_on(address_quic.clone())
         .expect("listen on quic");
 
-    if let Some(remote_address) = opt.remote_address {
-        swarm
-            .dial(remote_address)
-            .expect("a valid remote address to be provided");
+    for addr in opt.connect {
+        if let Err(e) = swarm.dial(addr.clone()) {
+            debug!("Failed to dial {addr}: {e}");
+        }
     }
 
     let chat_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC).hash();
@@ -101,8 +108,16 @@ async fn main() -> Result<()> {
         match select(swarm.next(), &mut tick).await {
             Either::Left((event, _)) => match event.unwrap() {
                 SwarmEvent::NewListenAddr { address, .. } => {
+                    if let Some(external_ip) = opt.external_address {
+                        let external_address = address
+                            .replace(0, |_| Some(external_ip.into()))
+                            .expect("address.len > 1 and we always return `Some`");
+
+                        swarm.add_external_address(external_address);
+                    }
+
                     let p2p_address = address.with(Protocol::P2p(*swarm.local_peer_id()));
-                    info!("Listen p2p address: {p2p_address:?}");
+                    info!("Listening on {p2p_address}");
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                     info!("Connected to {peer_id}");
