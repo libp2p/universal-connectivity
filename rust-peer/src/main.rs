@@ -173,54 +173,36 @@ async fn main() -> Result<()> {
                 )) => {
                     debug!("{peer_id} subscribed to {topic}");
                 }
-                SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
-                    info!("BehaviourEvent::Identify {:?}", e);
+                SwarmEvent::Behaviour(BehaviourEvent::Identify(identify::Event::Received {
+                    peer_id,
+                    info:
+                        identify::Info {
+                            listen_addrs,
+                            protocols,
+                            observed_addr,
+                            ..
+                        },
+                })) => {
+                    debug!("identify::Event::Received observed_addr: {}", observed_addr);
 
-                    if let identify::Event::Error { peer_id, error } = e {
-                        match error {
-                            libp2p::swarm::StreamUpgradeError::Timeout => {
-                                // When a browser tab closes, we don't get a swarm event
-                                // maybe there's a way to get this with TransportEvent
-                                // but for now remove the peer from routing table if there's an Identify timeout
-                                swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
-                                info!("Removed {peer_id} from the routing table (if it was in there).");
-                            }
-                            _ => {
-                                debug!("{error}");
-                            }
-                        }
-                    } else if let identify::Event::Received {
-                        peer_id,
-                        info:
-                            identify::Info {
-                                listen_addrs,
-                                protocols,
-                                observed_addr,
-                                ..
-                            },
-                    } = e
-                    {
-                        debug!("identify::Event::Received observed_addr: {}", observed_addr);
+                    swarm.add_external_address(observed_addr);
 
-                        swarm.add_external_address(observed_addr);
+                    // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
+                    if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
+                        for addr in listen_addrs {
+                            debug!("identify::Event::Received listen addr: {}", addr);
+                            // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
+                            // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
 
-                        // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
-                        if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
-                            for addr in listen_addrs {
-                                debug!("identify::Event::Received listen addr: {}", addr);
-                                // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
-                                // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
+                            let webrtc_address = addr
+                                .with(Protocol::WebRTCDirect)
+                                .with(Protocol::P2p(peer_id));
 
-                                let webrtc_address = addr
-                                    .with(Protocol::WebRTCDirect)
-                                    .with(Protocol::P2p(peer_id));
-
-                                swarm
-                                    .behaviour_mut()
-                                    .kademlia
-                                    .add_address(&peer_id, webrtc_address.clone());
-                                info!("Added {webrtc_address} to the routing table.");
-                            }
+                            swarm
+                                .behaviour_mut()
+                                .kademlia
+                                .add_address(&peer_id, webrtc_address.clone());
+                            info!("Added {webrtc_address} to the routing table.");
                         }
                     }
                 }
@@ -343,10 +325,10 @@ fn create_swarm(
         dns::TokioDnsConfig::system(mapped)?.boxed()
     };
 
-    let identify_config = identify::Behaviour::new(
-        identify::Config::new("/ipfs/0.1.0".into(), local_key.public())
-            .with_interval(Duration::from_secs(60)), // do this so we can get timeouts for dropped WebRTC connections
-    );
+    let identify_config = identify::Behaviour::new(identify::Config::new(
+        "/ipfs/0.1.0".into(),
+        local_key.public(),
+    ));
 
     // Create a Kademlia behaviour.
     let mut cfg = KademliaConfig::default();
