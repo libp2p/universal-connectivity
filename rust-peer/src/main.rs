@@ -11,7 +11,7 @@ use libp2p::{
     kad::record::store::MemoryStore,
     kad::{Kademlia, KademliaConfig},
     multiaddr::{Multiaddr, Protocol},
-    ping, quic, relay,
+    quic, relay,
     swarm::{NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
     PeerId, StreamProtocol, Transport,
 };
@@ -115,6 +115,7 @@ async fn main() -> Result<()> {
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
 
     let now = Instant::now();
+
     loop {
         match select(swarm.next(), &mut tick).await {
             Either::Left((event, _)) => match event.unwrap() {
@@ -175,24 +176,6 @@ async fn main() -> Result<()> {
                     libp2p::gossipsub::Event::Subscribed { peer_id, topic },
                 )) => {
                     debug!("{peer_id} subscribed to {topic}");
-                }
-                SwarmEvent::Behaviour(BehaviourEvent::Ping(ping::Event {
-                    peer,
-                    connection,
-                    result: Err(e),
-                    ..
-                })) => {
-                    // When a browser tab closes, we don't get a swarm event
-                    // maybe there's a way to get this with TransportEvent
-                    // but for now remove the peer from routing table if we fail to ping the other peer.
-
-                    // This isn't super clean because technically, other connections to this peer could still be functional.
-
-                    debug!("Connection {connection} to {peer} failed: {e}");
-                    swarm.close_connection(connection);
-                    swarm.behaviour_mut().kademlia.remove_peer(&peer);
-
-                    info!("Removed {peer} from routing table");
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
@@ -302,7 +285,6 @@ struct Behaviour {
     kademlia: Kademlia<MemoryStore>,
     relay: relay::Behaviour,
     request_response: request_response::Behaviour<FileExchangeCodec>,
-    ping: ping::Behaviour,
 }
 
 fn create_swarm(
@@ -358,10 +340,10 @@ fn create_swarm(
             .boxed()
     };
 
-    let identify_config = identify::Behaviour::new(
-        identify::Config::new("/ipfs/0.1.0".into(), local_key.public())
-            .with_interval(Duration::from_secs(60)), // do this so we can get timeouts for dropped WebRTC connections
-    );
+    let identify_config = identify::Behaviour::new(identify::Config::new(
+        "/ipfs/0.1.0".into(),
+        local_key.public(),
+    ));
 
     // Create a Kademlia behaviour.
     let mut cfg = KademliaConfig::default();
@@ -390,7 +372,6 @@ fn create_swarm(
             iter::once((FILE_EXCHANGE_PROTOCOL, ProtocolSupport::Outbound)),
             Default::default(),
         ),
-        ping: ping::Behaviour::default(),
     };
     Ok(
         SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id)
