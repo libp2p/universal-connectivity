@@ -115,7 +115,6 @@ async fn main() -> Result<()> {
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
 
     let now = Instant::now();
-
     loop {
         match select(swarm.next(), &mut tick).await {
             Either::Left((event, _)) => match event.unwrap() {
