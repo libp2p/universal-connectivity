@@ -176,41 +176,36 @@ async fn main() -> Result<()> {
                 )) => {
                     debug!("{peer_id} subscribed to {topic}");
                 }
-                SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
-                    info!("BehaviourEvent::Identify {:?}", e);
+                SwarmEvent::Behaviour(BehaviourEvent::Identify(identify::Event::Received {
+                    peer_id,
+                    info:
+                        identify::Info {
+                            listen_addrs,
+                            protocols,
+                            observed_addr,
+                            ..
+                        },
+                })) => {
+                    debug!("identify::Event::Received observed_addr: {}", observed_addr);
 
-                    if let identify::Event::Received {
-                        peer_id,
-                        info:
-                            identify::Info {
-                                listen_addrs,
-                                protocols,
-                                observed_addr,
-                                ..
-                            },
-                    } = e
-                    {
-                        debug!("identify::Event::Received observed_addr: {}", observed_addr);
+                    swarm.add_external_address(observed_addr);
 
-                        swarm.add_external_address(observed_addr);
+                    // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
+                    if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
+                        for addr in listen_addrs {
+                            debug!("identify::Event::Received listen addr: {}", addr);
+                            // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
+                            // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
 
-                        // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
-                        if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
-                            for addr in listen_addrs {
-                                debug!("identify::Event::Received listen addr: {}", addr);
-                                // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
-                                // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
+                            let webrtc_address = addr
+                                .with(Protocol::WebRTCDirect)
+                                .with(Protocol::P2p(peer_id));
 
-                                let webrtc_address = addr
-                                    .with(Protocol::WebRTCDirect)
-                                    .with(Protocol::P2p(peer_id));
-
-                                swarm
-                                    .behaviour_mut()
-                                    .kademlia
-                                    .add_address(&peer_id, webrtc_address.clone());
-                                info!("Added {webrtc_address} to the routing table.");
-                            }
+                            swarm
+                                .behaviour_mut()
+                                .kademlia
+                                .add_address(&peer_id, webrtc_address.clone());
+                            info!("Added {webrtc_address} to the routing table.");
                         }
                     }
                 }
