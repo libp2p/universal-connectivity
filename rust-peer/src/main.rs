@@ -194,24 +194,6 @@ async fn main() -> Result<()> {
                 )) => {
                     debug!("{peer_id} subscribed to {topic}");
                 }
-                SwarmEvent::Behaviour(BehaviourEvent::Ping(ping::Event {
-                    peer,
-                    connection,
-                    result: Err(e),
-                    ..
-                })) => {
-                    // When a browser tab closes, we don't get a swarm event
-                    // maybe there's a way to get this with TransportEvent
-                    // but for now remove the peer from routing table if we fail to ping the other peer.
-
-                    // This isn't super clean because technically, other connections to this peer could still be functional.
-
-                    debug!("Connection {connection} to {peer} failed: {e}");
-                    swarm.close_connection(connection);
-                    swarm.behaviour_mut().kademlia.remove_peer(&peer);
-
-                    info!("Removed {peer} from routing table");
-                }
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
                     if let identify::Event::Received {
