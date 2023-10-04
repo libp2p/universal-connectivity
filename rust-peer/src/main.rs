@@ -20,7 +20,7 @@ use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
 use protocol::FileExchangeCodec;
 use std::iter;
-use std::net::{IpAddr, Ipv4Addr};
+use std::net::IpAddr;
 use std::path::Path;
 use std::{
     collections::hash_map::DefaultHasher,
@@ -47,8 +47,8 @@ const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
 #[clap(name = "universal connectivity rust peer")]
 struct Opt {
     /// Address to listen on.
-    #[clap(long)]
-    listen_address: Option<String>,
+    #[clap(long, default_value = "0.0.0.0")]
+    listen_address: IpAddr,
 
     /// Address of a remote peer to connect to.
     #[clap(long)]
@@ -70,11 +70,11 @@ async fn main() -> Result<()> {
 
     let mut swarm = create_swarm(local_key, webrtc_cert)?;
 
-    let address_webrtc = Multiaddr::from(Ipv4Addr::UNSPECIFIED)
+    let address_webrtc = Multiaddr::from(opt.listen_address)
         .with(Protocol::Udp(PORT_WEBRTC))
         .with(Protocol::WebRTCDirect);
 
-    let address_quic = Multiaddr::from(Ipv4Addr::UNSPECIFIED)
+    let address_quic = Multiaddr::from(opt.listen_address)
         .with(Protocol::Udp(PORT_QUIC))
         .with(Protocol::QuicV1);
 
@@ -84,24 +84,6 @@ async fn main() -> Result<()> {
     swarm
         .listen_on(address_quic.clone())
         .expect("listen on quic");
-
-    if let Some(listen_address) = opt.listen_address {
-        // match on whether the listen address string is an IP address or not (do nothing if not)
-        match listen_address.parse::<IpAddr>() {
-            Ok(ip) => {
-                let opt_address_webrtc = Multiaddr::from(ip)
-                    .with(Protocol::Udp(PORT_WEBRTC))
-                    .with(Protocol::WebRTCDirect);
-                swarm.add_external_address(opt_address_webrtc);
-            }
-            Err(_) => {
-                debug!(
-                    "listen_address provided is not an IP address: {}",
-                    listen_address
-                )
-            }
-        }
-    }
 
     if let Some(remote_address) = opt.remote_address {
         swarm
