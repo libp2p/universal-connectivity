@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"sync"
@@ -136,13 +136,13 @@ func main() {
 		f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Println("failed to open log file", err)
-			log.SetOutput(ioutil.Discard)
+			log.SetOutput(io.Discard)
 		} else {
 			defer f.Close()
 			log.SetOutput(f)
 		}
 	} else {
-		log.SetOutput(ioutil.Discard)
+		log.SetOutput(io.Discard)
 	}
 
 	ctx := context.Background()
