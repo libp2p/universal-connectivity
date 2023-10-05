@@ -126,6 +126,9 @@ async fn main() -> Result<()> {
                 SwarmEvent::OutgoingConnectionError { peer_id, error, .. } => {
                     warn!("Failed to dial {peer_id:?}: {error}");
                 }
+                SwarmEvent::IncomingConnectionError { error, .. } => {
+                    warn!("{:#}", anyhow::Error::from(error))
+                }
                 SwarmEvent::ConnectionClosed { peer_id, cause, .. } => {
                     warn!("Connection to {peer_id} closed: {cause:?}");
                     swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
