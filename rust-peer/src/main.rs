@@ -10,6 +10,7 @@ use libp2p::{
     dns, gossipsub, identify, identity,
     kad::record::store::MemoryStore,
     kad::{Kademlia, KademliaConfig},
+    memory_connection_limits,
     multiaddr::{Multiaddr, Protocol},
     quic, relay,
     swarm::{NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
@@ -124,6 +125,9 @@ async fn main() -> Result<()> {
                 }
                 SwarmEvent::OutgoingConnectionError { peer_id, error, .. } => {
                     warn!("Failed to dial {peer_id:?}: {error}");
+                }
+                SwarmEvent::IncomingConnectionError { error, .. } => {
+                    warn!("{:#}", anyhow::Error::from(error))
                 }
                 SwarmEvent::ConnectionClosed { peer_id, cause, .. } => {
                     warn!("Connection to {peer_id} closed: {cause:?}");
@@ -294,6 +298,7 @@ struct Behaviour {
     kademlia: Kademlia<MemoryStore>,
     relay: relay::Behaviour,
     request_response: request_response::Behaviour<FileExchangeCodec>,
+    connection_limits: memory_connection_limits::Behaviour,
 }
 
 fn create_swarm(
@@ -375,6 +380,7 @@ fn create_swarm(
             iter::once((FILE_EXCHANGE_PROTOCOL, ProtocolSupport::Outbound)),
             Default::default(),
         ),
+        connection_limits: memory_connection_limits::Behaviour::with_max_percentage(0.9),
     };
     Ok(
         SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id)
