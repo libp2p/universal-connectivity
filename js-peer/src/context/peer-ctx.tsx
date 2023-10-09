@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode, createContext, useContext, useState } from 'react';
+import React, { ReactNode, createContext, useContext, useState } from 'react';
 import type { Connection } from '@libp2p/interface-connection'
 import { PeerId } from '@libp2p/interface-peer-id'
 
