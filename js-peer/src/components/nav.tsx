@@ -8,6 +8,7 @@ import { useRouter } from 'next/router'
 const navigationItems = [
   { name: 'Connecting to a Peer', href: '/' },
   { name: 'Chat', href: '/chat' },
+  { name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' },
 ]
 const userNavigation = [
   { name: 'Your Profile', href: '#' },
