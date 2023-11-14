@@ -39,7 +39,7 @@ export function AppWrapper({ children }: WrapperProps) {
         // @ts-ignore
         window.libp2p = libp2p
 
-        setLibp2p(libp2p)
+        setLibp2p(libp2p as Libp2p<{ pubsub: any; dht: any; identify: any }>)
       } catch (e) {
         console.error('failed to start libp2p', e)
       }
