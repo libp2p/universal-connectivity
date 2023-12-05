@@ -20,28 +20,28 @@
     "@libp2p/websockets": "^7.0.9",
     "@libp2p/webtransport": "^3.1.10",
     "@multiformats/multiaddr": "^12.1.10",
-    "@types/node": "20.9.0",
-    "@types/react": "18.2.37",
-    "@types/react-dom": "18.2.15",
     "debug": "^4.3.4",
-    "eslint": "8.53.0",
-    "eslint-config-next": "14.0.2",
     "it-length-prefixed": "^9.0.3",
     "it-map": "^3.0.4",
     "it-pipe": "^3.0.1",
     "libp2p": "^0.46.21",
-    "next": "13.5.4",
+    "next": "14.0.3",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "typescript": "5.2.2",
     "uint8arrays": "^4.0.6",
     "usehooks-ts": "^2.9.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/node": "20.10.3",
+    "@types/react": "18.2.41",
+    "@types/react-dom": "18.2.17",
     "@types/uuid": "^9.0.5",
     "autoprefixer": "^10.4.16",
+    "eslint": "8.55.0",
+    "eslint-config-next": "14.0.3",
     "postcss": "^8.4.31",
-    "tailwindcss": "^3.3.3"
+    "tailwindcss": "^3.3.3",
+    "typescript": "5.3.2"
   }
 }
