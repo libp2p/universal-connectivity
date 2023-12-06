@@ -189,7 +189,7 @@ export default function Home() {
                       stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" className="text-indigo-500">
                     </path>
                   </svg>)}{' '}
-                  Connect to multiaddr
+                  Connect{dialling && 'ing'} to multiaddr
                 </button>
                 {err && <p className="text-red-500">{err}</p>}
               </div>
