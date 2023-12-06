@@ -15,7 +15,7 @@ export default function Home() {
   const { peerStats, setPeerStats } = usePeerContext()
   const { listenAddresses, setListenAddresses } = useListenAddressesContext()
   const [maddr, setMultiaddr] = useState('')
-  const [dialing, setDialing] = useState(false)
+  const [dialling, setDialling] = useState(false)
   const [err, setErr] = useState('')
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export default function Home() {
         return
       }
 
-      setDialing(true)
+      setDialling(true)
 
       try {
         const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
@@ -99,7 +99,7 @@ export default function Home() {
         }
         console.error(e)
       } finally {
-        setDialing(false)
+        setDialling(false)
       }
     },
     [libp2p, maddr],
@@ -174,11 +174,11 @@ export default function Home() {
                 </div>
                 <button
                   type="button"
-                  className={"rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" + (dialing ? ' cursor-not-allowed' : '')}
+                  className={"rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" + (dialling ? ' cursor-not-allowed' : '')}
                   onClick={handleConnectToMultiaddr}
-                  disabled={dialing}
+                  disabled={dialling}
                 >
-                  {dialing && (
+                  {dialling && (
                     <svg className="inline-block text-gray-300 animate-spin" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"
                     width="20" height="20">
                     <path
