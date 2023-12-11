@@ -9,12 +9,15 @@ import Image from 'next/image'
 import { multiaddr } from '@multiformats/multiaddr'
 import { connectToMultiaddr } from '../lib/libp2p'
 import { useListenAddressesContext } from '../context/listen-addresses-ctx'
+import Spinner from '@/components/spinner'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
   const { peerStats, setPeerStats } = usePeerContext()
   const { listenAddresses, setListenAddresses } = useListenAddressesContext()
   const [maddr, setMultiaddr] = useState('')
+  const [dialling, setDialling] = useState(false)
+  const [err, setErr] = useState('')
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -78,17 +81,26 @@ export default function Home() {
 
   const handleConnectToMultiaddr = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
+      setErr('')
+
       if (!maddr) {
         return
       }
+
+      setDialling(true)
 
       try {
         const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
         console.log('connection: ', connection)
 
         return connection
-      } catch (e) {
+      } catch (e: any) {
+        if (e && e.message) {
+          setErr(e.message)
+        }
         console.error(e)
+      } finally {
+        setDialling(false)
       }
     },
     [libp2p, maddr],
@@ -163,11 +175,14 @@ export default function Home() {
                 </div>
                 <button
                   type="button"
-                  className="rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  className={"rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" + (dialling ? ' cursor-not-allowed' : '')}
                   onClick={handleConnectToMultiaddr}
+                  disabled={dialling}
                 >
-                  Connect to multiaddr
+                  {dialling && <Spinner />}{' '}
+                  Connect{dialling && 'ing'} to multiaddr
                 </button>
+                {err && <p className="text-red-500">{err}</p>}
               </div>
 
               <div className="my-4 inline-flex items-center text-xl">
