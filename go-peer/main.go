@@ -21,6 +21,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	libp2pwebrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
@@ -106,7 +107,7 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 						LogMsgf("Failed to connect to peer (%s): %s", p.ID, err.Error())
 						continue
 					}
-					LogMsgf("Connected to peer %s", p.ID.Pretty())
+					LogMsgf("Connected to peer %s", p.ID)
 				}
 			}
 		}
@@ -173,7 +174,12 @@ func main() {
 		libp2p.Identity(privk),
 		libp2p.Transport(quicTransport.NewTransport),
 		libp2p.Transport(webtransport.New),
-		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport"),
+		libp2p.Transport(libp2pwebrtc.New),
+		libp2p.ListenAddrStrings(
+			"/ip4/0.0.0.0/udp/9095/quic-v1",
+			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/9096/webrtc-direct/",
+		),
 	)
 
 	// create a new libp2p Host with lots of options
@@ -270,7 +276,7 @@ func defaultNick(p peer.ID) string {
 
 // shortID returns the last 8 chars of a base58-encoded peer id.
 func shortID(p peer.ID) string {
-	pretty := p.Pretty()
+	pretty := p.String()
 	return pretty[len(pretty)-8:]
 }
 
@@ -283,10 +289,10 @@ type discoveryNotifee struct {
 // the PubSub system will automatically start interacting with them if they also
 // support PubSub.
 func (n *discoveryNotifee) HandlePeerFound(pi peer.AddrInfo) {
-	LogMsgf("discovered new peer %s", pi.ID.Pretty())
+	LogMsgf("discovered new peer %s", pi.ID)
 	err := n.h.Connect(context.Background(), pi)
 	if err != nil {
-		LogMsgf("error connecting to peer %s: %s", pi.ID.Pretty(), err)
+		LogMsgf("error connecting to peer %s: %s", pi.ID, err)
 	}
 }
 
