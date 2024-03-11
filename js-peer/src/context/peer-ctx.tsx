@@ -1,5 +1,5 @@
 import React, { ReactNode, createContext, useContext, useState } from 'react';
-import type { Connection } from '@libp2p/interface/connection'
+import type { Connection } from '@libp2p/interface'
 import { PeerId } from '@libp2p/interface-peer-id'
 
 
