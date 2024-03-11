@@ -1,6 +1,6 @@
 import { useLibp2pContext } from '@/context/ctx'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Message } from '@libp2p/interface-pubsub'
+import type { Message } from '@libp2p/interface'
 import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL } from '@/lib/constants'
 import { createIcon } from '@download/blockies'
 import { ChatMessage, useChatContext } from '../context/chat-ctx'
@@ -78,6 +78,11 @@ export default function ChatContainer() {
       }
     }
 
+    const messageCBWrapper = (evt: Event) => {
+      const customEvent = evt as CustomEvent<Message>;
+      (async () => messageCB(customEvent))();
+    };
+
     const chatMessageCB = (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
       const msg = new TextDecoder().decode(data)
       console.log(`${topic}: ${msg}`)
@@ -97,30 +102,34 @@ export default function ChatContainer() {
       }
       const senderPeerId = evt.detail.from;
 
-      const stream = await libp2p.dialProtocol(senderPeerId, FILE_EXCHANGE_PROTOCOL)
-      await pipe(
-        [uint8ArrayFromString(fileId)],
-        (source) => lp.encode(source),
-        stream,
-        (source) => lp.decode(source),
-        async function(source) {
-          for await (const data of source) {
-            const body: Uint8Array = data.subarray()
-            console.log(`request_response: response received: size:${body.length}`)
+      try {
+        const stream = await libp2p.dialProtocol(senderPeerId, FILE_EXCHANGE_PROTOCOL)
+        await pipe(
+          [uint8ArrayFromString(fileId)],
+          (source) => lp.encode(source),
+          stream,
+          (source) => lp.decode(source),
+          async function(source) {
+            for await (const data of source) {
+              const body: Uint8Array = data.subarray()
+              console.log(`request_response: response received: size:${body.length}`)
 
-            const msg: ChatMessage = {
-              msg: newChatFileMessage(fileId, body),
-              fileObjectUrl: window.URL.createObjectURL(new Blob([body])),
-              from: 'other',
-              peerId: senderPeerId.toString(),
+              const msg: ChatMessage = {
+                msg: newChatFileMessage(fileId, body),
+                fileObjectUrl: window.URL.createObjectURL(new Blob([body])),
+                from: 'other',
+                peerId: senderPeerId.toString(),
+              }
+              setMessageHistory([...messageHistory, msg])
             }
-            setMessageHistory([...messageHistory, msg])
           }
-        }
-      )
+        )
+      } catch (e) {
+        console.error(e)
+      }
     }
 
-    libp2p.services.pubsub.addEventListener('message', messageCB)
+    libp2p.services.pubsub.addEventListener('message', messageCBWrapper)
 
     libp2p.handle(FILE_EXCHANGE_PROTOCOL, ({ stream }) => {
       pipe(
@@ -141,11 +150,11 @@ export default function ChatContainer() {
         // Cleanup handlers 👇
         // libp2p.services.pubsub.unsubscribe(CHAT_TOPIC)
         // libp2p.services.pubsub.unsubscribe(CHAT_FILE_TOPIC)
-        libp2p.services.pubsub.removeEventListener('message', messageCB)
+        libp2p.services.pubsub.removeEventListener('message', messageCBWrapper)
         await libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
       })();
     }
-  }, [libp2p, messageHistory, setMessageHistory])
+  }, [libp2p, messageHistory, setMessageHistory, files])
 
   const sendMessage = useCallback(async () => {
     if (input === '') return
@@ -202,7 +211,7 @@ export default function ChatContainer() {
       peerId: myPeerId,
     }
     setMessageHistory([...messageHistory, msg])
-  }, [messageHistory, libp2p, setMessageHistory])
+  }, [messageHistory, libp2p, setMessageHistory, files, setFiles])
 
   const newChatFileMessage = (id: string, body: Uint8Array) => {
     return `File: ${id} (${body.length} bytes)`
