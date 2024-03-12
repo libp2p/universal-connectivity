@@ -1,6 +1,6 @@
 import React, { ReactNode, createContext, useContext, useState } from 'react';
 import type { Connection } from '@libp2p/interface'
-import { PeerId } from '@libp2p/interface-peer-id'
+import { PeerId } from '@libp2p/interface'
 
 
 export interface PeerStats {

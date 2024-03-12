@@ -11,7 +11,7 @@ import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
 import { PeerProvider } from './peer-ctx'
 import { ListenAddressesProvider } from './listen-addresses-ctx'
-import { PubSub } from '@libp2p/interface-pubsub'
+import { PubSub } from '@libp2p/interface'
 
 // 👇 The context type will be avilable "anywhere" in the app
 interface Libp2pContextInterface {
