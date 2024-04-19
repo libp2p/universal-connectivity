@@ -1,6 +1,9 @@
 import Head from 'next/head'
-import Nav from '@/components/nav'
-import ChatContainer from '@/components/chat'
+import { ConnectedPeerList } from '@/components/PeerList'
+import { PubsubSubscribers } from '@/components/Pubsub'
+import { DirectMessages } from '@/components/DirectMessages'
+import ChatContainer from '@/components/chat/ChatContainer'
+import Nav from '@/components/Nav'
 
 export default function Chat() {
   return (
@@ -13,10 +16,17 @@ export default function Chat() {
       </Head>
       <main className="min-h-full">
         <Nav />
-        <div className="">
-          <main>
+        <div className="flex flex-row">
+          <div className="basis-2/12">
+            <DirectMessages />
+          </div>
+          <div className="basis-8/12">
             <ChatContainer />
-          </main>
+          </div>
+          <div className="basis-2/12">
+            <PubsubSubscribers />
+            <ConnectedPeerList showShortPeerId />
+          </div>
         </div>
       </main>
     </>

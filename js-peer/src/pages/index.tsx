@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
-import Nav from '@/components/nav'
+import Nav from '@/components/Nav'
 import { useLibp2pContext } from '@/context/ctx'
 import type { Connection } from '@libp2p/interface'
 import { usePeerContext } from '../context/peer-ctx'
@@ -9,7 +9,8 @@ import Image from 'next/image'
 import { multiaddr } from '@multiformats/multiaddr'
 import { connectToMultiaddr } from '../lib/libp2p'
 import { useListenAddressesContext } from '../context/listen-addresses-ctx'
-import Spinner from '@/components/spinner'
+import Spinner from '@/components/icons/Spinner'
+import { ConnectedPeerList } from '@/components/PeerList'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
@@ -50,34 +51,6 @@ export default function Home() {
       clearInterval(interval)
     }
   }, [libp2p, listenAddresses, setListenAddresses])
-
-  type PeerProtoTuple = {
-    peerId: string
-    protocols: string[]
-  }
-
-  const getFormattedConnections = (connections: Connection[]): PeerProtoTuple[] => {
-    const protoNames: Map<string, string[]> = new Map()
-
-    connections.forEach((conn) => {
-      const exists = protoNames.get(conn.remotePeer.toString())
-      const dedupedProtonames = [...new Set(conn.remoteAddr.protoNames())]
-
-      if (exists?.length) {
-        const namesToAdd = dedupedProtonames.filter((name) => !exists.includes(name))
-        // console.log('namesToAdd: ', namesToAdd)
-        protoNames.set(conn.remotePeer.toString(), [...exists, ...namesToAdd])
-
-      } else {
-        protoNames.set(conn.remotePeer.toString(), dedupedProtonames)
-      }
-    })
-
-    return [...protoNames.entries()].map(([peerId, protocols]) => ({
-      peerId,
-      protocols,
-    }))
-  }
 
   const handleConnectToMultiaddr = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -194,22 +167,7 @@ export default function Home() {
                 )}
               </div>
               <div>
-                {peerStats.peerIds.length > 0 ? (
-                  <>
-                    <h3 className="text-xl">
-                      {' '}
-                      Connected peers ({getFormattedConnections(peerStats.connections).length}) 👇
-                    </h3>
-                    <pre className="px-2">
-                      {getFormattedConnections(peerStats.connections)
-                        .map(
-                          (pair) =>
-                            `${pair.peerId} (${pair.protocols.join(', ')})`,
-                        )
-                        .join('\n')}
-                    </pre>
-                  </>
-                ) : null}
+                <ConnectedPeerList />
               </div>
             </div>
           </main>

@@ -4,6 +4,8 @@ import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
 import { kadDHT } from '@libp2p/kad-dht'
+import { dcutr } from '@libp2p/dcutr'
+import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import {
   Multiaddr,
 } from '@multiformats/multiaddr'
@@ -13,7 +15,7 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
-import { CHAT_FILE_TOPIC, CHAT_TOPIC, WEBRTC_BOOTSTRAP_NODE, WEBTRANSPORT_BOOTSTRAP_NODE } from './constants'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC, WEBRTC_BOOTSTRAP_NODE, WEBTRANSPORT_BOOTSTRAP_NODE } from '../constants/'
 import * as filters from "@libp2p/websockets/filters"
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 
@@ -32,6 +34,7 @@ export async function startLibp2p() {
     transports: [
       webTransport(),
       webSockets({
+        // this allows non-secure WebSocket connections, e.g. to local network
         filter: filters.all,
       }),
       webRTC({
@@ -61,16 +64,27 @@ export async function startLibp2p() {
     peerDiscovery: [
       bootstrap({
         list: [
-          WEBRTC_BOOTSTRAP_NODE,
-          WEBTRANSPORT_BOOTSTRAP_NODE,
+          '/ip4/161.35.148.108/udp/1970/quic-v1/webtransport/certhash/uEiBrr7E3WmC1omWyLEEPBlSkhdJxXp7eJSmcsdEor0uv2w/certhash/uEiAo-TevMGFzO1LPlUSmZvRquvCi8p4IReI0JpNnL4kLNQ/p2p/12D3KooWP6cwye9umPLg1T6fs7vUfLMShbKNoZmLb6iswBfMyfAM'
+          // WEBRTC_BOOTSTRAP_NODE,
+          // WEBTRANSPORT_BOOTSTRAP_NODE,
         ],
       }),
+      pubsubPeerDiscovery({
+        interval: 5000,
+        listenOnly: false,
+        topics: [`${CHAT_TOPIC}._peer-discovery._p2p._pubsub`],
+      }),
+
     ],
     services: {
       pubsub: gossipsub({
+        emitSelf: false,
         allowPublishToZeroTopicPeers: true,
         msgIdFn: msgIdFnStrictNoSign,
         ignoreDuplicatePublishError: true,
+        tagMeshPeers: true,
+        doPX: true,
+
       }),
       dht: kadDHT({
         protocol: "/universal-connectivity/kad/1.0.0",
@@ -78,7 +92,8 @@ export async function startLibp2p() {
         maxOutboundStreams: 5000,
         clientMode: true,
       }),
-      identify: identify()
+      identify: identify(),
+      dcutr: dcutr(),
     },
   })
 
