@@ -25,16 +25,23 @@ export const libp2pContext = createContext<Libp2pContextInterface>({
 interface WrapperProps {
   children?: ReactNode
 }
-let loaded = false
+
 export function AppWrapper({ children }: WrapperProps) {
+  const libp2pInit = React.useRef(false)
+
   const [libp2p, setLibp2p] = useState<Libp2p<{ pubsub: PubSub }>>()
 
   useEffect(() => {
     const init = async () => {
-      if (loaded) return
       try {
-        loaded = true
+        if (libp2pInit.current) {
+          console.debug('already init')
+          return
+        }
+
         const libp2p = await startLibp2p()
+
+        libp2pInit.current = true
 
         // @ts-ignore
         window.libp2p = libp2p

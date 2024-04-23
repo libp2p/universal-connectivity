@@ -35,7 +35,7 @@ export const InputBar = () => {
 
     const myPeerId = libp2p.peerId.toString()
 
-    setMessageHistory([...messageHistory, { msg: input, fileObjectUrl: undefined, from: 'me', peerId: myPeerId }])
+    setMessageHistory([...messageHistory, { msgId: crypto.randomUUID(), msg: input, fileObjectUrl: undefined, from: 'me', peerId: myPeerId, read: true }])
     setInput('')
   }, [input, messageHistory, setInput, libp2p, setMessageHistory])
 
@@ -65,10 +65,12 @@ export const InputBar = () => {
     )
 
     const msg: ChatMessage = {
+      msgId: crypto.randomUUID(),
       msg: newChatFileMessage(file.id, file.body),
       fileObjectUrl: window.URL.createObjectURL(new Blob([file.body])),
       from: 'me',
       peerId: myPeerId,
+      read: true,
     }
     setMessageHistory([...messageHistory, msg])
   }, [messageHistory, libp2p, setMessageHistory, files, setFiles])

@@ -29,9 +29,9 @@ export const ConnectedPeerList = ({ showShortPeerId }: Props) => {
     }
   }, [libp2p, peerStats, setPeerStats])
 
-  const peerConn = (peerProto: PeerProtoTuple) => {
+  const peerConn = (peerProto: PeerProtoTuple, idx: number) => {
     return (
-      <div className="flex">
+      <div className="flex" key={idx}>
         <Blockies seed={peerProto.peerId} size={15} scale={3} className="rounded mr-2 max-h-10 max-w-10" />
         {showShortPeerId ? shortPeerId(peerProto.peerId) : peerProto.peerId} ({peerProto.protocols.join(', ')})
       </div>
@@ -47,7 +47,7 @@ export const ConnectedPeerList = ({ showShortPeerId }: Props) => {
         <div className="px-2">
           {getFormattedConnections(peerStats.connections)
             .map(
-              (pair) => peerConn(pair)
+              (pair, idx) => peerConn(pair, idx)
             )
           }
         </div>

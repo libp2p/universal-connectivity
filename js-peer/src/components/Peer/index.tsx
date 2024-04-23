@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { shortPeerId } from '@/lib/peers'
 import Blockies from 'react-18-blockies'
+import { useChatContext } from '@/context/chat-ctx'
 
 export interface Props {
   peerId: string
@@ -13,6 +14,12 @@ function classNames(...classes: string[]) {
 }
 
 export default function Peer({ peerId, me }: Props) {
+  const { setChatRoom } = useChatContext();
+
+  const handleSetChatRoom = () => {
+    setChatRoom(peerId)
+  }
+
   return (
     <Menu as="div" className="relative inline-block text-left">
       <div>
@@ -36,18 +43,18 @@ export default function Peer({ peerId, me }: Props) {
             <div className="py-1">
               <Menu.Item>
                 {({ active }) => (
-                  <a
-                    href="#"
+                  <span
                     className={classNames(
                       active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                       'block px-4 py-2 text-sm'
                     )}
+                    onClick={() => handleSetChatRoom()}
                   >
                     Message
-                  </a>
+                  </span>
                 )}
               </Menu.Item>
-              <Menu.Item>
+              {/*<Menu.Item>
                 {({ active }) => (
                   <a
                     href="#"
@@ -59,7 +66,7 @@ export default function Peer({ peerId, me }: Props) {
                     Call
                   </a>
                 )}
-              </Menu.Item>
+              </Menu.Item>*/}
             </div>
           </Menu.Items>
         </Transition>

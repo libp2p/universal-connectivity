@@ -64,7 +64,7 @@ export async function startLibp2p() {
     peerDiscovery: [
       bootstrap({
         list: [
-          '/ip4/161.35.148.108/udp/1970/quic-v1/webtransport/certhash/uEiBrr7E3WmC1omWyLEEPBlSkhdJxXp7eJSmcsdEor0uv2w/certhash/uEiAo-TevMGFzO1LPlUSmZvRquvCi8p4IReI0JpNnL4kLNQ/p2p/12D3KooWP6cwye9umPLg1T6fs7vUfLMShbKNoZmLb6iswBfMyfAM'
+          '/ip4/142.93.224.65/udp/1970/quic-v1/webtransport/certhash/uEiBntFDuWbXUuSqg0XrFAfgKLivXbX1uxFtwYUV5vjFTRA/certhash/uEiBOkGfz3B7IcLOFdh4uU3wJQRG6DyUTfjMz8TDxjRBp3Q/p2p/12D3KooWDwgE8vSCx8KtpZHwYEENiutTfLdC7b757ekBTZcGoWqr'
           // WEBRTC_BOOTSTRAP_NODE,
           // WEBTRANSPORT_BOOTSTRAP_NODE,
         ],

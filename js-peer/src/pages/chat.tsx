@@ -1,9 +1,8 @@
 import Head from 'next/head'
-import { ConnectedPeerList } from '@/components/PeerList'
-import { PubsubSubscribers } from '@/components/Pubsub'
-import { DirectMessages } from '@/components/DirectMessages'
 import ChatContainer from '@/components/chat/ChatContainer'
 import Nav from '@/components/Nav'
+import { LeftSidebar } from '@/components/sidebar/LeftSidebar'
+import { RightSidebar } from '@/components/sidebar/RightSidebar'
 
 export default function Chat() {
   return (
@@ -18,14 +17,13 @@ export default function Chat() {
         <Nav />
         <div className="flex flex-row">
           <div className="basis-2/12">
-            <DirectMessages />
+            <LeftSidebar />
           </div>
           <div className="basis-8/12">
             <ChatContainer />
           </div>
           <div className="basis-2/12">
-            <PubsubSubscribers />
-            <ConnectedPeerList showShortPeerId />
+            <RightSidebar />
           </div>
         </div>
       </main>
