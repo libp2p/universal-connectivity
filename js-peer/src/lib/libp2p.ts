@@ -73,9 +73,6 @@ export async function startLibp2p() {
         ignoreDuplicatePublishError: true,
       }),
       dht: kadDHT({
-        protocol: "/universal-connectivity/kad/1.0.0",
-        maxInboundStreams: 5000,
-        maxOutboundStreams: 5000,
         clientMode: true,
       }),
       identify: identify()

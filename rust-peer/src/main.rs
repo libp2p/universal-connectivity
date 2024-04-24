@@ -34,7 +34,7 @@ use crate::protocol::FileRequest;
 
 const TICK_INTERVAL: Duration = Duration::from_secs(15);
 const KADEMLIA_PROTOCOL_NAME: StreamProtocol =
-    StreamProtocol::new("/universal-connectivity/lan/kad/1.0.0");
+    StreamProtocol::new("/ipfs/kad/1.0.0");
 const FILE_EXCHANGE_PROTOCOL: StreamProtocol =
     StreamProtocol::new("/universal-connectivity-file/1");
 const PORT_WEBRTC: u16 = 9090;
