@@ -1,34 +1,41 @@
-import React, { ReactNode, createContext, useContext, useState } from 'react'
-import { Multiaddr } from '@multiformats/multiaddr'
+import { Multiaddr } from "@multiformats/multiaddr";
+import React, { ReactNode, createContext, useContext, useState } from "react";
 
 export interface ListenAddresses {
-	multiaddrs: Multiaddr[]
+  multiaddrs: Multiaddr[];
 }
 
 export interface ListenAddressesContextInterface {
-	listenAddresses: ListenAddresses;
-	setListenAddresses: (addresses: ListenAddresses) => void;
+  listenAddresses: ListenAddresses;
+  setListenAddresses: (addresses: ListenAddresses) => void;
 }
 
-export const listenAddressesContext = createContext<ListenAddressesContextInterface>({
-	listenAddresses: {
-		multiaddrs: []
-	},
-	setListenAddresses: () => { }
-})
+export const listenAddressesContext =
+  createContext<ListenAddressesContextInterface>({
+    listenAddresses: {
+      multiaddrs: [],
+    },
+    setListenAddresses: () => {},
+  });
 
 export const useListenAddressesContext = () => {
-	return useContext(listenAddressesContext);
+  return useContext(listenAddressesContext);
 };
 
-export const ListenAddressesProvider = ({ children }: { children: ReactNode }) => {
-	const [listenAddresses, setListenAddresses] = useState<ListenAddresses>({
-		multiaddrs: []
-	});
+export const ListenAddressesProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
+  const [listenAddresses, setListenAddresses] = useState<ListenAddresses>({
+    multiaddrs: [],
+  });
 
-	return (
-		<listenAddressesContext.Provider value={{ listenAddresses, setListenAddresses }}>
-			{children}
-		</listenAddressesContext.Provider>
-	);
+  return (
+    <listenAddressesContext.Provider
+      value={{ listenAddresses, setListenAddresses }}
+    >
+      {children}
+    </listenAddressesContext.Provider>
+  );
 };

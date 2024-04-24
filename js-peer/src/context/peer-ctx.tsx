@@ -1,45 +1,43 @@
-import React, { ReactNode, createContext, useContext, useState } from 'react';
-import type { Connection } from '@libp2p/interface'
-import { PeerId } from '@libp2p/interface'
-
+import type { Connection } from "@libp2p/interface";
+import { PeerId } from "@libp2p/interface";
+import React, { ReactNode, createContext, useContext, useState } from "react";
 
 export interface PeerStats {
-	peerIds: PeerId[]
-	connected: boolean
-	connections: Connection[]
-	latency: number
+  peerIds: PeerId[];
+  connected: boolean;
+  connections: Connection[];
+  latency: number;
 }
 
 export interface PeerContextInterface {
-	peerStats: PeerStats;
-	setPeerStats: (peerStats: PeerStats) => void;
+  peerStats: PeerStats;
+  setPeerStats: (peerStats: PeerStats) => void;
 }
 export const peerContext = createContext<PeerContextInterface>({
-	peerStats: {
-		peerIds: [],
-		connected: true,
-		connections: [],
-		latency: 0
-	},
-	setPeerStats: () => { }
-})
+  peerStats: {
+    peerIds: [],
+    connected: true,
+    connections: [],
+    latency: 0,
+  },
+  setPeerStats: () => {},
+});
 
 export const usePeerContext = () => {
-	return useContext(peerContext);
+  return useContext(peerContext);
 };
 
 export const PeerProvider = ({ children }: { children: ReactNode }) => {
-	const [peerStats, setPeerStats] = useState<PeerStats>({
-		peerIds: [],
-		connected: false,
-		connections: [],
-		latency: 0
-	});
+  const [peerStats, setPeerStats] = useState<PeerStats>({
+    peerIds: [],
+    connected: false,
+    connections: [],
+    latency: 0,
+  });
 
-	return (
-		<peerContext.Provider value={{ peerStats, setPeerStats }}>
-			{children}
-		</peerContext.Provider>
-	);
+  return (
+    <peerContext.Provider value={{ peerStats, setPeerStats }}>
+      {children}
+    </peerContext.Provider>
+  );
 };
-

@@ -1,20 +1,20 @@
-import Attachment from "@/components/icons/Attachment"
-import Send from "@/components/icons/Send"
-import { ChatMessage, useChatContext } from "@/context/chat-ctx"
-import { useLibp2pContext } from "@/context/ctx"
-import { ChatFile, useFileChatContext } from "@/context/file-ctx"
-import { CHAT_FILE_TOPIC, CHAT_TOPIC } from "@/lib/constants/"
-import { useCallback, useRef, useState } from "react"
-import { v4 as uuidv4 } from 'uuid';
-import { TextInput } from "../TextInput"
-import { newChatFileMessage } from "@/lib/chat"
+import React, { useCallback, useRef, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
+import { TextInput } from '../TextInput'
+import Attachment from '@/components/icons/Attachment'
+import Send from '@/components/icons/Send'
+import { ChatMessage, useChatContext } from '@/context/chat-ctx'
+import { useLibp2pContext } from '@/context/ctx'
+import { ChatFile, useFileChatContext } from '@/context/file-ctx'
+import { newChatFileMessage } from '@/lib/chat'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC } from '@/lib/constants/'
 
 export const InputBar = () => {
   const { libp2p } = useLibp2pContext()
-  const { files, setFiles } = useFileChatContext();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const { files, setFiles } = useFileChatContext()
+  const fileRef = useRef<HTMLInputElement>(null)
   const [input, setInput] = useState<string>('')
-  const { messageHistory, setMessageHistory } = useChatContext();
+  const { messageHistory, setMessageHistory } = useChatContext()
 
   const sendMessage = useCallback(async () => {
     if (input === '') return
@@ -28,6 +28,7 @@ export const InputBar = () => {
       CHAT_TOPIC,
       new TextEncoder().encode(input),
     )
+
     console.log(
       'sent message to: ',
       res.recipients.map((peerId) => peerId.toString()),
@@ -35,45 +36,61 @@ export const InputBar = () => {
 
     const myPeerId = libp2p.peerId.toString()
 
-    setMessageHistory([...messageHistory, { msgId: crypto.randomUUID(), msg: input, fileObjectUrl: undefined, from: 'me', peerId: myPeerId, read: true }])
+    setMessageHistory([
+      ...messageHistory,
+      {
+        msgId: crypto.randomUUID(),
+        msg: input,
+        fileObjectUrl: undefined,
+        from: 'me',
+        peerId: myPeerId,
+        read: true,
+      },
+    ])
     setInput('')
   }, [input, messageHistory, setInput, libp2p, setMessageHistory])
 
-  const sendFile = useCallback(async (readerEvent: ProgressEvent<FileReader>) => {
-    const fileBody = readerEvent.target?.result as ArrayBuffer;
+  const sendFile = useCallback(
+    async (readerEvent: ProgressEvent<FileReader>) => {
+      const fileBody = readerEvent.target?.result as ArrayBuffer
 
-    const myPeerId = libp2p.peerId.toString()
-    const file: ChatFile = {
-      id: uuidv4(),
-      body: new Uint8Array(fileBody),
-      sender: myPeerId,
-    }
-    setFiles(files.set(file.id, file))
+      const myPeerId = libp2p.peerId.toString()
+      const file: ChatFile = {
+        id: uuidv4(),
+        body: new Uint8Array(fileBody),
+        sender: myPeerId,
+      }
 
-    console.log(
-      `peers in gossip for topic ${CHAT_FILE_TOPIC}:`,
-      libp2p.services.pubsub.getSubscribers(CHAT_FILE_TOPIC).toString(),
-    )
+      setFiles(files.set(file.id, file))
 
-    const res = await libp2p.services.pubsub.publish(
-      CHAT_FILE_TOPIC,
-      new TextEncoder().encode(file.id)
-    )
-    console.log(
-      'sent file to: ',
-      res.recipients.map((peerId) => peerId.toString()),
-    )
+      console.log(
+        `peers in gossip for topic ${CHAT_FILE_TOPIC}:`,
+        libp2p.services.pubsub.getSubscribers(CHAT_FILE_TOPIC).toString(),
+      )
 
-    const msg: ChatMessage = {
-      msgId: crypto.randomUUID(),
-      msg: newChatFileMessage(file.id, file.body),
-      fileObjectUrl: window.URL.createObjectURL(new Blob([file.body])),
-      from: 'me',
-      peerId: myPeerId,
-      read: true,
-    }
-    setMessageHistory([...messageHistory, msg])
-  }, [messageHistory, libp2p, setMessageHistory, files, setFiles])
+      const res = await libp2p.services.pubsub.publish(
+        CHAT_FILE_TOPIC,
+        new TextEncoder().encode(file.id),
+      )
+
+      console.log(
+        'sent file to: ',
+        res.recipients.map((peerId) => peerId.toString()),
+      )
+
+      const msg: ChatMessage = {
+        msgId: crypto.randomUUID(),
+        msg: newChatFileMessage(file.id, file.body),
+        fileObjectUrl: window.URL.createObjectURL(new Blob([file.body])),
+        from: 'me',
+        peerId: myPeerId,
+        read: true,
+      }
+
+      setMessageHistory([...messageHistory, msg])
+    },
+    [messageHistory, libp2p, setMessageHistory, files, setFiles],
+  )
 
   const handleSend = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -85,11 +102,12 @@ export const InputBar = () => {
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(e.target.files[0]);
+        const reader = new FileReader()
+
+        reader.readAsArrayBuffer(e.target.files[0])
         reader.onload = (readerEvent) => {
           sendFile(readerEvent)
-        };
+        }
       }
     },
     [sendFile],
@@ -97,7 +115,7 @@ export const InputBar = () => {
 
   const handleFileSend = useCallback(
     async (_e: React.MouseEvent<HTMLButtonElement>) => {
-      fileRef?.current?.click();
+      fileRef?.current?.click()
     },
     [fileRef],
   )
@@ -121,7 +139,12 @@ export const InputBar = () => {
                 </svg>
               </button> */}
 
-      <input ref={fileRef} className="hidden" type="file" onChange={handleFileInput} />
+      <input
+        ref={fileRef}
+        className="hidden"
+        type="file"
+        onChange={handleFileInput}
+      />
       <button onClick={handleFileSend}>
         <Attachment />
       </button>

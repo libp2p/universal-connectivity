@@ -1,19 +1,19 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from "react";
 
 export interface ChatMessage {
-  msgId: string
-  msg: string
-  fileObjectUrl: string | undefined
-  from: 'me' | 'other'
-  peerId: string
-  read: boolean
+  msgId: string;
+  msg: string;
+  fileObjectUrl: string | undefined;
+  from: "me" | "other";
+  peerId: string;
+  read: boolean;
 }
 
 export interface DMMessages {
-  [peerId: string]: ChatMessage[]
+  [peerId: string]: ChatMessage[];
 }
 
-export type Chatroom = string
+export type Chatroom = string;
 
 export interface ChatContextInterface {
   messageHistory: ChatMessage[];
@@ -25,12 +25,12 @@ export interface ChatContextInterface {
 }
 export const chatContext = createContext<ChatContextInterface>({
   messageHistory: [],
-  setMessageHistory: () => { },
+  setMessageHistory: () => {},
   dmMessages: {},
-  setDMMessages: () => { },
-  chatRoom: '',
-  setChatRoom: () => { },
-})
+  setDMMessages: () => {},
+  chatRoom: "",
+  setChatRoom: () => {},
+});
 
 export const useChatContext = () => {
   return useContext(chatContext);
@@ -39,10 +39,19 @@ export const useChatContext = () => {
 export const ChatProvider = ({ children }: any) => {
   const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([]);
   const [dmMessages, setDMMessages] = useState<DMMessages>({});
-  const [chatRoom, setChatRoom] = useState<Chatroom>('');
+  const [chatRoom, setChatRoom] = useState<Chatroom>("");
 
   return (
-    <chatContext.Provider value={{ chatRoom, setChatRoom, dmMessages, setDMMessages, messageHistory, setMessageHistory }}>
+    <chatContext.Provider
+      value={{
+        chatRoom,
+        setChatRoom,
+        dmMessages,
+        setDMMessages,
+        messageHistory,
+        setMessageHistory,
+      }}
+    >
       {children}
     </chatContext.Provider>
   );

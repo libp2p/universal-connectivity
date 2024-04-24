@@ -1,3 +1,87 @@
 {
-  "extends": "next/core-web-vitals"
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true,
+    "jest": true
+  },
+  "globals": {
+    "MediaStream": true,
+    "MediaStreamTrack": true,
+    "RTCPeerConnection": true,
+    "RTCSessionDescription": true,
+    "RTCSessionDescriptionInit": true,
+    "RTCRtpSender": true,
+    "RTCRtpReceiver": true,
+    "RTCIceTransport": true,
+    "RTCDtlsTransport": true,
+    "RTCIceGatherer": true,
+    "RTCSctpTransport": true,
+    "RTCCertificate": true
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "next/core-web-vitals",
+    "next",
+    "prettier",
+    "plugin:react/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "ignorePatterns": ["node_modules/", "build/", ".next/", "lib/proto/"],
+  "rules": {
+    "prettier/prettier": [
+      "warn",
+      {},
+      {
+        "usePrettierrc": true
+      }
+    ],
+    "import/no-named-as-default": 0,
+    "@typescript-eslint/camelcase": 0,
+    "@typescript-eslint/explicit-function-return-type": 0,
+    "import/order": [
+      "error",
+      {
+        "alphabetize": {
+          "caseInsensitive": true,
+          "order": "asc"
+        },
+        "groups": [
+          "builtin",
+          "external",
+          "parent",
+          "sibling",
+          "index",
+          "object"
+        ]
+      }
+    ],
+    "import/named": 0,
+    "no-console": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react/react-in-jsx-scope": "off",
+    "eol-last": ["error", "always"],
+    "padding-line-between-statements": [
+      "error",
+      {
+        "blankLine": "always",
+        "prev": ["const", "let", "var", "if"],
+        "next": "*"
+      },
+      {
+        "blankLine": "any",
+        "prev": ["const", "let", "var"],
+        "next": ["const", "let", "var"]
+      }
+    ],
+    "prefer-template": "error",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "error"
+  }
 }

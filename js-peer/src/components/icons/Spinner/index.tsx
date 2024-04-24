@@ -24,5 +24,5 @@ export default function Spinner() {
         className="text-indigo-500"
       ></path>
     </svg>
-  )
+  );
 }

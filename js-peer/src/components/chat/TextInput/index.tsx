@@ -1,4 +1,5 @@
-import { useCallback } from "react"
+import React from 'react'
+import { useCallback } from 'react'
 
 interface Props {
   setInput: (input: string) => void
@@ -19,6 +20,7 @@ export const TextInput = ({ sendMessage, setInput, input }: Props) => {
       if (e.key !== 'Enter') {
         return
       }
+
       sendMessage()
     },
     [sendMessage],
