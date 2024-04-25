@@ -20,6 +20,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
@@ -172,6 +173,11 @@ func main() {
 
 	// create a new libp2p Host with lots of options
 	h, err := libp2p.New(opts...)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = relayv2.New(h)
 	if err != nil {
 		panic(err)
 	}
