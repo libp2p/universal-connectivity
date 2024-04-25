@@ -38,17 +38,11 @@ var SysMsgChan chan *ChatMessage
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
 // If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
 func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Multiaddr) (*dht.IpfsDHT, error) {
-	var options []dht.Option
 
-	// if no bootstrap peers give this peer act as a bootstraping node
-	// other peers can use this peers ipfs address for peer discovery via dht
-	if len(bootstrapPeers) == 0 {
-		options = append(options, dht.Mode(dht.ModeServer))
-	}
-
-	options = append(options, dht.ProtocolPrefix("/universal-connectivity/lan"))
-
-	kdht, err := dht.New(ctx, host, options...)
+	kdht, err := dht.New(ctx, host,
+		dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...),
+		dht.Mode(dht.ModeAuto),
+	)
 	if err != nil {
 		return nil, err
 	}
