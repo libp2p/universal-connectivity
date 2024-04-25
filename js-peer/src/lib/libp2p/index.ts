@@ -15,6 +15,7 @@ import { webTransport } from '@libp2p/webtransport'
 import { Multiaddr } from '@multiformats/multiaddr'
 import { createLibp2p, Libp2p } from 'libp2p'
 import { sha256 } from 'multiformats/hashes/sha2'
+import { handleDirectMessageRequest } from '../chat/directMessage/handler'
 import {
   CHAT_FILE_TOPIC,
   CHAT_TOPIC,
@@ -101,6 +102,8 @@ export async function startLibp2p() {
   libp2p.services.pubsub.subscribe(CHAT_TOPIC)
   libp2p.services.pubsub.subscribe(CHAT_FILE_TOPIC)
 
+  await registerHandlers(libp2p)
+
   libp2p.addEventListener('self:peer:update', ({ detail: { peer } }) => {
     const multiaddrs = peer.addresses.map(({ multiaddr }) => multiaddr)
 
@@ -110,6 +113,10 @@ export async function startLibp2p() {
   })
 
   return libp2p
+}
+
+async function registerHandlers(libp2p: Libp2p) {
+  handleDirectMessageRequest(libp2p)
 }
 
 // message IDs are used to dedupe inbound messages

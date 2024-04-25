@@ -1,37 +1,37 @@
-import { useEffect } from "react";
-import Blockies from "react-18-blockies";
-import { useLibp2pContext } from "@/context/ctx";
-import { usePeerContext } from "@/context/peer-ctx";
+import { useEffect } from 'react'
+import Blockies from 'react-18-blockies'
+import { useLibp2pContext } from '@/context/ctx'
+import { usePeerContext } from '@/context/peer-ctx'
 import {
   PeerProtoTuple,
   getFormattedConnections,
   shortPeerId,
-} from "@/lib/peers";
+} from '@/lib/peers'
 
 export interface Props {
-  showShortPeerId?: boolean;
+  showShortPeerId?: boolean
 }
 
 export const ConnectedPeerList = ({ showShortPeerId }: Props) => {
-  const { peerStats, setPeerStats } = usePeerContext();
-  const { libp2p } = useLibp2pContext();
+  const { peerStats, setPeerStats } = usePeerContext()
+  const { libp2p } = useLibp2pContext()
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const connections = libp2p.getConnections();
+      const connections = libp2p.getConnections()
 
       setPeerStats({
         ...peerStats,
         peerIds: connections.map((conn) => conn.remotePeer),
         connections: connections,
         connected: connections.length > 0,
-      });
-    }, 1000);
+      })
+    }, 1000)
 
     return () => {
-      clearInterval(interval);
-    };
-  }, [libp2p, peerStats, setPeerStats]);
+      clearInterval(interval)
+    }
+  }, [libp2p, peerStats, setPeerStats])
 
   const peerConn = (peerProto: PeerProtoTuple, idx: number) => {
     return (
@@ -43,10 +43,10 @@ export const ConnectedPeerList = ({ showShortPeerId }: Props) => {
           className="rounded mr-2 max-h-10 max-w-10"
         />
         {showShortPeerId ? shortPeerId(peerProto.peerId) : peerProto.peerId} (
-        {peerProto.protocols.join(", ")})
+        {peerProto.protocols.join(', ')})
       </div>
-    );
-  };
+    )
+  }
 
   return peerStats.peerIds.length > 0 ? (
     <div>
@@ -56,9 +56,9 @@ export const ConnectedPeerList = ({ showShortPeerId }: Props) => {
       </h3>
       <div className="px-2">
         {getFormattedConnections(peerStats.connections).map((pair, idx) =>
-          peerConn(pair, idx)
+          peerConn(pair, idx),
         )}
       </div>
     </div>
-  ) : null;
-};
+  ) : null
+}

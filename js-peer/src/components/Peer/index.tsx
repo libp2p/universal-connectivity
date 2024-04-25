@@ -1,24 +1,24 @@
-import { Menu, Transition } from "@headlessui/react";
-import { Fragment } from "react";
-import Blockies from "react-18-blockies";
-import { useChatContext } from "@/context/chat-ctx";
-import { shortPeerId } from "@/lib/peers";
+import { Menu, Transition } from '@headlessui/react'
+import { Fragment } from 'react'
+import Blockies from 'react-18-blockies'
+import { useChatContext } from '@/context/chat-ctx'
+import { shortPeerId } from '@/lib/peers'
 
 export interface Props {
-  peerId: string;
-  me?: boolean;
+  peerId: string
+  me?: boolean
 }
 
 function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
+  return classes.filter(Boolean).join(' ')
 }
 
 export default function Peer({ peerId, me }: Props) {
-  const { setChatRoom } = useChatContext();
+  const { setChatRoom } = useChatContext()
 
   const handleSetChatRoom = () => {
-    setChatRoom(peerId);
-  };
+    setChatRoom(peerId)
+  }
 
   return (
     <Menu as="div" className="relative inline-block text-left">
@@ -51,8 +51,8 @@ export default function Peer({ peerId, me }: Props) {
                   {({ active }) => (
                     <span
                       className={classNames(
-                        active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                        "block px-4 py-2 text-sm"
+                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                        'block px-4 py-2 text-sm',
                       )}
                       onClick={() => handleSetChatRoom()}
                     >
@@ -79,5 +79,5 @@ export default function Peer({ peerId, me }: Props) {
         </>
       )}
     </Menu>
-  );
+  )
 }

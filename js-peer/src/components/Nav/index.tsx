@@ -1,27 +1,27 @@
-import { Disclosure, Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { Fragment } from "react";
+import { Disclosure, Menu, Transition } from '@headlessui/react'
+import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { Fragment } from 'react'
 
 const navigationItems = [
-  { name: "Connecting to a Peer", href: "/" },
-  { name: "Chat", href: "/chat" },
-  { name: "Source", href: "https://github.com/libp2p/universal-connectivity" },
-];
+  { name: 'Connecting to a Peer', href: '/' },
+  { name: 'Chat', href: '/chat' },
+  { name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' },
+]
 const userNavigation = [
-  { name: "Your Profile", href: "#" },
-  { name: "Settings", href: "#" },
-  { name: "Sign out", href: "#" },
-];
+  { name: 'Your Profile', href: '#' },
+  { name: 'Settings', href: '#' },
+  { name: 'Sign out', href: '#' },
+]
 
 function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
+  return classes.filter(Boolean).join(' ')
 }
 
 export default function Navigation() {
-  const router = useRouter();
+  const router = useRouter()
 
   return (
     <Disclosure as="nav" className="border-b border-gray-200 bg-white">
@@ -45,12 +45,12 @@ export default function Navigation() {
                         key={item.href}
                         className={classNames(
                           router.pathname === item.href
-                            ? "border-indigo-500 text-gray-900"
-                            : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
-                          "inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium"
+                            ? 'border-indigo-500 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                          'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
                         )}
                         aria-current={
-                          router.pathname === item.href ? "page" : undefined
+                          router.pathname === item.href ? 'page' : undefined
                         }
                       >
                         {item.name}
@@ -96,8 +96,8 @@ export default function Navigation() {
                             <a
                               href={item.href}
                               className={classNames(
-                                active ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm text-gray-700"
+                                active ? 'bg-gray-100' : '',
+                                'block px-4 py-2 text-sm text-gray-700',
                               )}
                             >
                               {item.name}
@@ -133,12 +133,12 @@ export default function Navigation() {
                     // href={item.href}
                     className={classNames(
                       router.pathname === item.href
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                        : "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800",
-                      "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800',
+                      'block border-l-4 py-2 pl-3 pr-4 text-base font-medium',
                     )}
                     aria-current={
-                      router.pathname === item.href ? "page" : undefined
+                      router.pathname === item.href ? 'page' : undefined
                     }
                   >
                     {item.name}
@@ -150,5 +150,5 @@ export default function Navigation() {
         </>
       )}
     </Disclosure>
-  );
+  )
 }

@@ -1,3 +1,4 @@
+import { peerIdFromString } from '@libp2p/peer-id'
 import React, { useCallback, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { TextInput } from '../TextInput'
@@ -7,18 +8,22 @@ import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 import { useLibp2pContext } from '@/context/ctx'
 import { ChatFile, useFileChatContext } from '@/context/file-ctx'
 import { newChatFileMessage } from '@/lib/chat'
+import { directMessageRequest } from '@/lib/chat/directMessage/directMessageRequest'
 import { CHAT_FILE_TOPIC, CHAT_TOPIC } from '@/lib/constants/'
 
-export const InputBar = () => {
+interface Props {
+  chatRoom: string
+}
+
+export const InputBar = ({ chatRoom }: Props) => {
   const { libp2p } = useLibp2pContext()
   const { files, setFiles } = useFileChatContext()
   const fileRef = useRef<HTMLInputElement>(null)
   const [input, setInput] = useState<string>('')
-  const { messageHistory, setMessageHistory } = useChatContext()
+  const { dmMessages, setDMMessages, messageHistory, setMessageHistory } =
+    useChatContext()
 
-  const sendMessage = useCallback(async () => {
-    if (input === '') return
-
+  const sendGossipsubMessage = useCallback(async () => {
     console.log(
       `peers in gossip for topic ${CHAT_TOPIC}:`,
       libp2p.services.pubsub.getSubscribers(CHAT_TOPIC).toString(),
@@ -30,7 +35,7 @@ export const InputBar = () => {
     )
 
     console.log(
-      'sent message to: ',
+      'sent message via gossipsub: ',
       res.recipients.map((peerId) => peerId.toString()),
     )
 
@@ -49,6 +54,53 @@ export const InputBar = () => {
     ])
     setInput('')
   }, [input, messageHistory, setInput, libp2p, setMessageHistory])
+
+  const sendDM = useCallback(async () => {
+    try {
+      directMessageRequest({ libp2p, peerId: chatRoom, message: input })
+      const conn = await libp2p.dial(peerIdFromString(chatRoom))
+
+      console.log('connected to peer:', conn.remotePeer.toString())
+
+      const myPeerId = libp2p.peerId.toString()
+
+      const newMessage: ChatMessage = {
+        msgId: crypto.randomUUID(),
+        msg: input,
+        fileObjectUrl: undefined,
+        from: 'me',
+        peerId: myPeerId,
+        read: true,
+      }
+
+      const updatedMessages = dmMessages[chatRoom]
+        ? [...dmMessages[chatRoom], newMessage]
+        : [newMessage]
+
+      setDMMessages({
+        ...dmMessages,
+        [chatRoom]: updatedMessages,
+      })
+
+      setInput('')
+    } catch (e: any) {
+      console.error(e)
+    }
+  }, [libp2p, setDMMessages, dmMessages, chatRoom, input])
+
+  const sendMessage = useCallback(async () => {
+    if (input === '') {
+      return
+    }
+
+    if (chatRoom != '') {
+      sendDM()
+      // send DM message
+    } else {
+      // send Gossipsub message to public chat
+      sendGossipsubMessage()
+    }
+  }, [chatRoom, input, sendDM, sendGossipsubMessage])
 
   const sendFile = useCallback(
     async (readerEvent: ProgressEvent<FileReader>) => {

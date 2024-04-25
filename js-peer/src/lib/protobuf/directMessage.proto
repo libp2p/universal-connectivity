@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package rpc;
+
+service DirectMessage {
+  rpc DirectMessage (DirectMessageRequest) returns (DirectMessageResponse) {}
+}
+
+// designed to be shared between all app protocols
+message MessageData {
+  string clientVersion = 1; // client version
+  int64 timestamp = 2;     // unix time
+  string id = 3;           // allows requesters to use request data when processing a response
+  string nodeId = 4;       // id of node that created the message (not the peer that may have sent it). =base58(multihash(nodePubKey))
+  bytes nodePubKey = 5;    // Authoring node Secp256k1 public key (32bytes) - protobufs serialized
+  bytes sign = 6;         // signature of message data + method specific data by message authoring node.
+}
+
+// StatusResponse defines various possible states for a response, indicating success or different types of errors.
+enum Status {
+  UNKNOWN = 0;
+  OK = 200;
+  ERROR = 500;
+}
+
+message DirectMessageRequest {
+  MessageData messageData = 1;
+  string message = 2;
+}
+
+message DirectMessageResponse{
+  MessageData messageData = 1;
+  Status status = 2;
+  optional string statusText = 3;
+}

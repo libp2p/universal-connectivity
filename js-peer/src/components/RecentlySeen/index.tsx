@@ -1,33 +1,33 @@
-import { Peer } from "@libp2p/interface";
-import { useEffect, useState } from "react";
-import PeerName from "../Peer";
-import { useLibp2pContext } from "@/context/ctx";
+import { Peer } from '@libp2p/interface'
+import { useEffect, useState } from 'react'
+import PeerName from '../Peer'
+import { useLibp2pContext } from '@/context/ctx'
 
-const UPDATE_INTERVAL = 1000;
+const UPDATE_INTERVAL = 1000
 
 export const RecentlySeen = () => {
-  const { libp2p } = useLibp2pContext();
-  const [peers, setPeers] = useState<Peer[]>([]);
+  const { libp2p } = useLibp2pContext()
+  const [peers, setPeers] = useState<Peer[]>([])
 
   useEffect(() => {
     const interval = setInterval(() => {
       const init = async () => {
         if (!libp2p) {
-          return;
+          return
         }
 
-        const peers = await libp2p.peerStore.all();
+        const peers = await libp2p.peerStore.all()
 
-        setPeers(peers);
-      };
+        setPeers(peers)
+      }
 
-      init();
-    }, UPDATE_INTERVAL);
+      init()
+    }, UPDATE_INTERVAL)
 
     return () => {
-      clearInterval(interval);
-    };
-  }, [libp2p, peers, setPeers]);
+      clearInterval(interval)
+    }
+  }, [libp2p, peers, setPeers])
 
   return (
     <>
@@ -43,5 +43,5 @@ export const RecentlySeen = () => {
         </div>
       ))}
     </>
-  );
-};
+  )
+}

@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
-import Peer from "@/components/Peer";
-import { ChatMessage, useChatContext } from "@/context/chat-ctx";
+import React, { useEffect } from 'react'
+import Peer from '@/components/Peer'
+import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 
 interface Props extends ChatMessage {
-  dm: boolean;
+  dm: boolean
 }
 
 export const PeerMessage = ({
@@ -16,37 +16,32 @@ export const PeerMessage = ({
   dm,
 }: Props) => {
   const { messageHistory, setMessageHistory, dmMessages, setDMMessages } =
-    useChatContext();
+    useChatContext()
 
   useEffect(() => {
-    if (read) {
-      return;
-    }
+    console.log('Effect running', { dm, peerId, msgId, read })
+
+    if (read) return // Exit if already read, no update needed
+
+    const updateMessages = (messages: ChatMessage[]) =>
+      messages.map((m) => (m.msgId === msgId ? { ...m, read: true } : m))
 
     if (dm) {
-      setDMMessages({
-        ...dmMessages,
-        [peerId]: dmMessages[peerId].map((m) => {
-          if (m.msgId === msgId) {
-            return { ...m, read: true };
-          }
+      console.log('in dms')
+      const updatedDMs = dmMessages[peerId]
 
-          return m;
-        }),
-      });
+      if (updatedDMs.some((m) => m.msgId === msgId && !m.read)) {
+        console.log('Updating DMs for', peerId)
+
+        setDMMessages((prev) => ({
+          ...prev,
+          [peerId]: updateMessages(updatedDMs),
+        }))
+      }
     } else {
-      for (const message of messageHistory) {
-        if (message.msgId === msgId) {
-          setMessageHistory(
-            messageHistory.map((m) => {
-              if (m.msgId === msgId) {
-                return { ...m, read: true };
-              }
-
-              return m;
-            })
-          );
-        }
+      if (messageHistory.some((m) => m.msgId === msgId && !m.read)) {
+        console.log('Updating public msg')
+        setMessageHistory((prev) => updateMessages(prev))
       }
     }
   }, [
@@ -58,11 +53,11 @@ export const PeerMessage = ({
     read,
     setDMMessages,
     setMessageHistory,
-  ]);
+  ])
 
   return (
     <li>
-      <Peer peerId={peerId} me={from === "me"} />
+      <Peer peerId={peerId} me={from === 'me'} />
       <div className="relative -top-6 left-11 w-[calc(100%-2.5rem)] px-4 py-2 text-gray-700 rounded shadow bg-white">
         <div className="block">
           {msg}
@@ -72,11 +67,11 @@ export const PeerMessage = ({
                 <b>Download</b>
               </a>
             ) : (
-              ""
+              ''
             )}
           </p>
         </div>
       </div>
     </li>
-  );
-};
+  )
+}

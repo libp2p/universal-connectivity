@@ -1,5 +1,5 @@
-import { DirectMessagesList } from "@/components/directmessages/DirectMessagesList";
-import { Rooms } from "@/components/Rooms";
+import { DirectMessagesList } from '@/components/directmessages/DirectMessagesList'
+import { Rooms } from '@/components/Rooms'
 
 export const LeftSidebar = () => {
   return (
@@ -7,5 +7,5 @@ export const LeftSidebar = () => {
       <Rooms />
       <DirectMessagesList />
     </>
-  );
-};
+  )
+}

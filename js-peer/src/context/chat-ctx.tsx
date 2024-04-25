@@ -1,45 +1,45 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from 'react'
 
 export interface ChatMessage {
-  msgId: string;
-  msg: string;
-  fileObjectUrl: string | undefined;
-  from: "me" | "other";
-  peerId: string;
-  read: boolean;
+  msgId: string
+  msg: string
+  fileObjectUrl: string | undefined
+  from: 'me' | 'other'
+  peerId: string
+  read: boolean
 }
 
 export interface DMMessages {
-  [peerId: string]: ChatMessage[];
+  [peerId: string]: ChatMessage[]
 }
 
-export type Chatroom = string;
+export type Chatroom = string
 
 export interface ChatContextInterface {
-  messageHistory: ChatMessage[];
-  setMessageHistory: (messageHistory: ChatMessage[]) => void;
-  dmMessages: DMMessages;
-  setDMMessages: (dmMessages: DMMessages) => void;
-  chatRoom: Chatroom;
-  setChatRoom: (chatRoom: Chatroom) => void;
+  messageHistory: ChatMessage[]
+  setMessageHistory: (messageHistory: ChatMessage[]) => void
+  dmMessages: DMMessages
+  setDMMessages: (dmMessages: DMMessages) => void
+  chatRoom: Chatroom
+  setChatRoom: (chatRoom: Chatroom) => void
 }
 export const chatContext = createContext<ChatContextInterface>({
   messageHistory: [],
   setMessageHistory: () => {},
   dmMessages: {},
   setDMMessages: () => {},
-  chatRoom: "",
+  chatRoom: '',
   setChatRoom: () => {},
-});
+})
 
 export const useChatContext = () => {
-  return useContext(chatContext);
-};
+  return useContext(chatContext)
+}
 
 export const ChatProvider = ({ children }: any) => {
-  const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([]);
-  const [dmMessages, setDMMessages] = useState<DMMessages>({});
-  const [chatRoom, setChatRoom] = useState<Chatroom>("");
+  const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([])
+  const [dmMessages, setDMMessages] = useState<DMMessages>({})
+  const [chatRoom, setChatRoom] = useState<Chatroom>('')
 
   return (
     <chatContext.Provider
@@ -54,5 +54,5 @@ export const ChatProvider = ({ children }: any) => {
     >
       {children}
     </chatContext.Provider>
-  );
-};
+  )
+}

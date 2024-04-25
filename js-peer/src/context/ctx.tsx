@@ -1,66 +1,66 @@
-import { PubSub } from "@libp2p/interface";
-import type { Libp2p } from "libp2p";
+import { PubSub } from '@libp2p/interface'
+import type { Libp2p } from 'libp2p'
 import React, {
   createContext,
   useContext,
   useState,
   useEffect,
   ReactNode,
-} from "react";
+} from 'react'
 
-import { startLibp2p } from "../lib/libp2p";
-import { ChatProvider } from "./chat-ctx";
-import { ListenAddressesProvider } from "./listen-addresses-ctx";
-import { PeerProvider } from "./peer-ctx";
+import { startLibp2p } from '../lib/libp2p'
+import { ChatProvider } from './chat-ctx'
+import { ListenAddressesProvider } from './listen-addresses-ctx'
+import { PeerProvider } from './peer-ctx'
 
 // 👇 The context type will be avilable "anywhere" in the app
 interface Libp2pContextInterface {
-  libp2p: Libp2p<{ pubsub: PubSub }>;
+  libp2p: Libp2p<{ pubsub: PubSub }>
 }
 export const libp2pContext = createContext<Libp2pContextInterface>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
   libp2p: undefined,
-});
+})
 
 interface WrapperProps {
-  children?: ReactNode;
+  children?: ReactNode
 }
 
 export function AppWrapper({ children }: WrapperProps) {
-  const libp2pInit = React.useRef(false);
+  const libp2pInit = React.useRef(false)
 
-  const [libp2p, setLibp2p] = useState<Libp2p<{ pubsub: PubSub }>>();
+  const [libp2p, setLibp2p] = useState<Libp2p<{ pubsub: PubSub }>>()
 
   useEffect(() => {
     const init = async () => {
       try {
         if (libp2pInit.current) {
-          console.debug("already init");
-          return;
+          console.debug('already init')
+          return
         }
 
-        const libp2p = await startLibp2p();
+        const libp2p = await startLibp2p()
 
-        libp2pInit.current = true;
+        libp2pInit.current = true
 
         // @ts-ignore
-        window.libp2p = libp2p;
+        window.libp2p = libp2p
 
-        setLibp2p(libp2p as Libp2p<{ pubsub: any; dht: any; identify: any }>);
+        setLibp2p(libp2p as Libp2p<{ pubsub: any; dht: any; identify: any }>)
       } catch (e) {
-        console.error("failed to start libp2p", e);
+        console.error('failed to start libp2p', e)
       }
-    };
+    }
 
-    init();
-  }, []);
+    init()
+  }, [])
 
   if (!libp2p) {
     return (
       <div>
         <h2>Initializing libp2p peer...</h2>
       </div>
-    );
+    )
   }
 
   return (
@@ -71,9 +71,9 @@ export function AppWrapper({ children }: WrapperProps) {
         </PeerProvider>
       </ChatProvider>
     </libp2pContext.Provider>
-  );
+  )
 }
 
 export function useLibp2pContext() {
-  return useContext(libp2pContext);
+  return useContext(libp2pContext)
 }

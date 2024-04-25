@@ -4,8 +4,13 @@
     "dev": "next dev --experimental-https",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix"
+    "lint": "npm run lint:fix && npm run tsc && npm run format",
+    "lint:fix": "next lint --fix",
+    "format": "npm run format:write",
+    "format:write": "npm run prettier --write --loglevel warn .",
+    "format:check": "npm run prettier --list-different .",
+    "tsc": "tsc --noEmit -p tsconfig.json",
+    "protobuf": "protons src/lib/protobuf/*.proto"
   },
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "^13.0.0",
@@ -30,6 +35,8 @@
     "it-pipe": "^3.0.1",
     "libp2p": "^1.2.4",
     "next": "14.2.3",
+    "protons": "^7.5.0",
+    "protons-runtime": "^5.4.0",
     "react": "18.2.0",
     "react-18-blockies": "^1.0.6",
     "react-dom": "18.2.0",

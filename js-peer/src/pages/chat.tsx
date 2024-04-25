@@ -1,8 +1,8 @@
-import Head from "next/head";
-import ChatContainer from "@/components/chat/ChatContainer";
-import Nav from "@/components/Nav";
-import { LeftSidebar } from "@/components/sidebar/LeftSidebar";
-import { RightSidebar } from "@/components/sidebar/RightSidebar";
+import Head from 'next/head'
+import ChatContainer from '@/components/chat/ChatContainer'
+import Nav from '@/components/Nav'
+import { LeftSidebar } from '@/components/sidebar/LeftSidebar'
+import { RightSidebar } from '@/components/sidebar/RightSidebar'
 
 export default function Chat() {
   return (
@@ -28,5 +28,5 @@ export default function Chat() {
         </div>
       </main>
     </>
-  );
+  )
 }

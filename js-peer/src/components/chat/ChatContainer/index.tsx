@@ -1,29 +1,29 @@
-import { useEffect, useState } from "react";
-import Blockies from "react-18-blockies";
-import { InputBar } from "../InputBar";
-import { PeerMessage } from "../PeerMessage";
-import { ChatMessage, useChatContext } from "@/context/chat-ctx";
+import { useEffect, useState } from 'react'
+import Blockies from 'react-18-blockies'
+import { InputBar } from '../InputBar'
+import { PeerMessage } from '../PeerMessage'
+import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 
 export default function ChatContainer() {
-  const defaultRoomTitle = "Public Chat";
-  const defaultRoomIcon = "💁🏽‍♀️💁🏿‍♂️";
-  const { messageHistory, dmMessages, chatRoom } = useChatContext();
+  const defaultRoomTitle = 'Public Chat'
+  const defaultRoomIcon = '💁🏽‍♀️💁🏿‍♂️'
+  const { messageHistory, dmMessages, chatRoom } = useChatContext()
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [roomTitle, setRoomTitle] = useState<string>(defaultRoomTitle);
-  const [roomIcon, setRoomIcon] = useState<string>(defaultRoomTitle);
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [roomTitle, setRoomTitle] = useState<string>(defaultRoomTitle)
+  const [roomIcon, setRoomIcon] = useState<string>(defaultRoomTitle)
 
   useEffect(() => {
-    if (chatRoom === "") {
-      setRoomTitle(defaultRoomTitle);
-      setRoomIcon(defaultRoomIcon);
-      setMessages(messageHistory);
+    if (chatRoom === '') {
+      setRoomTitle(defaultRoomTitle)
+      setRoomIcon(defaultRoomIcon)
+      setMessages(messageHistory)
     } else {
-      setRoomTitle(chatRoom);
-      setMessages(dmMessages[chatRoom] || []);
-      setRoomIcon("");
+      setRoomTitle(chatRoom)
+      setMessages(dmMessages[chatRoom] || [])
+      setRoomIcon('')
     }
-  }, [chatRoom, dmMessages, messageHistory]);
+  }, [chatRoom, dmMessages, messageHistory])
 
   return (
     <div className="max-h-screen">
@@ -33,7 +33,7 @@ export default function ChatContainer() {
             <div className="w-full">
               <div className="relative flex items-center p-3 border-b border-gray-300">
                 <span className="text-3xl">
-                  {roomIcon !== "" ? (
+                  {roomIcon !== '' ? (
                     roomIcon
                   ) : (
                     <Blockies
@@ -61,7 +61,7 @@ export default function ChatContainer() {
                     }: ChatMessage) => (
                       <PeerMessage
                         key={msgId}
-                        dm={false}
+                        dm={chatRoom !== '' ? true : false}
                         msg={msg}
                         fileObjectUrl={fileObjectUrl}
                         from={from}
@@ -69,15 +69,15 @@ export default function ChatContainer() {
                         read={read}
                         msgId={msgId}
                       />
-                    )
+                    ),
                   )}
                 </ul>
               </div>
-              <InputBar />
+              <InputBar chatRoom={chatRoom} />
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

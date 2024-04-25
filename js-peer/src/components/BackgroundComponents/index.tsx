@@ -1,5 +1,6 @@
-import { Dialer } from "./Dialer";
-import { GossipsubChatProcesser } from "./GossipsubChatProcessor";
+import { Dialer } from './Dialer'
+import { DirectMessageProcessor } from './DirectMessageProcessor'
+import { GossipsubChatProcesser } from './GossipsubChatProcessor'
 // import { Pinger } from "./Pinger"
 
 export const BackgroundComponents = () => {
@@ -8,6 +9,7 @@ export const BackgroundComponents = () => {
       <Dialer />
       {/* <Pinger /> */}
       <GossipsubChatProcesser />
+      <DirectMessageProcessor />
     </>
-  );
-};
+  )
+}
