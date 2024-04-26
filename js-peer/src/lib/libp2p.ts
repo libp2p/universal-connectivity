@@ -51,6 +51,7 @@ export async function startLibp2p() {
       webRTCDirect(),
       // 👇 Required to create circuit relay reservations in order to hole punch browser-to-browser WebRTC connections
       circuitRelayTransport({
+        // When set to >0, this will look up the magic CID in order to discover circuit relay peers it can create a reservation with
         discoverRelays: 1,
       })
     ],
