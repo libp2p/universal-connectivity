@@ -3,13 +3,12 @@ import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 import { directMessageEvent } from '@/lib/chat/directMessage/handler'
 
 export const DirectMessageProcessor = () => {
-  const { dmMessages, setDMMessages } = useChatContext()
+  const { directMessages, setDirectMessages } = useChatContext()
 
   // inbound chat
   useEffect(() => {
     const handleDirectMessage = async (event: any) => {
-      // eslint-disable-next-line no-console
-      console.log(directMessageEvent, event)
+      console.debug(directMessageEvent, event)
 
       const peerId = event.detail.connection.remotePeer.toString()
 
@@ -22,24 +21,22 @@ export const DirectMessageProcessor = () => {
         peerId: peerId,
       }
 
-      const updatedMessages = dmMessages[peerId]
-        ? [...dmMessages[peerId], message]
+      const updatedMessages = directMessages[peerId]
+        ? [...directMessages[peerId], message]
         : [message]
 
-      setDMMessages({
-        ...dmMessages,
+      setDirectMessages({
+        ...directMessages,
         [peerId]: updatedMessages,
       })
     }
 
-    // eslint-disable-next-line no-console
-    console.log(`adding event listener for ${directMessageEvent}`)
     document.addEventListener(directMessageEvent, handleDirectMessage)
 
     return () => {
       document.removeEventListener(directMessageEvent, handleDirectMessage)
     }
-  }, [dmMessages, setDMMessages])
+  }, [directMessages, setDirectMessages])
 
   return <></>
 }

@@ -1,7 +1,8 @@
 import { keys } from '@libp2p/crypto'
 import { Connection, Libp2p, PeerId, Stream } from '@libp2p/interface'
 import { peerIdFromString } from '@libp2p/peer-id'
-import { Multiaddr } from '@multiformats/multiaddr'
+import { Multiaddr, isMultiaddr } from '@multiformats/multiaddr'
+import delay from 'delay'
 import { pipe } from 'it-pipe'
 import { Uint8ArrayList } from 'uint8arraylist'
 import { toBuffer } from '@/lib/buffer'
@@ -12,14 +13,14 @@ import { DeepPartial } from '@/types/partial'
 
 interface Params {
   libp2p: Libp2p
-  peerId: PeerId | Multiaddr | string
+  peer: PeerId | Multiaddr | string
   message: string
 }
 
-// Send direct message to peer
+// directMessageRequest dials and sends a direct message to a peer.
 export const directMessageRequest = async ({
   libp2p,
-  peerId,
+  peer,
   message,
 }: Params): Promise<boolean> => {
   const protocol = DIRECT_MESSAGE_PROTOCOL
@@ -36,7 +37,7 @@ export const directMessageRequest = async ({
     throw new Error('no public key')
   }
 
-  if (!peerId) {
+  if (!peer) {
     throw new Error('no recipent peerId set')
   }
 
@@ -44,8 +45,20 @@ export const directMessageRequest = async ({
     throw new Error('empty message')
   }
 
-  if (typeof peerId === 'string') {
-    peerId = peerIdFromString(peerId)
+  let peerId: PeerId
+
+  if (typeof peer === 'string') {
+    peerId = peerIdFromString(peer)
+  } else if (isMultiaddr(peer)) {
+    const p = peer.getPeerId()
+
+    if (p) {
+      peerId = peerIdFromString(p)
+    } else {
+      throw new Error('no peerId in multiaddr')
+    }
+  } else {
+    peerId = peer
   }
 
   const privateKey = await keys.unmarshalPrivateKey(libp2p.peerId.privateKey)
@@ -79,19 +92,41 @@ export const directMessageRequest = async ({
     req as rpc.DirectMessageRequest,
   )
 
+  let conn: Connection
   let stream: Stream | undefined
-
   let response = false
 
-  // TODO timeout
   try {
-    const conn = await libp2p.dial(peerId)
+    conn = await libp2p.dial(peerId)
+
+    if (!conn) {
+      throw new Error('dial failed')
+    }
+
+    const maxWait = 2000
+    const wait = 100
+    let waited = 0
+
+    while (conn.transient || conn.status !== 'open') {
+      if (waited > maxWait) {
+        throw new Error('connection timeout')
+      }
+
+      console.log('transient connection, waiting to upgrade')
+      delay(wait)
+
+      waited += wait
+    }
 
     console.log('connection: ', conn)
 
-    const p = await libp2p.peerStore.get(peerId as PeerId)
+    const peer = await libp2p.peerStore.get(peerId as PeerId)
 
-    console.log('p: ', p.protocols)
+    if (!peer) {
+      throw new Error('peer not in peerStore')
+    }
+
+    console.log('peer: ', peer.protocols)
 
     stream = await conn.newStream([protocol])
 
@@ -103,7 +138,7 @@ export const directMessageRequest = async ({
 
     await pipe(
       stream.source, // Source, read data from the stream
-      async function(source) {
+      async function (source) {
         for await (const chunk of source) {
           response = await directMessageResponseProcessChunk(chunk, conn)
         }
@@ -122,11 +157,8 @@ export const directMessageRequest = async ({
   }
 
   if (!response) {
-    throw new Error('response was not true')
+    throw new Error('directMessageResponse was not true')
   }
-
-  // eslint-disable-next-line no-console
-  console.log('response was true, peer received message', response)
 
   if (stream) {
     await stream.close()
@@ -171,9 +203,7 @@ async function directMessageResponseProcessChunk(
   }
 
   if (res.status !== rpc.Status.OK) {
-    // eslint-disable-next-line no-console
-    console.log(res.statusText)
-    throw new Error('status: not OK')
+    throw new Error(`status: not OK, received: ${res.status}`)
   }
 
   return true

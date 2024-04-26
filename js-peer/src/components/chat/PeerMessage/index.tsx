@@ -15,43 +15,43 @@ export const PeerMessage = ({
   read,
   dm,
 }: Props) => {
-  const { messageHistory, setMessageHistory, dmMessages, setDMMessages } =
-    useChatContext()
+  const {
+    messageHistory,
+    setMessageHistory,
+    directMessages,
+    setDirectMessages,
+  } = useChatContext()
 
   useEffect(() => {
-    console.log('Effect running', { dm, peerId, msgId, read })
-
-    if (read) return // Exit if already read, no update needed
+    if (read) {
+      return
+    }
 
     const updateMessages = (messages: ChatMessage[]) =>
       messages.map((m) => (m.msgId === msgId ? { ...m, read: true } : m))
 
     if (dm) {
-      console.log('in dms')
-      const updatedDMs = dmMessages[peerId]
+      const updatedDMs = directMessages[peerId]
 
       if (updatedDMs.some((m) => m.msgId === msgId && !m.read)) {
-        console.log('Updating DMs for', peerId)
-
-        setDMMessages((prev) => ({
+        setDirectMessages((prev) => ({
           ...prev,
           [peerId]: updateMessages(updatedDMs),
         }))
       }
     } else {
       if (messageHistory.some((m) => m.msgId === msgId && !m.read)) {
-        console.log('Updating public msg')
         setMessageHistory((prev) => updateMessages(prev))
       }
     }
   }, [
     dm,
-    dmMessages,
+    directMessages,
     messageHistory,
     msgId,
     peerId,
     read,
-    setDMMessages,
+    setDirectMessages,
     setMessageHistory,
   ])
 

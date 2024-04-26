@@ -8,20 +8,20 @@ interface Props {
 }
 
 export const Peer = ({ peerId }: Props) => {
-  const { dmMessages } = useChatContext()
+  const { directMessages } = useChatContext()
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
       setUnreadMessagesCount(
-        dmMessages[peerId].filter((msg) => msg.read === false).length,
+        directMessages[peerId].filter((msg) => msg.read === false).length,
       )
     }, 200)
 
     return () => {
       clearInterval(interval)
     }
-  }, [dmMessages, peerId])
+  }, [directMessages, peerId])
 
   return (
     <div className="flex">

@@ -73,11 +73,11 @@ export async function startLibp2p() {
           // WEBTRANSPORT_BOOTSTRAP_NODE,
         ],
       }),
-      pubsubPeerDiscovery({
-        interval: 5000,
-        listenOnly: false,
-        topics: [`${CHAT_TOPIC}._peer-discovery._p2p._pubsub`],
-      }),
+      // pubsubPeerDiscovery({
+      //   interval: 5000,
+      //   listenOnly: false,
+      //   topics: [`${CHAT_TOPIC}._peer-discovery._p2p._pubsub`],
+      // }),
     ],
     services: {
       pubsub: gossipsub({
@@ -86,12 +86,9 @@ export async function startLibp2p() {
         msgIdFn: msgIdFnStrictNoSign,
         ignoreDuplicatePublishError: true,
         tagMeshPeers: true,
-        doPX: true,
       }),
       dht: kadDHT({
         protocol: '/universal-connectivity/kad/1.0.0',
-        maxInboundStreams: 5000,
-        maxOutboundStreams: 5000,
         clientMode: true,
       }),
       identify: identify(),
@@ -116,7 +113,7 @@ export async function startLibp2p() {
 }
 
 async function registerHandlers(libp2p: Libp2p) {
-  handleDirectMessageRequest(libp2p)
+  await handleDirectMessageRequest(libp2p)
 }
 
 // message IDs are used to dedupe inbound messages

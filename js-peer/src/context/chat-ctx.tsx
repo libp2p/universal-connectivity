@@ -9,7 +9,7 @@ export interface ChatMessage {
   read: boolean
 }
 
-export interface DMMessages {
+export interface DirectMessages {
   [peerId: string]: ChatMessage[]
 }
 
@@ -18,16 +18,16 @@ export type Chatroom = string
 export interface ChatContextInterface {
   messageHistory: ChatMessage[]
   setMessageHistory: (messageHistory: ChatMessage[]) => void
-  dmMessages: DMMessages
-  setDMMessages: (dmMessages: DMMessages) => void
+  directMessages: DirectMessages
+  setDirectMessages: (directMessages: DirectMessages) => void
   chatRoom: Chatroom
   setChatRoom: (chatRoom: Chatroom) => void
 }
 export const chatContext = createContext<ChatContextInterface>({
   messageHistory: [],
   setMessageHistory: () => {},
-  dmMessages: {},
-  setDMMessages: () => {},
+  directMessages: {},
+  setDirectMessages: () => {},
   chatRoom: '',
   setChatRoom: () => {},
 })
@@ -38,7 +38,7 @@ export const useChatContext = () => {
 
 export const ChatProvider = ({ children }: any) => {
   const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([])
-  const [dmMessages, setDMMessages] = useState<DMMessages>({})
+  const [directMessages, setDirectMessages] = useState<DirectMessages>({})
   const [chatRoom, setChatRoom] = useState<Chatroom>('')
 
   return (
@@ -46,8 +46,8 @@ export const ChatProvider = ({ children }: any) => {
       value={{
         chatRoom,
         setChatRoom,
-        dmMessages,
-        setDMMessages,
+        directMessages,
+        setDirectMessages,
         messageHistory,
         setMessageHistory,
       }}

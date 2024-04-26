@@ -10,29 +10,20 @@ import { rpc } from '@/lib/protobuf/directMessage'
 
 export const directMessageEvent = 'directMessageEvt'
 
-// handleDirectMessageRequest handles inbound direct messages from peers
+// handleDirectMessageRequest handles inbound direct messages from peers.
 // Needs to be registered in libp2p
 export async function handleDirectMessageRequest(libp2p: Libp2p) {
   await libp2p.handle(
     DIRECT_MESSAGE_PROTOCOL,
     async ({ stream, connection }) => {
-      // eslint-disable-next-line no-console
-      console.log(`${DIRECT_MESSAGE_PROTOCOL} got request`)
-
       pipe(
         stream.source, // Source, read data from the stream
-        async function(source) {
+        async function (source) {
           let reqData
 
           for await (const chunk of source) {
             reqData = await directMessageRequestProcessChunk(chunk, connection)
           }
-
-          // eslint-disable-next-line no-console
-          console.log(`${DIRECT_MESSAGE_PROTOCOL} processed chunk: `, reqData)
-
-          // eslint-disable-next-line no-console
-          console.log(`dispatching ${directMessageEvent}`)
 
           const eventDetails = {
             request: reqData,
@@ -40,11 +31,9 @@ export async function handleDirectMessageRequest(libp2p: Libp2p) {
             connection: connection,
           }
 
-          const dres = document.dispatchEvent(
+          document.dispatchEvent(
             new CustomEvent(directMessageEvent, { detail: eventDetails }),
           )
-
-          console.log(`dispatched ${directMessageEvent} res: ${dres}`)
         },
       )
 

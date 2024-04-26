@@ -5,15 +5,12 @@ import { rpc } from '@/lib/protobuf/directMessage'
 import { verifyMessage } from '@/lib/protobuf/helpers/verify'
 import { DeepPartial } from '@/types/partial'
 
-// directMessageResponse generates a response to a directMessageRequest
+// directMessageResponse generates a response to a directMessageRequest to
+// indicate that the message was received.
 export async function directMessageResponse(
   libp2p: Libp2p,
   status: rpc.Status,
 ): Promise<Uint8Array> {
-  // TODO add guards
-  // who request is from
-  // etc
-
   if (!libp2p) {
     throw new Error('no p2p connection')
   }
@@ -59,7 +56,6 @@ export async function directMessageResponse(
 export async function directMessageRequestProcessChunk(
   chunk: Uint8ArrayList,
   connection: Connection,
-  //todo replace any
 ): Promise<string> {
   const uint8Array = chunk.subarray()
   const res = rpc.DirectMessageRequest.decode(uint8Array)

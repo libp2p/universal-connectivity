@@ -7,7 +7,7 @@ import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 export default function ChatContainer() {
   const defaultRoomTitle = 'Public Chat'
   const defaultRoomIcon = '💁🏽‍♀️💁🏿‍♂️'
-  const { messageHistory, dmMessages, chatRoom } = useChatContext()
+  const { messageHistory, directMessages, chatRoom } = useChatContext()
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [roomTitle, setRoomTitle] = useState<string>(defaultRoomTitle)
@@ -20,10 +20,10 @@ export default function ChatContainer() {
       setMessages(messageHistory)
     } else {
       setRoomTitle(chatRoom)
-      setMessages(dmMessages[chatRoom] || [])
+      setMessages(directMessages[chatRoom] || [])
       setRoomIcon('')
     }
-  }, [chatRoom, dmMessages, messageHistory])
+  }, [chatRoom, directMessages, messageHistory])
 
   return (
     <div className="max-h-screen">

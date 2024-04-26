@@ -1,4 +1,3 @@
-import { peerIdFromString } from '@libp2p/peer-id'
 import React, { useCallback, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { TextInput } from '../TextInput'
@@ -20,8 +19,12 @@ export const InputBar = ({ chatRoom }: Props) => {
   const { files, setFiles } = useFileChatContext()
   const fileRef = useRef<HTMLInputElement>(null)
   const [input, setInput] = useState<string>('')
-  const { dmMessages, setDMMessages, messageHistory, setMessageHistory } =
-    useChatContext()
+  const {
+    directMessages,
+    setDirectMessages,
+    messageHistory,
+    setMessageHistory,
+  } = useChatContext()
 
   const sendGossipsubMessage = useCallback(async () => {
     console.log(
@@ -57,10 +60,15 @@ export const InputBar = ({ chatRoom }: Props) => {
 
   const sendDM = useCallback(async () => {
     try {
-      directMessageRequest({ libp2p, peerId: chatRoom, message: input })
-      const conn = await libp2p.dial(peerIdFromString(chatRoom))
+      await directMessageRequest({
+        libp2p,
+        peer: chatRoom,
+        message: input,
+      })
 
-      console.log('connected to peer:', conn.remotePeer.toString())
+      // const conn = await libp2p.dial(peerIdFromString(chatRoom))
+
+      // console.log('connected to peer:', conn.remotePeer.toString())
 
       const myPeerId = libp2p.peerId.toString()
 
@@ -73,12 +81,12 @@ export const InputBar = ({ chatRoom }: Props) => {
         read: true,
       }
 
-      const updatedMessages = dmMessages[chatRoom]
-        ? [...dmMessages[chatRoom], newMessage]
+      const updatedMessages = directMessages[chatRoom]
+        ? [...directMessages[chatRoom], newMessage]
         : [newMessage]
 
-      setDMMessages({
-        ...dmMessages,
+      setDirectMessages({
+        ...directMessages,
         [chatRoom]: updatedMessages,
       })
 
@@ -86,7 +94,7 @@ export const InputBar = ({ chatRoom }: Props) => {
     } catch (e: any) {
       console.error(e)
     }
-  }, [libp2p, setDMMessages, dmMessages, chatRoom, input])
+  }, [libp2p, setDirectMessages, directMessages, chatRoom, input])
 
   const sendMessage = useCallback(async () => {
     if (input === '') {

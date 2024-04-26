@@ -4,7 +4,8 @@ import { CHAT_TOPIC } from '@/lib/constants/'
 
 const GOSSIP_PING_MS = 5000
 
-// Gossipsub Pinger
+// Gossipsub Pinger - periodically sends a message to the chat topic
+// Too noisy but useful for debugging
 export const Pinger = () => {
   const { libp2p } = useLibp2pContext()
 
