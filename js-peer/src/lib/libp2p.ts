@@ -27,7 +27,7 @@ export async function startLibp2p() {
   await datastore.open()
 
   const libp2p = await createLibp2p({
-    // datastore,
+    datastore,
     addresses: {
       listen: [
         // 👇 Listen for webRTC connection
