@@ -11,7 +11,8 @@ import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
 import { PeerProvider } from './peer-ctx'
 import { ListenAddressesProvider } from './listen-addresses-ctx'
-import { PubSub } from '@libp2p/interface'
+import { PubSub,  } from '@libp2p/interface'
+import { Identify } from '@libp2p/identify'
 
 // 👇 The context type will be avilable "anywhere" in the app
 interface Libp2pContextInterface {
@@ -39,7 +40,7 @@ export function AppWrapper({ children }: WrapperProps) {
         // @ts-ignore
         window.libp2p = libp2p
 
-        setLibp2p(libp2p as Libp2p<{ pubsub: any; dht: any; identify: any }>)
+        setLibp2p(libp2p as Libp2p<{ pubsub: PubSub; identify: Identify }>)
       } catch (e) {
         console.error('failed to start libp2p', e)
       }
