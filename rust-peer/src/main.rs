@@ -104,7 +104,6 @@ async fn main() -> Result<()> {
 
     let mut tick = futures_timer::Delay::new(TICK_INTERVAL);
 
-    let now = Instant::now();
     loop {
         match select(swarm.next(), &mut tick).await {
             Either::Left((event, _)) => match event.unwrap() {
@@ -273,18 +272,6 @@ async fn main() -> Result<()> {
 
                 if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
                     debug!("Failed to run Kademlia bootstrap: {e:?}");
-                }
-
-                let message = format!(
-                    "Hello world! Sent from the rust-peer at: {:4}s",
-                    now.elapsed().as_secs_f64()
-                );
-
-                if let Err(err) = swarm.behaviour_mut().gossipsub.publish(
-                    gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC),
-                    message.as_bytes(),
-                ) {
-                    error!("Failed to publish periodic message: {err}")
                 }
             }
         }
