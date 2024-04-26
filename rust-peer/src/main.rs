@@ -33,8 +33,7 @@ use tokio::fs;
 use crate::protocol::FileRequest;
 
 const TICK_INTERVAL: Duration = Duration::from_secs(15);
-const KADEMLIA_PROTOCOL_NAME: StreamProtocol =
-    StreamProtocol::new("/ipfs/kad/1.0.0");
+const KADEMLIA_PROTOCOL_NAME: StreamProtocol = StreamProtocol::new("/ipfs/kad/1.0.0");
 const FILE_EXCHANGE_PROTOCOL: StreamProtocol =
     StreamProtocol::new("/universal-connectivity-file/1");
 const PORT_WEBRTC: u16 = 9090;
@@ -43,6 +42,12 @@ const LOCAL_KEY_PATH: &str = "./local_key";
 const LOCAL_CERT_PATH: &str = "./cert.pem";
 const GOSSIPSUB_CHAT_TOPIC: &str = "universal-connectivity";
 const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
+const BOOTSTRAP_NODES: [&str; 4] = [
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+];
 
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -96,6 +101,13 @@ async fn main() -> Result<()> {
     for addr in opt.connect {
         if let Err(e) = swarm.dial(addr.clone()) {
             debug!("Failed to dial {addr}: {e}");
+        }
+    }
+
+    for peer in &BOOTSTRAP_NODES {
+        let multiaddr: Multiaddr = peer.parse().expect("Failed to parse Multiaddr");
+        if let Err(e) = swarm.dial(multiaddr) {
+            debug!("Failed to dial {peer}: {e}");
         }
     }
 
