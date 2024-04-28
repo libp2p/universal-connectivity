@@ -1,3 +1,4 @@
+import CubeTransparentIcon from '@heroicons/react/24/outline/CubeTransparentIcon'
 import { useEffect } from 'react'
 import Blockies from 'react-18-blockies'
 import { useLibp2pContext } from '@/context/ctx'
@@ -7,8 +8,6 @@ import {
   getFormattedConnections,
   shortPeerId,
 } from '@/lib/peers'
-import ComputerDesktopIcon from '@heroicons/react/24/outline/ComputerDesktopIcon'
-import CubeTransparentIcon from '@heroicons/react/24/outline/CubeTransparentIcon'
 
 export interface Props {
   showShortPeerId?: boolean
