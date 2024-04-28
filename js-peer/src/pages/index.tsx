@@ -78,8 +78,6 @@ export default function Home() {
     }
   }, [libp2p, maddr])
 
-  // handleConnectToMultiaddr
-
   const handleMultiaddrChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setMultiaddr(e.target.value)
