@@ -7,8 +7,8 @@
     "lint": "npm run lint:fix && npm run tsc && npm run format",
     "lint:fix": "next lint --fix",
     "format": "npm run format:write",
-    "format:write": "npm run prettier --write --loglevel warn .",
-    "format:check": "npm run prettier --list-different .",
+    "format:write": "prettier --write --loglevel warn .",
+    "format:check": "prettier --list-different .",
     "tsc": "tsc --noEmit -p tsconfig.json",
     "protobuf": "protons src/lib/protobuf/*.proto"
   },
@@ -24,6 +24,7 @@
     "@libp2p/identify": "^1.0.15",
     "@libp2p/interface-pubsub": "^4.0.1",
     "@libp2p/kad-dht": "^12.0.9",
+    "@libp2p/ping": "^1.0.16",
     "@libp2p/pubsub-peer-discovery": "^10.0.2",
     "@libp2p/webrtc": "^4.0.20",
     "@libp2p/websockets": "^8.0.16",
@@ -41,6 +42,7 @@
     "react": "18.2.0",
     "react-18-blockies": "^1.0.6",
     "react-dom": "18.2.0",
+    "react-toastify": "^10.0.5",
     "uint8arrays": "^5.0.2",
     "usehooks-ts": "^3.0.1",
     "uuid": "^9.0.1"

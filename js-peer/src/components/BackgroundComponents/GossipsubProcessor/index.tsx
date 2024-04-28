@@ -7,7 +7,7 @@ import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 import { useLibp2pContext } from '@/context/ctx'
-import { ChatFile, useFileChatContext } from '@/context/file-ctx'
+import { useFileChatContext } from '@/context/file-ctx'
 import { newChatFileMessage } from '@/lib/chat'
 import {
   CHAT_FILE_TOPIC,
@@ -15,10 +15,10 @@ import {
   FILE_EXCHANGE_PROTOCOL,
 } from '@/lib/constants'
 
-export const GossipsubChatProcesser = () => {
+export const GossipsubProcesser = () => {
   const { messageHistory, setMessageHistory } = useChatContext()
   const { libp2p } = useLibp2pContext()
-  const { files, setFiles } = useFileChatContext()
+  const { files } = useFileChatContext()
 
   // Effect hook to subscribe to pubsub events and update the message state hook
   useEffect(() => {
@@ -53,24 +53,27 @@ export const GossipsubChatProcesser = () => {
       topic: string,
       data: Uint8Array,
     ) => {
+      // if the message isn't signed, discard it.
+      if (evt.detail.type !== 'signed') {
+        return
+      }
+
       const msg = new TextDecoder().decode(data)
 
       console.log(`${topic}: ${msg}`)
 
-      // Append signed messages, otherwise discard
-      if (evt.detail.type === 'signed') {
-        setMessageHistory([
-          ...messageHistory,
-          {
-            msgId: crypto.randomUUID(),
-            msg,
-            fileObjectUrl: undefined,
-            from: 'other',
-            peerId: evt.detail.from.toString(),
-            read: false,
-          },
-        ])
-      }
+      setMessageHistory([
+        ...messageHistory,
+        {
+          msgId: crypto.randomUUID(),
+          msg,
+          fileObjectUrl: undefined,
+          from: 'other',
+          peerId: evt.detail.from.toString(),
+          read: false,
+          receivedAt: Date.now(),
+        },
+      ])
     }
 
     const chatFileMessageCB = async (
@@ -113,6 +116,7 @@ export const GossipsubChatProcesser = () => {
                 from: 'other',
                 peerId: senderPeerId.toString(),
                 read: false,
+                receivedAt: Date.now(),
               }
 
               setMessageHistory([...messageHistory, msg])

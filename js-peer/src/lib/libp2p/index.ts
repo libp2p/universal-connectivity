@@ -7,6 +7,7 @@ import { dcutr } from '@libp2p/dcutr'
 import { identify } from '@libp2p/identify'
 import type { Message, SignedMessage } from '@libp2p/interface'
 import { kadDHT } from '@libp2p/kad-dht'
+import { ping } from '@libp2p/ping'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
 import { webSockets } from '@libp2p/websockets'
@@ -17,10 +18,14 @@ import { createLibp2p, Libp2p } from 'libp2p'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { handleDirectMessageRequest } from '../chat/directMessage/handler'
 import {
+  APP_PREFIX,
   CHAT_FILE_TOPIC,
   CHAT_TOPIC,
-  WEBRTC_BOOTSTRAP_NODE,
-  WEBTRANSPORT_BOOTSTRAP_NODE,
+  DHT_PROTOCOL,
+  P2P_PING_TIMEOUT_MS,
+  PUBSUB_PEER_DISCOVERY_TOPIC,
+  // WEBRTC_BOOTSTRAP_NODE,
+  // WEBTRANSPORT_BOOTSTRAP_NODE,
 } from '../constants/'
 
 export async function startLibp2p() {
@@ -57,7 +62,7 @@ export async function startLibp2p() {
       }),
     ],
     connectionManager: {
-      maxConnections: 10,
+      maxConnections: 30,
       minConnections: 5,
     },
     connectionEncryption: [noise()],
@@ -73,11 +78,11 @@ export async function startLibp2p() {
           // WEBTRANSPORT_BOOTSTRAP_NODE,
         ],
       }),
-      // pubsubPeerDiscovery({
-      //   interval: 5000,
-      //   listenOnly: false,
-      //   topics: [`${CHAT_TOPIC}._peer-discovery._p2p._pubsub`],
-      // }),
+      pubsubPeerDiscovery({
+        interval: 5000,
+        listenOnly: false,
+        topics: [PUBSUB_PEER_DISCOVERY_TOPIC],
+      }),
     ],
     services: {
       pubsub: gossipsub({
@@ -88,9 +93,10 @@ export async function startLibp2p() {
         tagMeshPeers: true,
       }),
       dht: kadDHT({
-        protocol: '/universal-connectivity/kad/1.0.0',
+        protocol: DHT_PROTOCOL,
         clientMode: true,
       }),
+      ping: ping({ protocolPrefix: APP_PREFIX, timeout: P2P_PING_TIMEOUT_MS }),
       identify: identify(),
       dcutr: dcutr(),
     },
@@ -104,7 +110,7 @@ export async function startLibp2p() {
   libp2p.addEventListener('self:peer:update', ({ detail: { peer } }) => {
     const multiaddrs = peer.addresses.map(({ multiaddr }) => multiaddr)
 
-    console.log(
+    console.debug(
       `changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`,
     )
   })

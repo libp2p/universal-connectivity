@@ -52,34 +52,31 @@ export default function Home() {
     }
   }, [libp2p, listenAddresses, setListenAddresses])
 
-  const handleConnectToMultiaddr = useCallback(
-    async (e: React.MouseEvent<HTMLButtonElement>) => {
-      setErr('')
+  const handleConnectToMultiaddr = useCallback(async () => {
+    setErr('')
 
-      if (!maddr) {
-        return
+    if (!maddr) {
+      return
+    }
+
+    setDialling(true)
+
+    try {
+      const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
+
+      console.log('connection: ', connection)
+
+      return connection
+    } catch (e: any) {
+      if (e && e.message) {
+        setErr(e.message)
       }
 
-      setDialling(true)
-
-      try {
-        const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
-
-        console.log('connection: ', connection)
-
-        return connection
-      } catch (e: any) {
-        if (e && e.message) {
-          setErr(e.message)
-        }
-
-        console.error(e)
-      } finally {
-        setDialling(false)
-      }
-    },
-    [libp2p, maddr],
-  )
+      console.error(e)
+    } finally {
+      setDialling(false)
+    }
+  }, [libp2p, maddr])
 
   // handleConnectToMultiaddr
 
@@ -104,13 +101,13 @@ export default function Home() {
           <header>
             <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
               <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900 flex flex-row">
-                <p className="mr-4">Universal Connectivity</p>
                 <Image
                   src="/libp2p-hero.svg"
                   alt="libp2p logo"
                   height="46"
                   width="46"
                 />
+                <p className="p-3">Universal Connectivity</p>
               </h1>
             </div>
           </header>
@@ -119,7 +116,7 @@ export default function Home() {
               <ul className="my-2 space-y-2 break-all">
                 <li className="">This PeerID: {libp2p.peerId.toString()}</li>
               </ul>
-              Addresses:
+              Multiaddr addresses:
               <ul className="my-2 space-y-2 break-all">
                 {listenAddresses.multiaddrs.map((ma, index) => {
                   return <li key={`ma-${index}`}>{ma.toString()}</li>
@@ -152,8 +149,7 @@ export default function Home() {
                   onClick={handleConnectToMultiaddr}
                   disabled={dialling}
                 >
-                  {dialling && <Spinner />} Connect{dialling && 'ing'} to
-                  multiaddr
+                  {dialling && <Spinner />} Connect
                 </button>
                 {err && <p className="text-red-500">{err}</p>}
               </div>

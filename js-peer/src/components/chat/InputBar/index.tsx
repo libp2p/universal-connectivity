@@ -1,8 +1,10 @@
 import React, { useCallback, useRef, useState } from 'react'
+import { toast } from 'react-toastify'
 import { v4 as uuidv4 } from 'uuid'
 import { TextInput } from '../TextInput'
 import Attachment from '@/components/icons/Attachment'
 import Send from '@/components/icons/Send'
+import Spinner from '@/components/icons/Spinner'
 import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 import { useLibp2pContext } from '@/context/ctx'
 import { ChatFile, useFileChatContext } from '@/context/file-ctx'
@@ -19,6 +21,8 @@ export const InputBar = ({ chatRoom }: Props) => {
   const { files, setFiles } = useFileChatContext()
   const fileRef = useRef<HTMLInputElement>(null)
   const [input, setInput] = useState<string>('')
+  const [isSending, setIsSending] = useState<boolean>(false)
+
   const {
     directMessages,
     setDirectMessages,
@@ -27,48 +31,59 @@ export const InputBar = ({ chatRoom }: Props) => {
   } = useChatContext()
 
   const sendGossipsubMessage = useCallback(async () => {
-    console.log(
-      `peers in gossip for topic ${CHAT_TOPIC}:`,
-      libp2p.services.pubsub.getSubscribers(CHAT_TOPIC).toString(),
-    )
+    try {
+      setIsSending(true)
+      console.log(
+        `peers in gossip for topic ${CHAT_TOPIC}:`,
+        libp2p.services.pubsub.getSubscribers(CHAT_TOPIC).toString(),
+      )
 
-    const res = await libp2p.services.pubsub.publish(
-      CHAT_TOPIC,
-      new TextEncoder().encode(input),
-    )
+      const res = await libp2p.services.pubsub.publish(
+        CHAT_TOPIC,
+        new TextEncoder().encode(input),
+      )
 
-    console.log(
-      'sent message via gossipsub: ',
-      res.recipients.map((peerId) => peerId.toString()),
-    )
+      console.log(
+        'sent message via gossipsub: ',
+        res.recipients.map((peerId) => peerId.toString()),
+      )
 
-    const myPeerId = libp2p.peerId.toString()
+      const myPeerId = libp2p.peerId.toString()
 
-    setMessageHistory([
-      ...messageHistory,
-      {
-        msgId: crypto.randomUUID(),
-        msg: input,
-        fileObjectUrl: undefined,
-        from: 'me',
-        peerId: myPeerId,
-        read: true,
-      },
-    ])
-    setInput('')
+      setMessageHistory([
+        ...messageHistory,
+        {
+          msgId: crypto.randomUUID(),
+          msg: input,
+          fileObjectUrl: undefined,
+          from: 'me',
+          peerId: myPeerId,
+          read: true,
+          receivedAt: Date.now(),
+        },
+      ])
+      setInput('')
+    } catch (e: any) {
+      toast.error(`Failed to send: ${e.message}`)
+      console.error(e)
+    } finally {
+      setIsSending(false)
+    }
   }, [input, messageHistory, setInput, libp2p, setMessageHistory])
 
   const sendDM = useCallback(async () => {
     try {
-      await directMessageRequest({
+      setIsSending(true)
+      const res = await directMessageRequest({
         libp2p,
         peer: chatRoom,
         message: input,
       })
 
-      // const conn = await libp2p.dial(peerIdFromString(chatRoom))
-
-      // console.log('connected to peer:', conn.remotePeer.toString())
+      if (!res) {
+        toast('Failed to send message')
+        return
+      }
 
       const myPeerId = libp2p.peerId.toString()
 
@@ -79,6 +94,7 @@ export const InputBar = ({ chatRoom }: Props) => {
         from: 'me',
         peerId: myPeerId,
         read: true,
+        receivedAt: Date.now(),
       }
 
       const updatedMessages = directMessages[chatRoom]
@@ -92,7 +108,10 @@ export const InputBar = ({ chatRoom }: Props) => {
 
       setInput('')
     } catch (e: any) {
+      toast.error(`Failed to send: ${e.message}`)
       console.error(e)
+    } finally {
+      setIsSending(false)
     }
   }, [libp2p, setDirectMessages, directMessages, chatRoom, input])
 
@@ -145,6 +164,7 @@ export const InputBar = ({ chatRoom }: Props) => {
         from: 'me',
         peerId: myPeerId,
         read: true,
+        receivedAt: Date.now(),
       }
 
       setMessageHistory([...messageHistory, msg])
@@ -152,12 +172,9 @@ export const InputBar = ({ chatRoom }: Props) => {
     [messageHistory, libp2p, setMessageHistory, files, setFiles],
   )
 
-  const handleSend = useCallback(
-    async (e: React.MouseEvent<HTMLButtonElement>) => {
-      sendMessage()
-    },
-    [sendMessage],
-  )
+  const handleSend = useCallback(async () => {
+    sendMessage()
+  }, [sendMessage])
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,32 +190,12 @@ export const InputBar = ({ chatRoom }: Props) => {
     [sendFile],
   )
 
-  const handleFileSend = useCallback(
-    async (_e: React.MouseEvent<HTMLButtonElement>) => {
-      fileRef?.current?.click()
-    },
-    [fileRef],
-  )
+  const handleFileSend = useCallback(async () => {
+    fileRef?.current?.click()
+  }, [fileRef])
 
   return (
     <div className="flex items-center justify-between w-full p-3 border-t border-gray-300">
-      {/* <button>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-6 h-6 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </button> */}
-
       <input
         ref={fileRef}
         className="hidden"
@@ -208,26 +205,19 @@ export const InputBar = ({ chatRoom }: Props) => {
       <button onClick={handleFileSend}>
         <Attachment />
       </button>
-      <TextInput sendMessage={sendMessage} setInput={setInput} input={input} />
-      {/* <button>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                  />
-                </svg>
-              </button> */}
-      <button onClick={handleSend} type="submit">
-        <Send />
-      </button>
+      <TextInput
+        sendMessage={sendMessage}
+        setInput={setInput}
+        input={input}
+        isDisabled={isSending}
+      />
+      {isSending ? (
+        <Spinner />
+      ) : (
+        <button onClick={handleSend} type="submit">
+          <Send />
+        </button>
+      )}
     </div>
   )
 }

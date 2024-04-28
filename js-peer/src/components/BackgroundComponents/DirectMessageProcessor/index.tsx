@@ -19,6 +19,7 @@ export const DirectMessageProcessor = () => {
         msgId: crypto.randomUUID(),
         fileObjectUrl: undefined,
         peerId: peerId,
+        receivedAt: Date.now(),
       }
 
       const updatedMessages = directMessages[peerId]

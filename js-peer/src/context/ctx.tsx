@@ -1,4 +1,6 @@
 import { PubSub } from '@libp2p/interface'
+import { KadDHT } from '@libp2p/kad-dht'
+import { PingService } from '@libp2p/ping'
 import type { Libp2p } from 'libp2p'
 import React, {
   createContext,
@@ -15,7 +17,7 @@ import { PeerProvider } from './peer-ctx'
 
 // 👇 The context type will be avilable "anywhere" in the app
 interface Libp2pContextInterface {
-  libp2p: Libp2p<{ pubsub: PubSub }>
+  libp2p: Libp2p<{ pubsub: PubSub; dht: KadDHT; ping: PingService }>
 }
 export const libp2pContext = createContext<Libp2pContextInterface>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
@@ -29,7 +31,8 @@ interface WrapperProps {
 export function AppWrapper({ children }: WrapperProps) {
   const libp2pInit = React.useRef(false)
 
-  const [libp2p, setLibp2p] = useState<Libp2p<{ pubsub: PubSub }>>()
+  const [libp2p, setLibp2p] =
+    useState<Libp2p<{ pubsub: PubSub; dht: KadDHT; ping: PingService }>>()
 
   useEffect(() => {
     const init = async () => {
@@ -46,7 +49,14 @@ export function AppWrapper({ children }: WrapperProps) {
         // @ts-ignore
         window.libp2p = libp2p
 
-        setLibp2p(libp2p as Libp2p<{ pubsub: any; dht: any; identify: any }>)
+        setLibp2p(
+          libp2p as Libp2p<{
+            pubsub: PubSub
+            dht: KadDHT
+            ping: PingService
+            identify: any
+          }>,
+        )
       } catch (e) {
         console.error('failed to start libp2p', e)
       }

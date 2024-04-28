@@ -3,6 +3,7 @@ import Blockies from 'react-18-blockies'
 import { InputBar } from '../InputBar'
 import { PeerMessage } from '../PeerMessage'
 import { ChatMessage, useChatContext } from '@/context/chat-ctx'
+import { shortPeerId } from '@/lib/peers'
 
 export default function ChatContainer() {
   const defaultRoomTitle = 'Public Chat'
@@ -11,7 +12,7 @@ export default function ChatContainer() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [roomTitle, setRoomTitle] = useState<string>(defaultRoomTitle)
-  const [roomIcon, setRoomIcon] = useState<string>(defaultRoomTitle)
+  const [roomIcon, setRoomIcon] = useState<string>(defaultRoomIcon)
 
   useEffect(() => {
     if (chatRoom === '') {
@@ -26,7 +27,7 @@ export default function ChatContainer() {
   }, [chatRoom, directMessages, messageHistory])
 
   return (
-    <div className="max-h-screen">
+    <div className="h-[calc(100vh-190px)]">
       <div className="container mx-auto">
         <div className="min-w-full border rounded lg:grid lg:grid-cols-3">
           <div className="lg:col-span-3 lg:block">
@@ -45,10 +46,10 @@ export default function ChatContainer() {
                   )}
                 </span>
                 <span className="block ml-2 font-bold text-gray-600">
-                  {roomTitle}
+                  {chatRoom ? shortPeerId(roomTitle) : roomTitle}
                 </span>
               </div>
-              <div className="relative w-full flex flex-col-reverse p-6 overflow-y-auto h-[40rem] bg-gray-100">
+              <div className="relative w-full flex flex-col-reverse p-6 h-[calc(100vh-195px)] overflow-y-auto bg-gray-100">
                 <ul className="space-y-2">
                   {messages.map(
                     ({
@@ -58,6 +59,7 @@ export default function ChatContainer() {
                       from,
                       peerId,
                       read,
+                      receivedAt,
                     }: ChatMessage) => (
                       <PeerMessage
                         key={msgId}
@@ -68,6 +70,7 @@ export default function ChatContainer() {
                         peerId={peerId}
                         read={read}
                         msgId={msgId}
+                        receivedAt={receivedAt}
                       />
                     ),
                   )}

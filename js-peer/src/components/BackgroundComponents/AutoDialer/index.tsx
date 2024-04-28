@@ -18,7 +18,7 @@ export const AutoDialer = () => {
       }
 
       if (evt.detail.topic !== CHAT_TOPIC) {
-        console.debug(
+        console.log(
           `skipping non-${CHAT_TOPIC} pubsub messages (${evt.detail.topic}, ${evt.detail.from}, ${evt}`,
         )
         return
@@ -32,6 +32,8 @@ export const AutoDialer = () => {
 
           if (libp2p.getConnections().length < AutoDialerMaxConnections) {
             await libp2p.dial(evt.detail.from)
+          } else {
+            console.log('max connections for AutoDialer reached')
           }
         }
       } catch (e: any) {

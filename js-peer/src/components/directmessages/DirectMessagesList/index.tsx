@@ -16,7 +16,7 @@ export const DirectMessagesList = () => {
           <div
             key={peerId}
             onClick={() => handleChangeChatRoom(peerId)}
-            className="cursor-pointer"
+            className="cursor-pointer p-1"
           >
             <Peer peerId={peerId} />
           </div>

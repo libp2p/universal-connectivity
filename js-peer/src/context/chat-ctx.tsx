@@ -7,6 +7,7 @@ export interface ChatMessage {
   from: 'me' | 'other'
   peerId: string
   read: boolean
+  receivedAt: number
 }
 
 export interface DirectMessages {
@@ -17,9 +18,17 @@ export type Chatroom = string
 
 export interface ChatContextInterface {
   messageHistory: ChatMessage[]
-  setMessageHistory: (messageHistory: ChatMessage[]) => void
+  setMessageHistory: (
+    messageHistory:
+      | ChatMessage[]
+      | ((prevMessages: ChatMessage[]) => ChatMessage[]),
+  ) => void
   directMessages: DirectMessages
-  setDirectMessages: (directMessages: DirectMessages) => void
+  setDirectMessages: (
+    directMessages:
+      | DirectMessages
+      | ((prevMessages: DirectMessages) => DirectMessages),
+  ) => void
   chatRoom: Chatroom
   setChatRoom: (chatRoom: Chatroom) => void
 }

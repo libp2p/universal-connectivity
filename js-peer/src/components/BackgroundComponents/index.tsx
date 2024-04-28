@@ -1,15 +1,15 @@
 import { AutoDialer } from './AutoDialer'
 import { DirectMessageProcessor } from './DirectMessageProcessor'
-import { GossipsubChatProcesser } from './GossipsubChatProcessor'
-// import { Pinger } from "./Pinger"
+import { GossipsubProcesser } from './GossipsubProcessor'
+import { P2PPinger } from './pinger/P2PPinger'
 
 export const BackgroundComponents = () => {
   return (
     <>
-      {/* <Pinger /> */}
       <AutoDialer />
-      <GossipsubChatProcesser />
+      <GossipsubProcesser />
       <DirectMessageProcessor />
+      <P2PPinger />
     </>
   )
 }

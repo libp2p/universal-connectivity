@@ -13,16 +13,16 @@ export default function Chat() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="min-h-full">
+      <main className="h-screen">
         <Nav />
         <div className="flex flex-row">
-          <div className="basis-2/12">
+          <div className="hidden lg:block lg:basis-2/12">
             <LeftSidebar />
           </div>
-          <div className="basis-8/12">
+          <div className="lg:basis-8/12 basis-full">
             <ChatContainer />
           </div>
-          <div className="basis-2/12">
+          <div className="hidden lg:block lg:basis-2/12">
             <RightSidebar />
           </div>
         </div>

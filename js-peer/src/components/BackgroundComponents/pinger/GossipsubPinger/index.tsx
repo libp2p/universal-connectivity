@@ -2,11 +2,11 @@ import { useEffect } from 'react'
 import { useLibp2pContext } from '@/context/ctx'
 import { CHAT_TOPIC } from '@/lib/constants/'
 
-const GOSSIP_PING_MS = 5000
+const GOSSIP_PING_INTERVAL_MS = 5000
 
 // Gossipsub Pinger - periodically sends a message to the chat topic
-// Too noisy but useful for debugging
-export const Pinger = () => {
+// Noisy but useful for debugging
+export const GossipsubPinger = () => {
   const { libp2p } = useLibp2pContext()
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export const Pinger = () => {
       }
 
       init()
-    }, GOSSIP_PING_MS)
+    }, GOSSIP_PING_INTERVAL_MS)
 
     return () => {
       clearInterval(interval)

@@ -35,15 +35,17 @@ export const ConnectedPeerList = ({ showShortPeerId }: Props) => {
 
   const peerConn = (peerProto: PeerProtoTuple, idx: number) => {
     return (
-      <div className="flex" key={idx}>
-        <Blockies
-          seed={peerProto.peerId}
-          size={15}
-          scale={3}
-          className="rounded mr-2 max-h-10 max-w-10"
-        />
-        {showShortPeerId ? shortPeerId(peerProto.peerId) : peerProto.peerId} (
-        {peerProto.protocols.join(', ')})
+      <div key={idx} className="p-1">
+        <div className="flex">
+          <Blockies
+            seed={peerProto.peerId}
+            size={15}
+            scale={3}
+            className="rounded mr-2 max-h-10 max-w-10"
+          />
+          {showShortPeerId ? shortPeerId(peerProto.peerId) : peerProto.peerId} (
+          {peerProto.protocols.join(', ')})
+        </div>
       </div>
     )
   }

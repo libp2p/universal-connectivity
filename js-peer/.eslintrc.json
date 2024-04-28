@@ -33,7 +33,7 @@
       "version": "detect"
     }
   },
-  "ignorePatterns": ["node_modules/", "build/", ".next/", "lib/proto/"],
+  "ignorePatterns": ["node_modules/", "build/", ".next/", "src/lib/protobuf/"],
   "rules": {
     "prettier/prettier": [
       "warn",
