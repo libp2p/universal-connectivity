@@ -37,7 +37,7 @@
     "it-length-prefixed": "^9.0.4",
     "it-map": "^3.0.5",
     "it-pipe": "^3.0.1",
-    "libp2p": "^1.2.4",
+    "libp2p": "^1.4.2",
     "next": "14.2.3",
     "protons": "^7.5.0",
     "protons-runtime": "^5.4.0",
@@ -45,7 +45,7 @@
     "react-18-blockies": "^1.0.6",
     "react-dom": "18.2.0",
     "react-toastify": "^10.0.5",
-    "uint8arrays": "^5.0.2",
+    "uint8arrays": "^5.0.3",
     "usehooks-ts": "^3.1.0",
     "uuid": "^9.0.1"
   },

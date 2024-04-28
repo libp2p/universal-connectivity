@@ -14,10 +14,11 @@ import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
 import { ListenAddressesProvider } from './listen-addresses-ctx'
 import { PeerProvider } from './peer-ctx'
+import { Identify } from '@libp2p/identify'
 
 // 👇 The context type will be avilable "anywhere" in the app
 interface Libp2pContextInterface {
-  libp2p: Libp2p<{ pubsub: PubSub; dht: KadDHT; ping: PingService }>
+  libp2p: Libp2p<{ pubsub: PubSub; dht: KadDHT; ping: PingService; identify: Identify }>
 }
 export const libp2pContext = createContext<Libp2pContextInterface>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
@@ -32,7 +33,7 @@ export function AppWrapper({ children }: WrapperProps) {
   const libp2pInit = React.useRef(false)
 
   const [libp2p, setLibp2p] =
-    useState<Libp2p<{ pubsub: PubSub; dht: KadDHT; ping: PingService }>>()
+    useState<Libp2p<{ pubsub: PubSub; dht: KadDHT; ping: PingService; identify: Identify }>>()
 
   useEffect(() => {
     const init = async () => {
@@ -54,7 +55,7 @@ export function AppWrapper({ children }: WrapperProps) {
             pubsub: PubSub
             dht: KadDHT
             ping: PingService
-            identify: any
+            identify: Identify
           }>,
         )
       } catch (e) {
