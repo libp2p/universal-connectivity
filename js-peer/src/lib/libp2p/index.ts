@@ -19,7 +19,7 @@ import { Multiaddr } from '@multiformats/multiaddr'
 import { IDBDatastore } from 'datastore-idb'
 import { createLibp2p, Libp2p } from 'libp2p'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { handleDirectMessageRequest } from '../chat/directMessage/handler'
+import { handleDirectMessage } from '../chat/directMessage/handler'
 import {
   APP_PREFIX,
   CHAT_FILE_TOPIC,
@@ -158,13 +158,13 @@ export async function startLibp2p() {
 }
 
 async function registerHandlers(libp2p: Libp2p) {
-  await handleDirectMessageRequest(libp2p)
+  await handleDirectMessage(libp2p)
 }
 
 // message IDs are used to dedupe inbound messages
 // every agent in network should use the same message id function
 // messages could be perceived as duplicate if this isnt added (as opposed to rust peer which has unique message ids)
-export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
+async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
   var enc = new TextEncoder()
 
   const signedMessage = msg as SignedMessage

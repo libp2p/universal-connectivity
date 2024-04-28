@@ -7,6 +7,8 @@ import {
   getFormattedConnections,
   shortPeerId,
 } from '@/lib/peers'
+import ComputerDesktopIcon from '@heroicons/react/24/outline/ComputerDesktopIcon'
+import CubeTransparentIcon from '@heroicons/react/24/outline/CubeTransparentIcon'
 
 export interface Props {
   showShortPeerId?: boolean
@@ -52,10 +54,13 @@ export const ConnectedPeerList = ({ showShortPeerId }: Props) => {
 
   return peerStats.peerIds.length > 0 ? (
     <div>
-      <h3 className="font-bold text-gray-600">
-        Connected peers ({getFormattedConnections(peerStats.connections).length}
-        )
-      </h3>
+      <div className="flex">
+        <CubeTransparentIcon className="w-6 h-6 text-gray-400 mr-1" />
+        <h3 className="font-bold text-gray-600">
+          Connected peers (
+          {getFormattedConnections(peerStats.connections).length})
+        </h3>
+      </div>
       <div className="px-2">
         {getFormattedConnections(peerStats.connections).map((pair, idx) =>
           peerConn(pair, idx),

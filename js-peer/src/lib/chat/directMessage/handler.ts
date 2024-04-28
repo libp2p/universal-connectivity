@@ -10,9 +10,9 @@ import { rpc } from '@/lib/protobuf/directMessage'
 
 export const directMessageEvent = 'directMessageEvt'
 
-// handleDirectMessageRequest handles inbound direct messages from peers.
+// handleDirectMessage handles inbound direct messages from peers.
 // Needs to be registered in libp2p
-export async function handleDirectMessageRequest(libp2p: Libp2p) {
+export async function handleDirectMessage(libp2p: Libp2p) {
   await libp2p.handle(
     DIRECT_MESSAGE_PROTOCOL,
     async ({ stream, connection }) => {

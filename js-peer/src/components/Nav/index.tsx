@@ -8,8 +8,10 @@ import { Fragment } from 'react'
 const navigationItems = [
   { name: 'Connecting to a Peer', href: '/' },
   { name: 'Chat', href: '/chat' },
+  { name: 'DMs', href: '/directMessages', mobileOnly: true },
   { name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' },
 ]
+
 const userNavigation = [
   { name: 'Your Profile', href: '#' },
   { name: 'Settings', href: '#' },
@@ -39,24 +41,30 @@ export default function Navigation() {
                   />
                 </div>
                 <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-                  {navigationItems.map((item) => (
-                    <Link key={item.href} href={item.href} legacyBehavior>
-                      <a
-                        key={item.href}
-                        className={classNames(
-                          router.pathname === item.href
-                            ? 'border-indigo-500 text-gray-900'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                          'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
-                        )}
-                        aria-current={
-                          router.pathname === item.href ? 'page' : undefined
-                        }
-                      >
-                        {item.name}
-                      </a>
-                    </Link>
-                  ))}
+                  {navigationItems.map((item) => {
+                    if (item.mobileOnly) {
+                      return null
+                    }
+
+                    return (
+                      <Link key={item.href} href={item.href} legacyBehavior>
+                        <a
+                          key={item.href}
+                          className={classNames(
+                            router.pathname === item.href
+                              ? 'border-indigo-500 text-gray-900'
+                              : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                            'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium',
+                          )}
+                          aria-current={
+                            router.pathname === item.href ? 'page' : undefined
+                          }
+                        >
+                          {item.name}
+                        </a>
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:items-center">

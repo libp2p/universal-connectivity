@@ -18,13 +18,13 @@ export const AutoDialer = () => {
       }
 
       if (evt.detail.topic !== CHAT_TOPIC) {
-        console.log(
+        console.debug(
           `skipping non-${CHAT_TOPIC} pubsub messages (${evt.detail.topic}, ${evt.detail.from}, ${evt}`,
         )
         return
       }
 
-      console.log(`received ${CHAT_TOPIC} pubsub message`, evt.detail)
+      console.debug(`received ${CHAT_TOPIC} pubsub message`, evt.detail)
 
       try {
         if (!(await libp2p.peerStore.has(evt.detail.from))) {
@@ -33,11 +33,11 @@ export const AutoDialer = () => {
           if (libp2p.getConnections().length < AutoDialerMaxConnections) {
             await libp2p.dial(evt.detail.from)
           } else {
-            console.log('max connections for AutoDialer reached')
+            console.debug('max connections for AutoDialer reached')
           }
         }
       } catch (e: any) {
-        console.log('error', e)
+        console.log('autodialer error', e)
       }
     }
 

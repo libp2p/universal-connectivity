@@ -18,7 +18,9 @@ export const P2PPinger = () => {
           return await libp2p.services.ping
             .ping(conn.remotePeer)
             .then((rtt) => {
-              console.log(`${conn.remotePeer}: ping rtt ${rtt}ms`)
+              console.log(
+                `${conn.remotePeer} - ${conn.remoteAddr}: ping rtt ${rtt}ms`,
+              )
             })
             .catch(async (err) => {
               if (err.message === 'protocol selection failed') {
