@@ -33,6 +33,7 @@ export const InputBar = ({ chatRoom }: Props) => {
   const sendGossipsubMessage = useCallback(async () => {
     try {
       setIsSending(true)
+
       console.log(
         `peers in gossip for topic ${CHAT_TOPIC}:`,
         libp2p.services.pubsub.getSubscribers(CHAT_TOPIC).toString(),
@@ -74,6 +75,7 @@ export const InputBar = ({ chatRoom }: Props) => {
   const sendDM = useCallback(async () => {
     try {
       setIsSending(true)
+
       const res = await directMessageRequest({
         libp2p,
         peer: chatRoom,
@@ -129,7 +131,7 @@ export const InputBar = ({ chatRoom }: Props) => {
     }
   }, [chatRoom, input, sendDM, sendGossipsubMessage])
 
-  const sendFile = useCallback(
+  const sendFileGossipsub = useCallback(
     async (readerEvent: ProgressEvent<FileReader>) => {
       const fileBody = readerEvent.target?.result as ArrayBuffer
 
@@ -183,11 +185,11 @@ export const InputBar = ({ chatRoom }: Props) => {
 
         reader.readAsArrayBuffer(e.target.files[0])
         reader.onload = (readerEvent) => {
-          sendFile(readerEvent)
+          sendFileGossipsub(readerEvent)
         }
       }
     },
-    [sendFile],
+    [sendFileGossipsub],
   )
 
   const handleFileSend = useCallback(async () => {
@@ -201,8 +203,14 @@ export const InputBar = ({ chatRoom }: Props) => {
         className="hidden"
         type="file"
         onChange={handleFileInput}
+        disabled={chatRoom !== ''}
       />
-      <button onClick={handleFileSend}>
+      <button
+        onClick={handleFileSend}
+        disabled={chatRoom !== ''}
+        title={chatRoom !== '' ? "Unsupported in DM's " : 'Upload file'}
+        className={chatRoom !== '' ? 'cursor-not-allowed' : ''}
+      >
         <Attachment />
       </button>
       <TextInput
