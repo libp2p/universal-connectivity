@@ -1,7 +1,6 @@
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
-// import { bootstrap } from '@libp2p/bootstrap'
 import { createDelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 import { dcutr } from '@libp2p/dcutr'
@@ -10,7 +9,6 @@ import type { Message, SignedMessage } from '@libp2p/interface'
 import { kadDHT } from '@libp2p/kad-dht'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { ping } from '@libp2p/ping'
-// import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
 import { webSockets } from '@libp2p/websockets'
 import * as filters from '@libp2p/websockets/filters'
@@ -26,9 +24,6 @@ import {
   CHAT_TOPIC,
   DHT_PROTOCOL,
   P2P_PING_TIMEOUT_MS,
-  // PUBSUB_PEER_DISCOVERY_TOPIC,
-  // WEBRTC_BOOTSTRAP_NODE,
-  // WEBTRANSPORT_BOOTSTRAP_NODE,
   WEBRTC_BOOTSTRAP_PEER_ID,
   WEBTRANSPORT_BOOTSTRAP_PEER_ID,
 } from '../constants/'
@@ -82,20 +77,6 @@ export async function startLibp2p() {
     connectionGater: {
       denyDialMultiaddr: async () => false,
     },
-    // peerDiscovery: [
-    //   bootstrap({
-    //     list: [
-    //       '/ip4/142.93.224.65/udp/1970/quic-v1/webtransport/certhash/uEiBntFDuWbXUuSqg0XrFAfgKLivXbX1uxFtwYUV5vjFTRA/certhash/uEiBOkGfz3B7IcLOFdh4uU3wJQRG6DyUTfjMz8TDxjRBp3Q/p2p/12D3KooWDwgE8vSCx8KtpZHwYEENiutTfLdC7b757ekBTZcGoWqr',
-    //       // WEBRTC_BOOTSTRAP_NODE,
-    //       // WEBTRANSPORT_BOOTSTRAP_NODE,
-    //     ],
-    //   }),
-    //   pubsubPeerDiscovery({
-    //     interval: 5000,
-    //     listenOnly: false,
-    //     topics: [PUBSUB_PEER_DISCOVERY_TOPIC],
-    //   }),
-    // ],
     // The app-specific go and rust peers use WebTransport and WebRTC-direct which have ephemeral multiadrrs that change.
     // Thus, we dial them using only their peer id below, with delegated routing to discovery their multiaddrs
     // peerDiscovery: [
