@@ -23,7 +23,10 @@ export const Rooms = () => {
         <h3 className="font-bold text-gray-600">Rooms</h3>
       </div>
       <span className="cursor-pointer" onClick={handleRoomChange}>
-        Public {unreadMessagesCount !== 0 && <>({unreadMessagesCount})</>}
+        Public{' '}
+        {unreadMessagesCount !== 0 && (
+          <span className="text-sm">({unreadMessagesCount})</span>
+        )}
       </span>
     </>
   )

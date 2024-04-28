@@ -1,7 +1,7 @@
 import CloudIcon from '@heroicons/react/24/outline/CloudIcon'
 import { Peer } from '@libp2p/interface'
 import { useEffect, useState } from 'react'
-import PeerName from '../Peer'
+import { PeerName } from '../Peer'
 import { useLibp2pContext } from '@/context/ctx'
 
 const UPDATE_INTERVAL = 1000

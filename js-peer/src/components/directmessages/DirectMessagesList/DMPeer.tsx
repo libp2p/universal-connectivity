@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Blockies from 'react-18-blockies'
 import { PeerName } from '@/components/Peer'
 import { useChatContext } from '@/context/chat-ctx'
 
@@ -6,7 +7,7 @@ interface Props {
   peerId: string
 }
 
-export const Peer = ({ peerId }: Props) => {
+export const DMPeer = ({ peerId }: Props) => {
   const { directMessages } = useChatContext()
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
 
@@ -24,10 +25,16 @@ export const Peer = ({ peerId }: Props) => {
 
   return (
     <div className="flex">
-      <PeerName peerId={peerId} />
-      {unreadMessagesCount !== 0 && (
-        <span className="text-sm pl-1">({unreadMessagesCount})</span>
-      )}
+      <Blockies
+        seed={peerId}
+        size={15}
+        scale={3}
+        className="rounded mr-2 max-h-10 max-w-10"
+      />
+      <div>
+        <PeerName peerId={peerId} />
+        {unreadMessagesCount !== 0 && <>({unreadMessagesCount})</>}
+      </div>
     </div>
   )
 }

@@ -45,7 +45,7 @@ export const MenuItem = ({ protocol, peerId }: MenuItemProps) => {
   }
 }
 
-export default function Peer({ peerId, me }: Props) {
+export const PeerName = ({ peerId, me }: Props) => {
   const { libp2p } = useLibp2pContext()
   const [commsProtocols, setCommsProtocols] = useState<string[]>([])
 

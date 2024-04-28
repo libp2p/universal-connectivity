@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import Peer from '@/components/Peer'
+import { PeerName } from '@/components/Peer'
 import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 
 interface Props extends ChatMessage {
@@ -63,7 +63,7 @@ export const PeerMessage = ({
       <div>
         <div>
           <div className="flex">
-            <Peer peerId={peerId} me={from === 'me'} />{' '}
+            <PeerName peerId={peerId} me={from === 'me'} />{' '}
             <span className="relative pl-1 text-xs text-slate-400">
               {timestamp}
             </span>
