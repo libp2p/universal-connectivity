@@ -217,7 +217,8 @@ async fn main() -> Result<()> {
                     {
                         debug!("identify::Event::Received observed_addr: {}", observed_addr);
 
-                        swarm.add_external_address(observed_addr);
+                        // Disable to see if it's the cause of the wrong multiaddrs getting announced
+                        // swarm.add_external_address(observed_addr);
 
                         // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
                         if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
