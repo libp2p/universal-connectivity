@@ -11,13 +11,8 @@ import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
 import { Multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
-import type { Message, SignedMessage, PeerId } from '@libp2p/interface'
+import type { Message, SignedMessage } from '@libp2p/interface'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import { Key } from 'interface-datastore'
-import { keychain } from '@libp2p/keychain'
-import { defaultLogger } from '@libp2p/logger'
-
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
@@ -40,24 +35,10 @@ export async function startLibp2p() {
   const datastore = new IDBDatastore('universal-connectivity')
   await datastore.open()
 
-  let peerId: PeerId
-  // Try to load peer from data store
-  const selfKey = new Key('/pkcs8/self')
-  const chain = keychain()({ datastore, logger: defaultLogger() })
-  if (await datastore.has(selfKey)) {
-    // load the peer id from the keychain
-    peerId = await chain.exportPeerId('self')
-  } else {
-    // Create a new one and load it into the chain
-    peerId = await createEd25519PeerId()
-    await chain.importPeer('self', peerId)
-  }
-
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
   const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
 
   const libp2p = await createLibp2p({
-    peerId: peerId ?? undefined,
     datastore,
     addresses: {
       listen: [
