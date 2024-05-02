@@ -38,7 +38,6 @@ export async function startLibp2p() {
 
   // application-specific data lives in the datastore
   const datastore = new IDBDatastore('universal-connectivity')
-
   await datastore.open()
 
   let peerId: PeerId
@@ -54,11 +53,8 @@ export async function startLibp2p() {
     await chain.importPeer('self', peerId)
   }
 
-
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
-  const { bootstrapAddrs, listenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
-  console.log(bootstrapAddrs, listenAddrs)
-
+  const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
 
   const libp2p = await createLibp2p({
     peerId: peerId ?? undefined,
@@ -67,7 +63,8 @@ export async function startLibp2p() {
       listen: [
         // 👇 Listen for webRTC connection
         '/webrtc',
-        ...listenAddrs,
+        // Use the app's bootstrap nodes as circuit relays
+        ...relayListenAddrs,
       ],
     },
     transports: [
@@ -99,24 +96,13 @@ export async function startLibp2p() {
     connectionGater: {
       denyDialMultiaddr: async () => false,
     },
-    // The app-specific go and rust peers use WebTransport and WebRTC-direct which have ephemeral multiadrrs that change.
-    // Thus, we dial them using only their peer id below, with delegated routing to discovery their multiaddrs
     peerDiscovery: [
       bootstrap({
-        list: bootstrapAddrs.map((maddr) => maddr.toString()),
+        // The app-specific go and rust bootstrappers use WebTransport and WebRTC-direct which have ephemeral multiadrrs
+        // that are resolved above using the delegated routing API
+        list: bootstrapAddrs,
       }),
     ],
-    // [
-    // '12D3KooWFhXabKDwALpzqMbto94sB7rvmZ6M28hs9Y9xSopDKwQr'
-    // WEBRTC_BOOTSTRAP_NODE,
-    // WEBTRANSPORT_BOOTSTRAP_NODE,
-    // '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-    // '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-    // '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-    // '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
-    // ],
-    // }),
-    // ],
     services: {
       pubsub: gossipsub({
         allowPublishToZeroTopicPeers: true,
@@ -125,7 +111,7 @@ export async function startLibp2p() {
       }),
       // Delegated routing helps us discover the ephemeral multiaddrs of the dedicated go and rust bootstrap peers
       // This relies on the public delegated routing endpoint https://docs.ipfs.tech/concepts/public-utilities/#delegated-routing
-      delegatedRouting: () => createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev'),
+      delegatedRouting: () => delegatedClient,
       identify: identify(),
     },
   })
@@ -168,13 +154,17 @@ export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiadd
   }
 }
 
-const getBootstrapMultiaddrs = async (client: DelegatedRoutingV1HttpApiClient) => {
+// Function which resolves PeerIDs of rust/go bootstrap nodes to multiaddrs dialable from the browser
+// Returns both the dialable multiaddrs in addition to the relay
+async function getBootstrapMultiaddrs(
+  client: DelegatedRoutingV1HttpApiClient,
+): Promise<BootstrapsMultiaddrs> {
   const peers = await Promise.all([
     first(client.getPeers(peerIdFromString(WEBTRANSPORT_BOOTSTRAP_PEER_ID))),
     first(client.getPeers(peerIdFromString(WEBRTC_BOOTSTRAP_PEER_ID))),
   ])
   const bootstrapAddrs = []
-  const listenAddrs = []
+  const relayListenAddrs = []
   for (const p of peers) {
     if (p && p.Addrs.length > 0) {
       for (const maddr of p.Addrs) {
@@ -183,11 +173,24 @@ const getBootstrapMultiaddrs = async (client: DelegatedRoutingV1HttpApiClient) =
           (protos.includes('webtransport') || protos.includes('webrtc-direct')) &&
           protos.includes('certhash')
         ) {
-          bootstrapAddrs.push(maddr)
-          listenAddrs.push(`${maddr.toString()}/p2p/${p.ID.toString()}/p2p-circuit`)
+          if (maddr.nodeAddress().address === '127.0.0.1') continue // skip loopback
+          bootstrapAddrs.push(maddr.toString())
+          relayListenAddrs.push(getRelayListenAddr(maddr, p.ID))
         }
       }
     }
   }
-  return { bootstrapAddrs, listenAddrs }
+  return { bootstrapAddrs, relayListenAddrs }
 }
+
+interface BootstrapsMultiaddrs {
+  // Multiaddrs that are dialable from the browser
+  bootstrapAddrs: string[]
+
+  // multiaddr string representing the circuit relay v2 listen addr
+  relayListenAddrs: string[]
+}
+
+// Constructs a multiaddr string representing the circuit relay v2 listen address for a relayed connection to the given peer.
+const getRelayListenAddr = (maddr: Multiaddr, peer: PeerId): string =>
+  `${maddr.toString()}/p2p/${peer.toString()}/p2p-circuit`
