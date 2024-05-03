@@ -3,6 +3,7 @@ import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
 import type { Connection } from '@libp2p/interface'
+import { PeerId } from '@libp2p/interface'
 import { usePeerContext } from '../context/peer-ctx'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
@@ -25,7 +26,7 @@ export default function Home() {
 
       setPeerStats({
         ...peerStats,
-        peerIds: connections.map(conn => conn.remotePeer),
+        peerIds: connections.map((conn) => conn.remotePeer),
         connections: connections,
         connected: connections.length > 0,
       })
@@ -42,7 +43,7 @@ export default function Home() {
 
       setListenAddresses({
         ...listenAddresses,
-        multiaddrs
+        multiaddrs,
       })
     }, 1000)
 
@@ -52,24 +53,23 @@ export default function Home() {
   }, [libp2p, listenAddresses, setListenAddresses])
 
   type PeerProtoTuple = {
-    peerId: string
+    peerId: PeerId
     protocols: string[]
   }
 
   const getFormattedConnections = (connections: Connection[]): PeerProtoTuple[] => {
-    const protoNames: Map<string, string[]> = new Map()
+    const protoNames: Map<PeerId, string[]> = new Map()
 
     connections.forEach((conn) => {
-      const exists = protoNames.get(conn.remotePeer.toString())
+      const exists = protoNames.get(conn.remotePeer)
       const dedupedProtonames = [...new Set(conn.remoteAddr.protoNames())]
 
       if (exists?.length) {
         const namesToAdd = dedupedProtonames.filter((name) => !exists.includes(name))
         // console.log('namesToAdd: ', namesToAdd)
-        protoNames.set(conn.remotePeer.toString(), [...exists, ...namesToAdd])
-
+        protoNames.set(conn.remotePeer, [...exists, ...namesToAdd])
       } else {
-        protoNames.set(conn.remotePeer.toString(), dedupedProtonames)
+        protoNames.set(conn.remotePeer, dedupedProtonames)
       }
     })
 
@@ -113,6 +113,10 @@ export default function Home() {
     [setMultiaddr],
   )
 
+  const handleDisconnectPeer = useCallback((peerId: PeerId) => {
+    libp2p.hangUp(peerId)
+  }, [libp2p])
+
   return (
     <>
       <Head>
@@ -128,12 +132,7 @@ export default function Home() {
             <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
               <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900 flex flex-row">
                 <p className="mr-4">Universal Connectivity</p>
-                <Image
-                  src="/libp2p-hero.svg"
-                  alt="libp2p logo"
-                  height="46"
-                  width="46"
-                />
+                <Image src="/libp2p-hero.svg" alt="libp2p logo" height="46" width="46" />
               </h1>
             </div>
           </header>
@@ -144,19 +143,12 @@ export default function Home() {
               </ul>
               Addresses:
               <ul className="my-2 space-y-2 break-all">
-                {
-                  listenAddresses.multiaddrs.map((ma, index) => {
-                    return (
-                      <li key={`ma-${index}`}>{ma.toString()}</li>
-                    )
-                  })
-                }
+                {listenAddresses.multiaddrs.map((ma, index) => {
+                  return <li key={`ma-${index}`}>{ma.toString()}</li>
+                })}
               </ul>
               <div className="my-6 w-1/2">
-                <label
-                  htmlFor="peer-id"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label htmlFor="peer-id" className="block text-sm font-medium leading-6 text-gray-900">
                   multiaddr to connect to
                 </label>
                 <div className="mt-2">
@@ -173,16 +165,17 @@ export default function Home() {
                 </div>
                 <button
                   type="button"
-                  className={"rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" + (dialling ? ' cursor-not-allowed' : '')}
+                  className={
+                    'rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600' +
+                    (dialling ? ' cursor-not-allowed' : '')
+                  }
                   onClick={handleConnectToMultiaddr}
                   disabled={dialling}
                 >
-                  {dialling && <Spinner />}{' '}
-                  Connect{dialling && 'ing'} to multiaddr
+                  {dialling && <Spinner />} Connect{dialling && 'ing'} to multiaddr
                 </button>
                 {err && <p className="text-red-500">{err}</p>}
               </div>
-
               <div className="my-4 inline-flex items-center text-xl">
                 Connected:{' '}
                 {peerStats.connected ? (
@@ -198,14 +191,17 @@ export default function Home() {
                       {' '}
                       Connected peers ({getFormattedConnections(peerStats.connections).length}) 👇
                     </h3>
-                    <pre className="px-2">
-                      {getFormattedConnections(peerStats.connections)
-                        .map(
-                          (pair) =>
-                            `${pair.peerId} (${pair.protocols.join(', ')})`,
-                        )
-                        .join('\n')}
-                    </pre>
+
+                    <ul className="divide-y divide-gray-100">
+                      {getFormattedConnections(peerStats.connections).map((pair) => (
+                        <li key={pair.peerId.toString()} className="py-1 flex justify-between items-center">
+                          <span>{`${pair.peerId} (${pair.protocols.join(', ')})`}</span>
+                          <button onClick={() => handleDisconnectPeer(pair.peerId)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex flex-row">
+                            <XCircleIcon className="w-6 h-6" /> Disconnect
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   </>
                 ) : null}
               </div>
