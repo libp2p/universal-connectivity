@@ -63,7 +63,7 @@ export async function startLibp2p() {
     ],
     connectionManager: {
       maxConnections: 10,
-      minConnections: 3,
+      minConnections: 0,
     },
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
