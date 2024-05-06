@@ -1,4 +1,3 @@
-import { IDBDatastore } from 'datastore-idb'
 import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
@@ -25,15 +24,10 @@ export async function startLibp2p() {
   // enable verbose logging in browser console to view debug logs
   localStorage.debug = 'libp2p*,-*:trace'
 
-  // application-specific data lives in the datastore
-  const datastore = new IDBDatastore('universal-connectivity')
-  await datastore.open()
-
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
   const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
 
   const libp2p = await createLibp2p({
-    datastore,
     addresses: {
       listen: [
         // 👇 Listen for webRTC connection
