@@ -194,3 +194,18 @@ interface BootstrapsMultiaddrs {
 // Constructs a multiaddr string representing the circuit relay v2 listen address for a relayed connection to the given peer.
 const getRelayListenAddr = (maddr: Multiaddr, peer: PeerId): string =>
   `${maddr.toString()}/p2p/${peer.toString()}/p2p-circuit`
+
+
+export const getFormattedConnections = (connections: Connection[]): PeerProtoTuple[] => {
+  return connections.map((conn) => {
+    return {
+      peerId: conn.remotePeer,
+      protocols: [...new Set(conn.remoteAddr.protoNames())]
+    }
+  })
+}
+
+interface PeerProtoTuple  {
+  peerId: PeerId
+  protocols: string[]
+}
