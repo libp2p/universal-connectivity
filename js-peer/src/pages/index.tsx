@@ -113,9 +113,12 @@ export default function Home() {
     [setMultiaddr],
   )
 
-  const handleDisconnectPeer = useCallback((peerId: PeerId) => {
-    libp2p.hangUp(peerId)
-  }, [libp2p])
+  const handleDisconnectPeer = useCallback(
+    (peerId: PeerId) => {
+      libp2p.hangUp(peerId)
+    },
+    [libp2p],
+  )
 
   return (
     <>
@@ -192,12 +195,19 @@ export default function Home() {
                       Connected peers ({getFormattedConnections(peerStats.connections).length}) 👇
                     </h3>
 
-                    <ul className="divide-y divide-gray-100">
+                    <ul className="divide-y divide-gray-200">
                       {getFormattedConnections(peerStats.connections).map((pair) => (
-                        <li key={`${pair.peerId.toString()}-${pair.protocols.join('-')}`} className="py-1 flex justify-between items-center">
-                          <span>{`${pair.peerId} (${pair.protocols.join(', ')})`}</span>
-                          <button onClick={() => handleDisconnectPeer(pair.peerId)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex flex-row">
-                            <XCircleIcon className="w-6 h-6" /> Disconnect
+                        <li
+                          key={`${pair.peerId.toString()}-${pair.protocols.join('-')}`}
+                          className="py-1 flex flex-wrap justify-between items-center break-all"
+                        >
+                          <span>{`${pair.peerId.toString()} (${pair.protocols.join(', ')})`}</span>
+                          <button
+                            onClick={() => handleDisconnectPeer(pair.peerId)}
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex flex-row"
+                          >
+                            <XCircleIcon className="w-6 h-6" />
+                            <span className="pl-1">Disconnect</span>
                           </button>
                         </li>
                       ))}
