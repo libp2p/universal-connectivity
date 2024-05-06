@@ -55,6 +55,7 @@ export async function startLibp2p() {
           ],
         },
       }),
+      // 👇 Required to estalbish connections with peers supporting WebRTC-direct, e.g. the Rust-peer
       webRTCDirect(),
       // 👇 Required to create circuit relay reservations in order to hole punch browser-to-browser WebRTC connections
       circuitRelayTransport({
@@ -106,6 +107,10 @@ export async function startLibp2p() {
   libp2p.addEventListener('self:peer:update', ({ detail: { peer } }) => {
     const multiaddrs = peer.addresses.map(({ multiaddr }) => multiaddr)
     console.log(`changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`)
+  })
+
+  libp2p.addEventListener('peer:discovery', (event) => {
+    console.log(`woot peer discovery with maddrs: %o`, event.detail.multiaddrs)
   })
 
   return libp2p

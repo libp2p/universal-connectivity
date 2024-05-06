@@ -59,11 +59,10 @@ export const ChatProvider = ({ children }: any) => {
         break
       }
       case PUBSUB_PEER_DISCOVERY: {
-        peerDiscoveryCB(evt, topic, data)
         break
       }
       default: {
-        throw new Error(`Unexpected gossipsub topic: ${topic}`)
+        console.error(`Unexpected event %o on gossipsub topic: ${topic}`, evt)
       }
     }
   }
@@ -76,10 +75,6 @@ export const ChatProvider = ({ children }: any) => {
     if (evt.detail.type === 'signed') {
       setMessageHistory([...messageHistory, { msg, fileObjectUrl: undefined, from: 'other', peerId: evt.detail.from.toString() }])
     }
-  }
-
-  const peerDiscoveryCB = (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
-    // TODO: handle peer discovery events
   }
 
   const chatFileMessageCB = async (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
