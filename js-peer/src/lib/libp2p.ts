@@ -10,7 +10,7 @@ import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
 import { Multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
-import type { Message, SignedMessage, PeerId } from '@libp2p/interface'
+import type { Connection, Message, SignedMessage, PeerId } from '@libp2p/interface'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
@@ -68,7 +68,7 @@ export async function startLibp2p() {
     },
     peerDiscovery: [
       pubsubPeerDiscovery({
-        interval: 10000,
+        interval: 10_000,
         topics: [PUBSUB_PEER_DISCOVERY],
         listenOnly: false,
       }),
@@ -94,17 +94,21 @@ export async function startLibp2p() {
   libp2p.services.pubsub.subscribe(CHAT_TOPIC)
   libp2p.services.pubsub.subscribe(CHAT_FILE_TOPIC)
 
-  // .catch((e) => {
-  //   console.log('woot', e)
-  // })
-
   libp2p.addEventListener('self:peer:update', ({ detail: { peer } }) => {
     const multiaddrs = peer.addresses.map(({ multiaddr }) => multiaddr)
     console.log(`changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`)
   })
 
+  // The peer:discovery event will be triggered only when a NEW PeerID is discovered
   libp2p.addEventListener('peer:discovery', (event) => {
-    console.log(`woot peer discovery with maddrs: %o`, event.detail.multiaddrs)
+    const { multiaddrs, id } = event.detail
+
+    if (libp2p.getConnections(id)?.length > 0) {
+      console.log(`Already connected to peer %s. Will not try dialling`, id)
+      return
+    }
+
+    dialWebRTCMaddrs(libp2p, multiaddrs)
   })
 
   return libp2p
@@ -119,6 +123,23 @@ export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
   const signedMessage = msg as SignedMessage
   const encodedSeqNum = enc.encode(signedMessage.sequenceNumber.toString())
   return await sha256.encode(encodedSeqNum)
+}
+
+// Function which dials one maddr at a time to avoid establishing multiple connections to the same peer
+async function dialWebRTCMaddrs(libp2p: Libp2p, multiaddrs: Multiaddr[]): Promise<void> {
+  // Filter webrtc (browser-to-browser) multiaddrs
+  const webRTCMadrs = multiaddrs.filter((maddr) => maddr.protoNames().includes('webrtc'))
+  console.log(`peer:discovery with maddrs: %o`, webRTCMadrs)
+
+  for (const addr of webRTCMadrs) {
+    try {
+      console.log(`woot attempting to dial webrtc multiaddr: %o`, addr)
+      await libp2p.dial(addr)
+      return // if we succeed dialing the peer, no need to try another address
+    } catch (error) {
+      console.error(`woot failed to dial webrtc multiaddr: %o`, addr)
+    }
+  }
 }
 
 export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {
@@ -138,7 +159,9 @@ export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiadd
 async function getBootstrapMultiaddrs(
   client: DelegatedRoutingV1HttpApiClient,
 ): Promise<BootstrapsMultiaddrs> {
-  const peers = await Promise.all(BOOTSTRAP_PEER_IDS.map(peerId => first(client.getPeers(peerIdFromString(peerId)))))
+  const peers = await Promise.all(
+    BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId)))),
+  )
 
   const bootstrapAddrs = []
   const relayListenAddrs = []

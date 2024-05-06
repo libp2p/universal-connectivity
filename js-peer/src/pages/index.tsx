@@ -7,7 +7,7 @@ import { PeerId } from '@libp2p/interface'
 import { usePeerContext } from '../context/peer-ctx'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
-import { multiaddr } from '@multiformats/multiaddr'
+import { multiaddr, protocols } from '@multiformats/multiaddr'
 import { connectToMultiaddr } from '../lib/libp2p'
 import { useListenAddressesContext } from '../context/listen-addresses-ctx'
 import Spinner from '@/components/spinner'
@@ -194,7 +194,7 @@ export default function Home() {
 
                     <ul className="divide-y divide-gray-100">
                       {getFormattedConnections(peerStats.connections).map((pair) => (
-                        <li key={pair.peerId.toString()} className="py-1 flex justify-between items-center">
+                        <li key={`${pair.peerId.toString()}-${pair.protocols.join('-')}`} className="py-1 flex justify-between items-center">
                           <span>{`${pair.peerId} (${pair.protocols.join(', ')})`}</span>
                           <button onClick={() => handleDisconnectPeer(pair.peerId)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex flex-row">
                             <XCircleIcon className="w-6 h-6" /> Disconnect
