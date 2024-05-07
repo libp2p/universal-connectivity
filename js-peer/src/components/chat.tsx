@@ -4,7 +4,7 @@ import type { Message } from '@libp2p/interface'
 import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL } from '@/lib/constants'
 import { createIcon } from '@download/blockies'
 import { ChatFile, ChatMessage, useChatContext } from '../context/chat-ctx'
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
 import { pipe } from 'it-pipe'
 import map from 'it-map'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
@@ -12,15 +12,13 @@ import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import * as lp from 'it-length-prefixed'
 import { MessageComponent } from './message'
 
-interface MessageProps extends ChatMessage { }
-
-
+interface MessageProps extends ChatMessage {}
 
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
-  const { messageHistory, setMessageHistory, files, setFiles } = useChatContext();
+  const { messageHistory, setMessageHistory, files, setFiles } = useChatContext()
   const [input, setInput] = useState<string>('')
-  const fileRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const sendMessage = useCallback(async () => {
     if (input === '') return
@@ -30,10 +28,7 @@ export default function ChatContainer() {
       libp2p.services.pubsub.getSubscribers(CHAT_TOPIC).toString(),
     )
 
-    const res = await libp2p.services.pubsub.publish(
-      CHAT_TOPIC,
-      new TextEncoder().encode(input),
-    )
+    const res = await libp2p.services.pubsub.publish(CHAT_TOPIC, new TextEncoder().encode(input))
     console.log(
       'sent message to: ',
       res.recipients.map((peerId) => peerId.toString()),
@@ -41,43 +36,46 @@ export default function ChatContainer() {
 
     const myPeerId = libp2p.peerId.toString()
 
-    setMessageHistory([...messageHistory, { msg: input, fileObjectUrl: undefined, from: 'me', peerId: myPeerId }])
+    setMessageHistory([
+      ...messageHistory,
+      { msg: input, fileObjectUrl: undefined, from: 'me', peerId: myPeerId },
+    ])
     setInput('')
   }, [input, messageHistory, setInput, libp2p, setMessageHistory])
 
-  const sendFile = useCallback(async (readerEvent: ProgressEvent<FileReader>) => {
-    const fileBody = readerEvent.target?.result as ArrayBuffer;
+  const sendFile = useCallback(
+    async (readerEvent: ProgressEvent<FileReader>) => {
+      const fileBody = readerEvent.target?.result as ArrayBuffer
 
-    const myPeerId = libp2p.peerId.toString()
-    const file: ChatFile = {
-      id: uuidv4(),
-      body: new Uint8Array(fileBody),
-      sender: myPeerId,
-    }
-    setFiles(files.set(file.id, file))
+      const myPeerId = libp2p.peerId.toString()
+      const file: ChatFile = {
+        id: uuidv4(),
+        body: new Uint8Array(fileBody),
+        sender: myPeerId,
+      }
+      setFiles(files.set(file.id, file))
 
-    console.log(
-      `peers in gossip for topic ${CHAT_FILE_TOPIC}:`,
-      libp2p.services.pubsub.getSubscribers(CHAT_FILE_TOPIC).toString(),
-    )
+      console.log(
+        `peers in gossip for topic ${CHAT_FILE_TOPIC}:`,
+        libp2p.services.pubsub.getSubscribers(CHAT_FILE_TOPIC).toString(),
+      )
 
-    const res = await libp2p.services.pubsub.publish(
-      CHAT_FILE_TOPIC,
-      new TextEncoder().encode(file.id)
-    )
-    console.log(
-      'sent file to: ',
-      res.recipients.map((peerId) => peerId.toString()),
-    )
+      const res = await libp2p.services.pubsub.publish(CHAT_FILE_TOPIC, new TextEncoder().encode(file.id))
+      console.log(
+        'sent file to: ',
+        res.recipients.map((peerId) => peerId.toString()),
+      )
 
-    const msg: ChatMessage = {
-      msg: newChatFileMessage(file.id, file.body),
-      fileObjectUrl: window.URL.createObjectURL(new Blob([file.body])),
-      from: 'me',
-      peerId: myPeerId,
-    }
-    setMessageHistory([...messageHistory, msg])
-  }, [messageHistory, libp2p, setMessageHistory, files, setFiles])
+      const msg: ChatMessage = {
+        msg: newChatFileMessage(file.id, file.body),
+        fileObjectUrl: window.URL.createObjectURL(new Blob([file.body])),
+        from: 'me',
+        peerId: myPeerId,
+      }
+      setMessageHistory([...messageHistory, msg])
+    },
+    [messageHistory, libp2p, setMessageHistory, files, setFiles],
+  )
 
   const newChatFileMessage = (id: string, body: Uint8Array) => {
     return `File: ${id} (${body.length} bytes)`
@@ -110,11 +108,11 @@ export default function ChatContainer() {
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(e.target.files[0]);
+        const reader = new FileReader()
+        reader.readAsArrayBuffer(e.target.files[0])
         reader.onload = (readerEvent) => {
           sendFile(readerEvent)
-        };
+        }
       }
     },
     [sendFile],
@@ -122,7 +120,7 @@ export default function ChatContainer() {
 
   const handleFileSend = useCallback(
     async (_e: React.MouseEvent<HTMLButtonElement>) => {
-      fileRef?.current?.click();
+      fileRef?.current?.click()
     },
     [fileRef],
   )
@@ -142,38 +140,25 @@ export default function ChatContainer() {
               />
               <span className="absolute w-3 h-3 bg-green-600 rounded-full left-10 top-3"></span> */}
               <span className="text-3xl">💁🏽‍♀️💁🏿‍♂️</span>
-              <span className="block ml-2 font-bold text-gray-600">
-                Public Chat
-              </span>
+              <span className="block ml-2 font-bold text-gray-600">Public Chat</span>
             </div>
             <div className="relative w-full flex flex-col-reverse p-6 overflow-y-auto h-[40rem] bg-gray-100">
               <ul className="space-y-2">
                 {/* messages start */}
                 {messageHistory.map(({ msg, fileObjectUrl, from, peerId }, idx) => (
-                  <MessageComponent key={idx} msg={msg} fileObjectUrl={fileObjectUrl} from={from} peerId={peerId} />
+                  <MessageComponent
+                    key={idx}
+                    msg={msg}
+                    fileObjectUrl={fileObjectUrl}
+                    from={from}
+                    peerId={peerId}
+                  />
                 ))}
                 {/* messages end */}
               </ul>
             </div>
 
             <div className="flex items-center justify-between w-full p-3 border-t border-gray-300">
-              <button>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-6 h-6 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </button>
-
               <input ref={fileRef} className="hidden" type="file" onChange={handleFileInput} />
               <button onClick={handleFileSend}>
                 <svg
@@ -202,22 +187,6 @@ export default function ChatContainer() {
                 name="message"
                 required
               />
-              <button>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                  />
-                </svg>
-              </button>
               <button onClick={handleSend} type="submit">
                 <svg
                   className="w-5 h-5 text-gray-500 origin-center transform rotate-90"
@@ -235,4 +204,3 @@ export default function ChatContainer() {
     </div>
   )
 }
-
