@@ -58,8 +58,8 @@ export async function startLibp2p() {
       }),
     ],
     connectionManager: {
-      maxConnections: 10,
-      minConnections: 0,
+      maxConnections: 30,
+      minConnections: 5,
     },
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
@@ -99,17 +99,18 @@ export async function startLibp2p() {
     console.log(`changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`)
   })
 
-  // The peer:discovery event will be triggered only when a NEW PeerID is discovered
-  libp2p.addEventListener('peer:discovery', (event) => {
-    const { multiaddrs, id } = event.detail
+  // 👇 explicitly dialling peers discovered via pubsub is only necessary
+  //  when minConnections is set to 0 and the connection manager doesn't autodial
+  // libp2p.addEventListener('peer:discovery', (event) => {
+  //   const { multiaddrs, id } = event.detail
 
-    if (libp2p.getConnections(id)?.length > 0) {
-      console.log(`Already connected to peer %s. Will not try dialling`, id)
-      return
-    }
+  //   if (libp2p.getConnections(id)?.length > 0) {
+  //     console.log(`Already connected to peer %s. Will not try dialling`, id)
+  //     return
+  //   }
 
-    dialWebRTCMaddrs(libp2p, multiaddrs)
-  })
+  //   dialWebRTCMaddrs(libp2p, multiaddrs)
+  // })
 
   return libp2p
 }
