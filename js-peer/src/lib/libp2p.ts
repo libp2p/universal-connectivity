@@ -196,17 +196,8 @@ interface BootstrapsMultiaddrs {
 const getRelayListenAddr = (maddr: Multiaddr, peer: PeerId): string =>
   `${maddr.toString()}/p2p/${peer.toString()}/p2p-circuit`
 
-
-export const getFormattedConnections = (connections: Connection[]): PeerProtoTuple[] => {
-  return connections.map((conn) => {
-    return {
-      peerId: conn.remotePeer,
-      protocols: [...new Set(conn.remoteAddr.protoNames())]
-    }
-  })
-}
-
-interface PeerProtoTuple  {
-  peerId: PeerId
-  protocols: string[]
-}
+export const getFormattedConnections = (connections: Connection[]) =>
+  connections.map((conn) => ({
+    peerId: conn.remotePeer,
+    protocols: [...new Set(conn.remoteAddr.protoNames())],
+  }))
