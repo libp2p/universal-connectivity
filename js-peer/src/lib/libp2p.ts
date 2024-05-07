@@ -22,7 +22,7 @@ import first from 'it-first'
 
 export async function startLibp2p() {
   // enable verbose logging in browser console to view debug logs
-  localStorage.debug = 'libp2p*,-*:trace'
+  localStorage.debug = 'libp2p*,-libp2p:connection-manager*,-*:trace'
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
   const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
