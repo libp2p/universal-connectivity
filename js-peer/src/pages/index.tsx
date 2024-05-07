@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { Multiaddr, multiaddr } from '@multiformats/multiaddr'
 import { connectToMultiaddr, getFormattedConnections } from '../lib/libp2p'
 import Spinner from '@/components/spinner'
+import PeerList from '@/components/peer-list'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
@@ -31,7 +32,6 @@ export default function Home() {
       libp2p.removeEventListener('connection:clone', onConnection)
     }
   }, [libp2p, setConnections])
-
 
   useEffect(() => {
     const onPeerUpdate = (evt: CustomEvent<PeerUpdate>) => {
@@ -71,13 +71,6 @@ export default function Home() {
     [setMultiaddr],
   )
 
-  const handleDisconnectPeer = useCallback(
-    (peerId: PeerId) => {
-      libp2p.hangUp(peerId)
-    },
-    [libp2p],
-  )
-
   return (
     <>
       <Head>
@@ -104,9 +97,7 @@ export default function Home() {
               </ul>
               Addresses:
               <ul className="my-2 space-y-2 break-all">
-                {listenAddresses.map((ma, index) => {
-                  return <li key={`ma-${index}`}>{ma.toString()}</li>
-                })}
+                {listenAddresses.map((ma, index) => (<li className='text-xs text-gray-700' key={`ma-${index}`}>{ma.toString()}</li>))}
               </ul>
               <div className="my-6 w-1/2">
                 <label htmlFor="peer-id" className="block text-sm font-medium leading-6 text-gray-900">
@@ -137,39 +128,19 @@ export default function Home() {
                 </button>
                 {err && <p className="text-red-500">{err}</p>}
               </div>
-              <div className="my-4 inline-flex items-center text-xl">
+              {/* <div className="my-4 inline-flex items-center text-xl">
                 Connected:{' '}
                 {connections.length > 0 ? (
                   <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
                 ) : (
                   <XCircleIcon className="w-6 h-6 text-red-500" />
                 )}
-              </div>
+              </div> */}
               <div>
                 {connections.length > 0 ? (
                   <>
-                    <h3 className="text-xl">
-                      {' '}
-                      Connected peers ({getFormattedConnections(connections).length}) 👇
-                    </h3>
-
-                    <ul className="divide-y divide-gray-200">
-                      {getFormattedConnections(connections).map((pair) => (
-                        <li
-                          key={`${pair.peerId.toString()}-${pair.protocols.join('-')}`}
-                          className="py-1 flex flex-wrap justify-between items-center break-all"
-                        >
-                          <span>{`${pair.peerId.toString()} (${pair.protocols.join(', ')})`}</span>
-                          <button
-                            onClick={() => handleDisconnectPeer(pair.peerId)}
-                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex flex-row"
-                          >
-                            <XCircleIcon className="w-6 h-6" />
-                            <span className="pl-1">Disconnect</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+                    <h3 className="text-xl">Connections ({connections.length}):</h3>
+                    <PeerList connections={connections} />
                   </>
                 ) : null}
               </div>
