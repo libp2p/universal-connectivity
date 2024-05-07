@@ -128,14 +128,6 @@ export default function Home() {
                 </button>
                 {err && <p className="text-red-500">{err}</p>}
               </div>
-              {/* <div className="my-4 inline-flex items-center text-xl">
-                Connected:{' '}
-                {connections.length > 0 ? (
-                  <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
-                ) : (
-                  <XCircleIcon className="w-6 h-6 text-red-500" />
-                )}
-              </div> */}
               <div>
                 {connections.length > 0 ? (
                   <>
