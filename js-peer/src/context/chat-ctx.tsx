@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLibp2pContext } from './ctx';
 import type { Message } from '@libp2p/interface'
-import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL } from '@/lib/constants'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL, PUBSUB_PEER_DISCOVERY } from '@/lib/constants'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { pipe } from 'it-pipe'
@@ -58,8 +58,11 @@ export const ChatProvider = ({ children }: any) => {
         chatFileMessageCB(evt, topic, data)
         break
       }
+      case PUBSUB_PEER_DISCOVERY: {
+        break
+      }
       default: {
-        throw new Error(`Unexpected gossipsub topic: ${topic}`)
+        console.error(`Unexpected event %o on gossipsub topic: ${topic}`, evt)
       }
     }
   }

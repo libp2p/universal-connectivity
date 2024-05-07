@@ -8,7 +8,7 @@ import { usePeerContext } from '../context/peer-ctx'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { multiaddr } from '@multiformats/multiaddr'
-import { connectToMultiaddr } from '../lib/libp2p'
+import { connectToMultiaddr, getFormattedConnections } from '../lib/libp2p'
 import { useListenAddressesContext } from '../context/listen-addresses-ctx'
 import Spinner from '@/components/spinner'
 
@@ -28,7 +28,6 @@ export default function Home() {
         ...peerStats,
         peerIds: connections.map((conn) => conn.remotePeer),
         connections: connections,
-        connected: connections.length > 0,
       })
     }, 1000)
 
@@ -42,7 +41,6 @@ export default function Home() {
       const multiaddrs = libp2p.getMultiaddrs()
 
       setListenAddresses({
-        ...listenAddresses,
         multiaddrs,
       })
     }, 1000)
@@ -52,32 +50,6 @@ export default function Home() {
     }
   }, [libp2p, listenAddresses, setListenAddresses])
 
-  type PeerProtoTuple = {
-    peerId: PeerId
-    protocols: string[]
-  }
-
-  const getFormattedConnections = (connections: Connection[]): PeerProtoTuple[] => {
-    const protoNames: Map<PeerId, string[]> = new Map()
-
-    connections.forEach((conn) => {
-      const exists = protoNames.get(conn.remotePeer)
-      const dedupedProtonames = [...new Set(conn.remoteAddr.protoNames())]
-
-      if (exists?.length) {
-        const namesToAdd = dedupedProtonames.filter((name) => !exists.includes(name))
-        // console.log('namesToAdd: ', namesToAdd)
-        protoNames.set(conn.remotePeer, [...exists, ...namesToAdd])
-      } else {
-        protoNames.set(conn.remotePeer, dedupedProtonames)
-      }
-    })
-
-    return [...protoNames.entries()].map(([peerId, protocols]) => ({
-      peerId,
-      protocols,
-    }))
-  }
 
   const handleConnectToMultiaddr = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -181,7 +153,7 @@ export default function Home() {
               </div>
               <div className="my-4 inline-flex items-center text-xl">
                 Connected:{' '}
-                {peerStats.connected ? (
+                {peerStats.connections.length > 0 ? (
                   <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
                 ) : (
                   <XCircleIcon className="w-6 h-6 text-red-500" />
@@ -198,7 +170,7 @@ export default function Home() {
                     <ul className="divide-y divide-gray-200">
                       {getFormattedConnections(peerStats.connections).map((pair) => (
                         <li
-                          key={pair.peerId.toString()}
+                          key={`${pair.peerId.toString()}-${pair.protocols.join('-')}`}
                           className="py-1 flex flex-wrap justify-between items-center break-all"
                         >
                           <span>{`${pair.peerId.toString()} (${pair.protocols.join(', ')})`}</span>

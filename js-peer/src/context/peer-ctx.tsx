@@ -5,7 +5,6 @@ import { PeerId } from '@libp2p/interface'
 
 export interface PeerStats {
 	peerIds: PeerId[]
-	connected: boolean
 	connections: Connection[]
 	latency: number
 }
@@ -17,7 +16,6 @@ export interface PeerContextInterface {
 export const peerContext = createContext<PeerContextInterface>({
 	peerStats: {
 		peerIds: [],
-		connected: true,
 		connections: [],
 		latency: 0
 	},
@@ -31,7 +29,6 @@ export const usePeerContext = () => {
 export const PeerProvider = ({ children }: { children: ReactNode }) => {
 	const [peerStats, setPeerStats] = useState<PeerStats>({
 		peerIds: [],
-		connected: false,
 		connections: [],
 		latency: 0
 	});
