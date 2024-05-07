@@ -27,6 +27,7 @@ export async function startLibp2p() {
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
   const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
 
+  console.log('starting libp2p')
   const libp2p = await createLibp2p({
     addresses: {
       listen: [

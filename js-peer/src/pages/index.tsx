@@ -2,75 +2,61 @@ import Head from 'next/head'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
-import type { Connection } from '@libp2p/interface'
+import type { PeerUpdate, Connection } from '@libp2p/interface'
 import { PeerId } from '@libp2p/interface'
-import { usePeerContext } from '../context/peer-ctx'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
-import { multiaddr } from '@multiformats/multiaddr'
+import { Multiaddr, multiaddr } from '@multiformats/multiaddr'
 import { connectToMultiaddr, getFormattedConnections } from '../lib/libp2p'
-import { useListenAddressesContext } from '../context/listen-addresses-ctx'
 import Spinner from '@/components/spinner'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
-  const { peerStats, setPeerStats } = usePeerContext()
-  const { listenAddresses, setListenAddresses } = useListenAddressesContext()
+  const [connections, setConnections] = useState<Connection[]>([])
+  const [listenAddresses, setListenAddresses] = useState<Multiaddr[]>([])
   const [maddr, setMultiaddr] = useState('')
   const [dialling, setDialling] = useState(false)
   const [err, setErr] = useState('')
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const onConnection = () => {
       const connections = libp2p.getConnections()
-
-      setPeerStats({
-        ...peerStats,
-        peerIds: connections.map((conn) => conn.remotePeer),
-        connections: connections,
-      })
-    }, 1000)
-
-    return () => {
-      clearInterval(interval)
+      setConnections(connections)
     }
-  }, [libp2p, peerStats, setPeerStats])
+    onConnection()
+    libp2p.addEventListener('connection:open', onConnection)
+    libp2p.addEventListener('connection:close', onConnection)
+    return () => {
+      libp2p.removeEventListener('connection:open', onConnection)
+      libp2p.removeEventListener('connection:clone', onConnection)
+    }
+  }, [libp2p, setConnections])
+
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const multiaddrs = libp2p.getMultiaddrs()
-
-      setListenAddresses({
-        multiaddrs,
-      })
-    }, 1000)
+    const onPeerUpdate = (evt: CustomEvent<PeerUpdate>) => {
+      const maddrs = evt.detail.peer.addresses?.map((p) => p.multiaddr)
+      setListenAddresses(maddrs ?? [])
+    }
+    libp2p.addEventListener('self:peer:update', onPeerUpdate)
 
     return () => {
-      clearInterval(interval)
+      libp2p.removeEventListener('self:peer:update', onPeerUpdate)
     }
-  }, [libp2p, listenAddresses, setListenAddresses])
-
+  }, [libp2p, setListenAddresses])
 
   const handleConnectToMultiaddr = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       setErr('')
-
       if (!maddr) {
         return
       }
-
       setDialling(true)
-
       try {
         const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
-        console.log('connection: ', connection)
-
-        return connection
+        console.log('connection established: ', connection)
       } catch (e: any) {
-        if (e && e.message) {
-          setErr(e.message)
-        }
-        console.error(e)
+        setErr(e?.message ?? 'Error connecting')
       } finally {
         setDialling(false)
       }
@@ -118,7 +104,7 @@ export default function Home() {
               </ul>
               Addresses:
               <ul className="my-2 space-y-2 break-all">
-                {listenAddresses.multiaddrs.map((ma, index) => {
+                {listenAddresses.map((ma, index) => {
                   return <li key={`ma-${index}`}>{ma.toString()}</li>
                 })}
               </ul>
@@ -153,22 +139,22 @@ export default function Home() {
               </div>
               <div className="my-4 inline-flex items-center text-xl">
                 Connected:{' '}
-                {peerStats.connections.length > 0 ? (
+                {connections.length > 0 ? (
                   <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
                 ) : (
                   <XCircleIcon className="w-6 h-6 text-red-500" />
                 )}
               </div>
               <div>
-                {peerStats.peerIds.length > 0 ? (
+                {connections.length > 0 ? (
                   <>
                     <h3 className="text-xl">
                       {' '}
-                      Connected peers ({getFormattedConnections(peerStats.connections).length}) 👇
+                      Connected peers ({getFormattedConnections(connections).length}) 👇
                     </h3>
 
                     <ul className="divide-y divide-gray-200">
-                      {getFormattedConnections(peerStats.connections).map((pair) => (
+                      {getFormattedConnections(connections).map((pair) => (
                         <li
                           key={`${pair.peerId.toString()}-${pair.protocols.join('-')}`}
                           className="py-1 flex flex-wrap justify-between items-center break-all"
