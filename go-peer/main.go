@@ -72,10 +72,12 @@ func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Mult
 }
 
 // Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
-func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous string) {
+// Only used by Go peer to find each other.
+// TODO: since this isn't implemented on the Rust or the JS side, can probably be removed
+func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT) {
 	routingDiscovery := routing.NewRoutingDiscovery(dht)
 
-	discovery.Advertise(ctx, routingDiscovery, rendezvous)
+	discovery.Advertise(ctx, routingDiscovery, DiscoveryServiceTag)
 
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
@@ -86,7 +88,7 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, rendezvous str
 			return
 		case <-ticker.C:
 
-			peers, err := discovery.FindPeers(ctx, routingDiscovery, rendezvous)
+			peers, err := discovery.FindPeers(ctx, routingDiscovery, DiscoveryServiceTag)
 			if err != nil {
 				panic(err)
 			}
@@ -115,7 +117,6 @@ func LogMsgf(f string, msg ...any) {
 func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
-	roomFlag := flag.String("room", "universal-connectivity", "name of chat room to join")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
 	certPath := flag.String("tls-cert-path", "", "path to the tls cert file (for websockets)")
 	keyPath := flag.String("tls-key-path", "", "path to the tls key file (for websockets")
@@ -194,11 +195,8 @@ func main() {
 		nick = defaultNick(h.ID())
 	}
 
-	// join the room from the cli flag, or the flag default
-	room := *roomFlag
-
 	// join the chat room
-	cr, err := JoinChatRoom(ctx, h, ps, nick, room)
+	cr, err := JoinChatRoom(ctx, h, ps, nick)
 	if err != nil {
 		panic(err)
 	}
@@ -213,7 +211,7 @@ func main() {
 	}
 
 	// setup peer discovery
-	go Discover(ctx, h, dht, "universal-connectivity")
+	go Discover(ctx, h, dht)
 
 	// setup local mDNS discovery
 	if err := setupDiscovery(h); err != nil {
