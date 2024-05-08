@@ -1,6 +1,10 @@
 name: Continuous Integration
 
-on: pull_request
+on: 
+  pull_request:
+    paths:
+      - 'go-peer/**'
+      - 'rust-peer/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
