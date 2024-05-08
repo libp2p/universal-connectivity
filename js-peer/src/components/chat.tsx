@@ -5,6 +5,7 @@ import { ChatFile, ChatMessage, useChatContext } from '../context/chat-ctx'
 import { v4 as uuidv4 } from 'uuid'
 import { MessageComponent } from './message'
 import { forComponent } from '@/lib/logger'
+import { ChatPeerList } from './chat-peer-list'
 
 const log = forComponent('chat')
 
@@ -121,22 +122,13 @@ export default function ChatContainer() {
 
   return (
     <div className="container mx-auto">
-      <div className="min-w-full border rounded lg:grid lg:grid-cols-3">
-        {/* <RoomList /> */}
-        <div className="lg:col-span-3 lg:block">
+      <div className="min-w-full border rounded lg:grid lg:grid-cols-6">
+        <div className="lg:col-span-5 lg:block">
           <div className="w-full">
             <div className="relative flex items-center p-3 border-b border-gray-300">
-              {/* disable
-              <img
-                className="object-cover w-10 h-10 rounded-full"
-                src="https://github.com/achingbrain.png"
-                alt="username"
-              />
-              <span className="absolute w-3 h-3 bg-green-600 rounded-full left-10 top-3"></span> */}
-              <span className="text-3xl">💁🏽‍♀️💁🏿‍♂️</span>
               <span className="block ml-2 font-bold text-gray-600">Public Chat</span>
             </div>
-            <div className="relative w-full flex flex-col-reverse p-6 overflow-y-auto h-[40rem] bg-gray-100">
+            <div className="relative w-full flex flex-col-reverse p-3 overflow-y-auto h-[40rem] bg-gray-100">
               <ul className="space-y-2">
                 {/* messages start */}
                 {messageHistory.map(({ msg, fileObjectUrl, from, peerId }, idx) => (
@@ -194,6 +186,7 @@ export default function ChatContainer() {
             </div>
           </div>
         </div>
+        <ChatPeerList />
       </div>
     </div>
   )
