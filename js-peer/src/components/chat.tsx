@@ -1,18 +1,12 @@
 import { useLibp2pContext } from '@/context/ctx'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import type { Message } from '@libp2p/interface'
 import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL } from '@/lib/constants'
-import { createIcon } from '@download/blockies'
 import { ChatFile, ChatMessage, useChatContext } from '../context/chat-ctx'
 import { v4 as uuidv4 } from 'uuid'
-import { pipe } from 'it-pipe'
-import map from 'it-map'
-import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-import * as lp from 'it-length-prefixed'
 import { MessageComponent } from './message'
+import { forComponent } from '@/lib/logger'
 
-interface MessageProps extends ChatMessage {}
+const log = forComponent('chat')
 
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
@@ -23,13 +17,13 @@ export default function ChatContainer() {
   const sendMessage = useCallback(async () => {
     if (input === '') return
 
-    console.log(
+    log(
       `peers in gossip for topic ${CHAT_TOPIC}:`,
       libp2p.services.pubsub.getSubscribers(CHAT_TOPIC).toString(),
     )
 
     const res = await libp2p.services.pubsub.publish(CHAT_TOPIC, new TextEncoder().encode(input))
-    console.log(
+    log(
       'sent message to: ',
       res.recipients.map((peerId) => peerId.toString()),
     )
@@ -55,13 +49,13 @@ export default function ChatContainer() {
       }
       setFiles(files.set(file.id, file))
 
-      console.log(
+      log(
         `peers in gossip for topic ${CHAT_FILE_TOPIC}:`,
         libp2p.services.pubsub.getSubscribers(CHAT_FILE_TOPIC).toString(),
       )
 
       const res = await libp2p.services.pubsub.publish(CHAT_FILE_TOPIC, new TextEncoder().encode(file.id))
-      console.log(
+      log(
         'sent file to: ',
         res.recipients.map((peerId) => peerId.toString()),
       )
