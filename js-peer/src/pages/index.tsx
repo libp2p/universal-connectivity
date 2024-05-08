@@ -53,8 +53,7 @@ export default function Home() {
       }
       setDialling(true)
       try {
-        const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
-        console.log('connection established: ', connection)
+        await connectToMultiaddr(libp2p)(multiaddr(maddr))
       } catch (e: any) {
         setErr(e?.message ?? 'Error connecting')
       } finally {

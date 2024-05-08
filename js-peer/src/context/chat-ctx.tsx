@@ -7,6 +7,9 @@ import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { pipe } from 'it-pipe'
 import map from 'it-map'
 import * as lp from 'it-length-prefixed'
+import { forComponent } from '@/lib/logger';
+
+const log = forComponent('chat-context')
 
 
 export interface ChatMessage {
@@ -68,7 +71,7 @@ export const ChatProvider = ({ children }: any) => {
 
   const chatMessageCB = (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
     const msg = new TextDecoder().decode(data)
-    console.log(`${topic}: ${msg}`)
+    log(`${topic}: ${msg}`)
 
     // Append signed messages, otherwise discard
     if (evt.detail.type === 'signed') {
@@ -98,7 +101,7 @@ export const ChatProvider = ({ children }: any) => {
         async function(source) {
           for await (const data of source) {
             const body: Uint8Array = data.subarray()
-            console.log(`request_response: response received: size:${body.length}`)
+            log(`chat file message request_response: response received: size:${body.length}`)
 
             const msg: ChatMessage = {
               msg: newChatFileMessage(fileId, body),

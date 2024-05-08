@@ -19,6 +19,7 @@
     "@libp2p/identify": "^2.0.0",
     "@libp2p/interface-pubsub": "^4.0.1",
     "@libp2p/kad-dht": "^12.0.13",
+    "@libp2p/logger": "^4.0.10",
     "@libp2p/pubsub-peer-discovery": "^10.0.2",
     "@libp2p/webrtc": "^4.0.28",
     "@libp2p/websockets": "^8.0.22",

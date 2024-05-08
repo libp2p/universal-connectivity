@@ -19,15 +19,18 @@ import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, PUBSUB_PEER_DISCOVERY } from './constants'
 import first from 'it-first'
+import { forComponent } from './logger'
+
+const log = forComponent('libp2p')
 
 export async function startLibp2p() {
   // enable verbose logging in browser console to view debug logs
-  localStorage.debug = 'libp2p*,-libp2p:connection-manager*,-*:trace'
+  localStorage.debug = 'ui*,libp2p*,-libp2p:connection-manager*,-*:trace'
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
   const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
+  log('starting libp2p with bootstrapAddrs %o and relayListenAddrs: %o', bootstrapAddrs, relayListenAddrs)
 
-  console.log('starting libp2p')
   const libp2p = await createLibp2p({
     addresses: {
       listen: [
@@ -97,7 +100,7 @@ export async function startLibp2p() {
 
   libp2p.addEventListener('self:peer:update', ({ detail: { peer } }) => {
     const multiaddrs = peer.addresses.map(({ multiaddr }) => multiaddr)
-    console.log(`changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`)
+    log(`changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`)
   })
 
   // 👇 explicitly dialling peers discovered via pubsub is only necessary
@@ -106,7 +109,7 @@ export async function startLibp2p() {
   //   const { multiaddrs, id } = event.detail
 
   //   if (libp2p.getConnections(id)?.length > 0) {
-  //     console.log(`Already connected to peer %s. Will not try dialling`, id)
+  //     log(`Already connected to peer %s. Will not try dialling`, id)
   //     return
   //   }
 
@@ -131,24 +134,24 @@ export async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
 async function dialWebRTCMaddrs(libp2p: Libp2p, multiaddrs: Multiaddr[]): Promise<void> {
   // Filter webrtc (browser-to-browser) multiaddrs
   const webRTCMadrs = multiaddrs.filter((maddr) => maddr.protoNames().includes('webrtc'))
-  console.log(`peer:discovery with maddrs: %o`, webRTCMadrs)
+  log(`dialling WebRTC multiaddrs: %o`, webRTCMadrs)
 
   for (const addr of webRTCMadrs) {
     try {
-      console.log(`woot attempting to dial webrtc multiaddr: %o`, addr)
+      log(`attempting to dial webrtc multiaddr: %o`, addr)
       await libp2p.dial(addr)
       return // if we succeed dialing the peer, no need to try another address
     } catch (error) {
-      console.error(`woot failed to dial webrtc multiaddr: %o`, addr)
+      log.error(`failed to dial webrtc multiaddr: %o`, addr)
     }
   }
 }
 
 export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiaddr) => {
-  console.log(`dialling: ${multiaddr.toString()}`)
+  log(`dialling: %a`, multiaddr)
   try {
     const conn = await libp2p.dial(multiaddr)
-    console.info('connected to', conn.remotePeer, 'on', conn.remoteAddr)
+    log('connected to %p on %a', conn.remotePeer, conn.remoteAddr)
     return conn
   } catch (e) {
     console.error(e)
