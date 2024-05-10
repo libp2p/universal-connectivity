@@ -170,6 +170,7 @@ func main() {
 		libp2p.Transport(quicTransport.NewTransport),
 		libp2p.Transport(webtransport.New),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport"),
+		libp2p.ListenAddrStrings("/ip6/::/udp/9095/quic-v1", "/ip6/::/udp/9095/quic-v1/webtransport"),
 	)
 
 	// create a new libp2p Host with lots of options
