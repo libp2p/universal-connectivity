@@ -21,7 +21,7 @@
     "@libp2p/pubsub-peer-discovery": "^10.0.2",
     "@libp2p/webrtc": "^4.0.31",
     "@libp2p/websockets": "^8.0.22",
-    "@libp2p/webtransport": "^4.0.30",
+    "@libp2p/webtransport": "^4.0.32",
     "@multiformats/multiaddr": "^12.2.1",
     "clsx": "^2.1.1",
     "debug": "^4.3.4",
