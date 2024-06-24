@@ -14,7 +14,7 @@
     "@helia/delegated-routing-v1-http-api-client": "^3.0.1",
     "@heroicons/react": "^2.1.3",
     "@libp2p/bootstrap": "^10.0.22",
-    "@libp2p/circuit-relay-v2": "^1.0.22",
+    "@libp2p/circuit-relay-v2": "^1.1.0",
     "@libp2p/identify": "^2.0.0",
     "@libp2p/interface-pubsub": "^4.0.1",
     "@libp2p/logger": "^4.0.10",
