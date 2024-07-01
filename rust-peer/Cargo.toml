@@ -13,7 +13,7 @@ futures = "0.3.27"
 futures-timer = "3.0.2"
 libp2p = { version = "0.52.3", features = ["identify", "ping", "tokio", "gossipsub", "macros", "relay", "kad", "rsa", "ed25519", "quic", "request-response", "dns", "memory-connection-limits"] }
 libp2p-webrtc = { version = "0.6.0-alpha", features = ["tokio", "pem"] }
-log = "0.4.17"
+log = "0.4.22"
 rand = "0.8.5"
 tokio = { version = "1.27.0", features = ["full"] }
 tokio-util = { version = "0.7", features = ["full"] }
