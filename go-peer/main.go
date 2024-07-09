@@ -22,6 +22,7 @@ import (
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
@@ -169,7 +170,10 @@ func main() {
 		libp2p.Identity(privk),
 		libp2p.Transport(quicTransport.NewTransport),
 		libp2p.Transport(webtransport.New),
+		libp2p.Transport(webrtc.New),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport"),
+		// 👇 webrtc-direct cannot listen on the same port as QUIC or WebTransport
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9096/webrtc-direct"),
 		libp2p.ListenAddrStrings("/ip6/::/udp/9095/quic-v1", "/ip6/::/udp/9095/quic-v1/webtransport"),
 	)
 
