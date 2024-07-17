@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-import type { Libp2p } from 'libp2p'
+import type { Libp2p, PubSub } from '@libp2p/interface'
 import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
-import { PubSub } from '@libp2p/interface'
 import { Identify } from '@libp2p/identify'
 
 type Libp2pType = Libp2p<{ pubsub: PubSub; identify: Identify }>
@@ -20,7 +19,12 @@ interface WrapperProps {
 // This is needed to prevent libp2p from instantiating more than once
 let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
-  const [libp2p, setLibp2p] = useState<Libp2pType>()
+  const [libp2p, setLibp2p] = useState<
+    Libp2p<{
+      pubsub: PubSub
+      identify: Identify
+    }>
+  | undefined>(undefined)
 
   useEffect(() => {
     const init = async () => {
@@ -29,10 +33,19 @@ export function AppWrapper({ children }: WrapperProps) {
         loaded = true
         const libp2p = await startLibp2p()
 
+        if (!libp2p) {
+          throw new Error('failed to start libp2p')
+        }
         // @ts-ignore
         window.libp2p = libp2p
 
-        setLibp2p(libp2p)
+        setLibp2p(
+          libp2p as Libp2p<{
+            pubsub: PubSub
+            identify: Identify
+          }>
+        )
+
       } catch (e) {
         console.error('failed to start libp2p', e)
       }

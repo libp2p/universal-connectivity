@@ -1,22 +1,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLibp2pContext } from './ctx';
 import type { Message } from '@libp2p/interface'
-import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL, PUBSUB_PEER_DISCOVERY } from '@/lib/constants'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC, DIRECT_MESSAGE_PROTOCOL, FILE_EXCHANGE_PROTOCOL, PUBSUB_PEER_DISCOVERY } from '@/lib/constants'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { pipe } from 'it-pipe'
 import map from 'it-map'
 import * as lp from 'it-length-prefixed'
-import { forComponent } from '@/lib/logger';
+import { forComponent } from '@/lib/logger'
+import { DirectMessageEvent, directMessageEvent, dmClientVersion, handleInboundDirectMessage, mimeTextPlain } from '@/components/direct-message'
+import { dm } from '@/lib/protobuf/direct-message'
+import { pbStream } from 'it-protobuf-stream'
 
 const log = forComponent('chat-context')
 
-
 export interface ChatMessage {
-	msg: string
-	fileObjectUrl: string | undefined
-	from: 'me' | 'other'
-	peerId: string
+  msgId: string
+  msg: string
+  fileObjectUrl: string | undefined
+  from: 'me' | 'other'
+  peerId: string
+  read: boolean
+  receivedAt: number
 }
 
 export interface ChatFile {
@@ -25,26 +30,52 @@ export interface ChatFile {
   sender: string
 }
 
-export interface ChatContextInterface {
-	messageHistory: ChatMessage[];
-	setMessageHistory: (messageHistory: ChatMessage[]) => void;
-  files: Map<string, ChatFile>
-  setFiles: (files: Map<string, ChatFile>) => void;
+export interface DirectMessages {
+  [peerId: string]: ChatMessage[]
 }
+
+type Chatroom = string
+
+export interface ChatContextInterface {
+  messageHistory: ChatMessage[]
+  setMessageHistory: (
+    messageHistory:
+      | ChatMessage[]
+      | ((prevMessages: ChatMessage[]) => ChatMessage[]),
+  ) => void
+  directMessages: DirectMessages
+  setDirectMessages: (
+    directMessages:
+      | DirectMessages
+      | ((prevMessages: DirectMessages) => DirectMessages),
+  ) => void
+  roomId: Chatroom
+  setRoomId: (chatRoom: Chatroom) => void
+  files: Map<string, ChatFile>
+  setFiles: (files: Map<string, ChatFile>) => void
+}
+
 export const chatContext = createContext<ChatContextInterface>({
-	messageHistory: [],
+  messageHistory: [],
+  setMessageHistory: () => {},
+  directMessages: {},
+  setDirectMessages: () => {},
+  roomId: '',
+  setRoomId: () => {},
   files: new Map<string, ChatFile>(),
-	setMessageHistory: () => { },
-  setFiles: () => { }
+  setFiles: () => {},
 })
 
 export const useChatContext = () => {
-	return useContext(chatContext);
-};
+  return useContext(chatContext)
+}
 
 export const ChatProvider = ({ children }: any) => {
-	const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([]);
+  const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([]);
+  const [directMessages, setDirectMessages] = useState<DirectMessages>({})
   const [files, setFiles] = useState<Map<string, ChatFile>>(new Map<string, ChatFile>());
+  const [roomId, setRoomId] = useState<Chatroom>('')
+
   const { libp2p } = useLibp2pContext()
 
   const messageCB = (evt: CustomEvent<Message>) => {
@@ -69,13 +100,32 @@ export const ChatProvider = ({ children }: any) => {
     }
   }
 
+  const messageCBWrapper = (evt: Event) => {
+    const customEvent = evt as CustomEvent<Message>
+
+      ; (async () => messageCB(customEvent))()
+  }
+
+
+
   const chatMessageCB = (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
     const msg = new TextDecoder().decode(data)
     log(`${topic}: ${msg}`)
 
     // Append signed messages, otherwise discard
     if (evt.detail.type === 'signed') {
-      setMessageHistory([...messageHistory, { msg, fileObjectUrl: undefined, from: 'other', peerId: evt.detail.from.toString() }])
+      setMessageHistory([
+        ...messageHistory,
+        {
+          msgId: crypto.randomUUID(),
+          msg,
+          fileObjectUrl: undefined,
+          from: 'other',
+          peerId: evt.detail.from.toString(),
+          read: false,
+          receivedAt: Date.now(),
+        },
+      ])
     }
   }
 
@@ -104,10 +154,13 @@ export const ChatProvider = ({ children }: any) => {
             log(`chat file message request_response: response received: size:${body.length}`)
 
             const msg: ChatMessage = {
+              msgId: crypto.randomUUID(),
               msg: newChatFileMessage(fileId, body),
               fileObjectUrl: window.URL.createObjectURL(new Blob([body])),
               from: 'other',
               peerId: senderPeerId.toString(),
+              read: false,
+              receivedAt: Date.now(),
             }
             setMessageHistory([...messageHistory, msg])
           }
@@ -119,7 +172,46 @@ export const ChatProvider = ({ children }: any) => {
   }
 
   useEffect(() => {
-    libp2p.services.pubsub.addEventListener('message', messageCB)
+    const handleDirectMessage = async (evt: CustomEvent<DirectMessageEvent>) => {
+      const peerId = evt.detail.connection.remotePeer.toString()
+
+      if (evt.detail.type !== mimeTextPlain) {
+        throw new Error(`unexpected message type: ${evt.detail.type}`)
+      }
+
+      const message: ChatMessage = {
+        msg: evt.detail.content,
+        from: 'other',
+        read: false,
+        msgId: crypto.randomUUID(),
+        fileObjectUrl: undefined,
+        peerId: peerId,
+        receivedAt: Date.now(),
+      }
+
+      const updatedMessages = directMessages[peerId]
+        ? [...directMessages[peerId], message]
+        : [message]
+
+      setDirectMessages({
+        ...directMessages,
+        [peerId]: updatedMessages,
+      })
+    }
+
+    const eventListener = (evt: Event) => {
+      handleDirectMessage(evt as CustomEvent<DirectMessageEvent>);
+    };
+
+    document.addEventListener(directMessageEvent, eventListener)
+
+    return () => {
+      document.removeEventListener(directMessageEvent, eventListener)
+    }
+  }, [directMessages, setDirectMessages])
+
+  useEffect(() => {
+    libp2p.services.pubsub.addEventListener('message', messageCBWrapper)
 
     libp2p.handle(FILE_EXCHANGE_PROTOCOL, ({ stream }) => {
       pipe(
@@ -138,17 +230,39 @@ export const ChatProvider = ({ children }: any) => {
     return () => {
       (async () => {
         // Cleanup handlers 👇
-        libp2p.services.pubsub.removeEventListener('message', messageCB)
+        libp2p.services.pubsub.removeEventListener('message', messageCBWrapper)
         await libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
       })();
     }
   })
 
+  useEffect(() => {
+    libp2p.handle(DIRECT_MESSAGE_PROTOCOL, async ({ stream, connection }) => {
+      handleInboundDirectMessage(stream, connection)
+    })
 
-	return (
-		<chatContext.Provider value={{ messageHistory, setMessageHistory, files, setFiles }}>
-			{children}
-		</chatContext.Provider>
-	);
+    return () => {
+      (async () => {
+        // Cleanup handlers 👇
+        await libp2p.unhandle(DIRECT_MESSAGE_PROTOCOL)
+      })();
+    }
+  })
+
+
+  return (
+    <chatContext.Provider
+      value={{
+        roomId,
+        setRoomId,
+        messageHistory,
+        setMessageHistory,
+        directMessages,
+        setDirectMessages,
+        files,
+        setFiles
+      }}>
+      {children}
+    </chatContext.Provider>
+  );
 };
-
