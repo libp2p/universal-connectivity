@@ -184,10 +184,7 @@ async fn main() -> Result<()> {
                     }
 
                     if message.topic == peer_discovery_hash {
-                        info!(
-                            "Received peer discovery from {:?}",
-                            message.source
-                        );
+                        info!("Received peer discovery from {:?}", message.source);
                         continue;
                     }
 
