@@ -5,7 +5,7 @@ import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
 import { PubSub } from '@libp2p/interface'
 import { Identify } from '@libp2p/identify'
-import { Booting } from '@/components/Booting'
+import { Booting } from '@/components/booting'
 
 type Libp2pType = Libp2p<{ pubsub: PubSub; identify: Identify }>
 
