@@ -19,12 +19,7 @@ interface WrapperProps {
 // This is needed to prevent libp2p from instantiating more than once
 let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
-  const [libp2p, setLibp2p] = useState<
-    Libp2p<{
-      pubsub: PubSub
-      identify: Identify
-    }>
-  | undefined>(undefined)
+  const [libp2p, setLibp2p] = useState<Libp2pType | undefined>(undefined)
 
   useEffect(() => {
     const init = async () => {
