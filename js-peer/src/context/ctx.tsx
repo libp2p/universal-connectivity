@@ -1,11 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-
-import type { Libp2p, PubSub } from '@libp2p/interface'
 import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
-import { Identify } from '@libp2p/identify'
+import type { Libp2p, PubSub } from '@libp2p/interface'
+import type { Identify } from '@libp2p/identify'
+import type { DirectMessage } from '@/lib/direct-message'
+import type { DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
 
-type Libp2pType = Libp2p<{ pubsub: PubSub; identify: Identify }>
+export type Libp2pType = Libp2p<{
+  pubsub: PubSub;
+  identify: Identify;
+  directMessage: DirectMessage;
+  delegatedRouting: DelegatedRoutingV1HttpApiClient;
+}>
 
 export const libp2pContext = createContext<{ libp2p: Libp2pType }>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
@@ -34,12 +40,7 @@ export function AppWrapper({ children }: WrapperProps) {
         // @ts-ignore
         window.libp2p = libp2p
 
-        setLibp2p(
-          libp2p as Libp2p<{
-            pubsub: PubSub
-            identify: Identify
-          }>
-        )
+        setLibp2p(libp2p as Libp2pType)
 
       } catch (e) {
         console.error('failed to start libp2p', e)

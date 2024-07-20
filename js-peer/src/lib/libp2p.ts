@@ -3,7 +3,7 @@ import {
   DelegatedRoutingV1HttpApiClient,
 } from '@helia/delegated-routing-v1-http-api-client'
 import { createLibp2p } from 'libp2p'
-import { Identify, identify } from '@libp2p/identify'
+import { identify } from '@libp2p/identify'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
@@ -20,11 +20,12 @@ import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, PUBSUB_PEER_DISCOVERY } from './constants'
 import first from 'it-first'
 import { forComponent } from './logger'
-import { PubSub } from '@libp2p/interface-pubsub'
+import { directMessage } from './direct-message'
+import type { Libp2pType } from '@/context/ctx'
 
 const log = forComponent('libp2p')
 
-export async function startLibp2p(): Promise<Libp2p<{ pubsub: PubSub; identify: Identify }>> {
+export async function startLibp2p(): Promise<Libp2pType> {
   // enable verbose logging in browser console to view debug logs
   localStorage.debug = 'ui*,libp2p*,-libp2p:connection-manager*,-*:trace'
 
@@ -33,7 +34,7 @@ export async function startLibp2p(): Promise<Libp2p<{ pubsub: PubSub; identify: 
   const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
   log('starting libp2p with bootstrapAddrs %o and relayListenAddrs: %o', bootstrapAddrs, relayListenAddrs)
 
-  let libp2p: Libp2p<{ pubsub: PubSub; identify: Identify }>
+  let libp2p: Libp2pType
 
   libp2p = await createLibp2p({
     addresses: {
@@ -96,6 +97,8 @@ export async function startLibp2p(): Promise<Libp2p<{ pubsub: PubSub; identify: 
       // This relies on the public delegated routing endpoint https://docs.ipfs.tech/concepts/public-utilities/#delegated-routing
       delegatedRouting: () => delegatedClient,
       identify: identify(),
+      // Custom protocol for direct messaging
+      directMessage: directMessage(),
     },
   })
 
