@@ -66,7 +66,7 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
     await this.components.registrar.handle(
       DIRECT_MESSAGE_PROTOCOL,
       async ({ stream, connection }) => {
-        this.receive(stream, connection)
+        await this.receive(stream, connection)
       },
     )
   }
