@@ -62,13 +62,22 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
     })
   }
 
+  async afterStart(): Promise<void> {
+    await this.components.registrar.handle(
+      DIRECT_MESSAGE_PROTOCOL,
+      async ({ stream, connection }) => {
+        this.receive(stream, connection)
+      },
+    )
+  }
+
   stop(): void {
     if (this.topologyId != null) {
       this.components.registrar.unregister(this.topologyId)
     }
   }
 
-  private handleConnect(peerId: PeerId, conn: Connection): void {
+  private handleConnect(peerId: PeerId): void {
     this.dmPeers.add(peerId.toString())
   }
 
@@ -127,8 +136,8 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
         throw new Error(ERRORS.STATUS_NOT_OK(res.status))
       }
     } catch (e: any) {
-        stream?.abort(e)
-        throw e
+      stream?.abort(e)
+      throw e
     } finally {
       await stream?.close()
     }

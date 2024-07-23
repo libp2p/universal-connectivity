@@ -232,20 +232,6 @@ export const ChatProvider = ({ children }: any) => {
     }
   })
 
-  useEffect(() => {
-    libp2p.handle(DIRECT_MESSAGE_PROTOCOL, async ({ stream, connection }) => {
-      libp2p.services.directMessage.receive(stream, connection)
-    })
-
-    return () => {
-      (async () => {
-        // Cleanup handlers 👇
-        await libp2p.unhandle(DIRECT_MESSAGE_PROTOCOL)
-      })();
-    }
-  })
-
-
   return (
     <chatContext.Provider
       value={{
