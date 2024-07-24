@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLibp2pContext } from './ctx';
 import type { Message } from '@libp2p/interface'
-import { CHAT_FILE_TOPIC, CHAT_TOPIC, DIRECT_MESSAGE_PROTOCOL, FILE_EXCHANGE_PROTOCOL, MIME_TEXT_PLAIN, PUBSUB_PEER_DISCOVERY } from '@/lib/constants'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL, MIME_TEXT_PLAIN, PUBSUB_PEER_DISCOVERY } from '@/lib/constants'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { pipe } from 'it-pipe'
@@ -98,12 +98,6 @@ export const ChatProvider = ({ children }: any) => {
     }
   }
 
-  const messageCBWrapper = (evt: Event) => {
-    const customEvent = evt as CustomEvent<Message>
-
-      ; (async () => messageCB(customEvent))()
-  }
-
   const chatMessageCB = (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
     const msg = new TextDecoder().decode(data)
     log(`${topic}: ${msg}`)
@@ -168,7 +162,7 @@ export const ChatProvider = ({ children }: any) => {
   }
 
   useEffect(() => {
-    const handleDirectMessage = async (evt: CustomEvent<DirectMessageEvent>) => {
+    const handleDirectMessage = (evt: CustomEvent<DirectMessageEvent>) => {
       const peerId = evt.detail.connection.remotePeer.toString()
 
       if (evt.detail.type !== MIME_TEXT_PLAIN) {
@@ -195,19 +189,15 @@ export const ChatProvider = ({ children }: any) => {
       })
     }
 
-    const eventListener = (evt: Event) => {
-      handleDirectMessage(evt as CustomEvent<DirectMessageEvent>);
-    };
-
-    libp2p.services.directMessage.addEventListener(directMessageEvent, eventListener)
+    libp2p.services.directMessage.addEventListener(directMessageEvent, handleDirectMessage)
 
     return () => {
-      libp2p.services.directMessage.removeEventListener(directMessageEvent, eventListener)
+      libp2p.services.directMessage.removeEventListener(directMessageEvent, handleDirectMessage)
     }
   }, [directMessages, libp2p.services.directMessage, setDirectMessages])
 
   useEffect(() => {
-    libp2p.services.pubsub.addEventListener('message', messageCBWrapper)
+    libp2p.services.pubsub.addEventListener('message', messageCB)
 
     libp2p.handle(FILE_EXCHANGE_PROTOCOL, ({ stream }) => {
       pipe(
@@ -226,7 +216,7 @@ export const ChatProvider = ({ children }: any) => {
     return () => {
       (async () => {
         // Cleanup handlers 👇
-        libp2p.services.pubsub.removeEventListener('message', messageCBWrapper)
+        libp2p.services.pubsub.removeEventListener('message', messageCB)
         await libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
       })();
     }
