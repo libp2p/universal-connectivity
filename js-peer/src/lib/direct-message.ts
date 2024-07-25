@@ -97,6 +97,7 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
     let stream: Stream | undefined
 
     try {
+      // openConnection will return the current open connection if it already exists, or create a new one
       const conn = await this.components.connectionManager.openConnection(peerId, { signal: AbortSignal.timeout(5000) })
       if (!conn) {
         throw new Error(ERRORS.NO_CONNECTION)
@@ -120,9 +121,11 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
         },
       }
 
-      await datastream.write(req, dm.DirectMessageRequest)
+      const signal = AbortSignal.timeout(5000)
 
-      const res = await datastream.read(dm.DirectMessageResponse)
+      await datastream.write(req, dm.DirectMessageRequest, { signal })
+
+      const res = await datastream.read(dm.DirectMessageResponse, { signal })
 
       if (!res) {
         throw new Error(ERRORS.NO_RESPONSE)
@@ -139,7 +142,14 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
       stream?.abort(e)
       throw e
     } finally {
-      await stream?.close()
+      try {
+        await stream?.close({
+          signal: AbortSignal.timeout(5000)
+        })
+      } catch (err: any) {
+        stream?.abort(err)
+        throw err
+      }
     }
 
     return true
