@@ -46,7 +46,6 @@ export default function ChatContainer() {
         msgId: crypto.randomUUID(),
         msg: input,
         fileObjectUrl: undefined,
-        from: 'me',
         peerId: myPeerId,
         read: true,
         receivedAt: Date.now(),
@@ -72,7 +71,6 @@ export default function ChatContainer() {
         msgId: crypto.randomUUID(),
         msg: input,
         fileObjectUrl: undefined,
-        from: 'me',
         peerId: myPeerId,
         read: true,
         receivedAt: Date.now(),
@@ -121,7 +119,6 @@ export default function ChatContainer() {
         msgId: crypto.randomUUID(),
         msg: newChatFileMessage(file.id, file.body),
         fileObjectUrl: window.URL.createObjectURL(new Blob([file.body])),
-        from: 'me',
         peerId: myPeerId,
         read: true,
         receivedAt: Date.now(),
@@ -239,7 +236,6 @@ export default function ChatContainer() {
                       msgId,
                       msg,
                       fileObjectUrl,
-                      from,
                       peerId,
                       read,
                       receivedAt,
@@ -249,7 +245,6 @@ export default function ChatContainer() {
                         dm={roomId !== ''}
                         msg={msg}
                         fileObjectUrl={fileObjectUrl}
-                        from={from}
                         peerId={peerId}
                         read={read}
                         msgId={msgId}

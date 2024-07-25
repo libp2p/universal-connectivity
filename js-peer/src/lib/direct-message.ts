@@ -160,12 +160,12 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
 
     await datastream.write(res, dm.DirectMessageResponse)
 
-    const detail = {
+    const detail: DirectMessageEvent = {
       content: req.content,
       type: req.type,
       stream: stream,
       connection: connection
-    } as DirectMessageEvent
+    }
 
     this.dispatchEvent(
       new CustomEvent(directMessageEvent, { detail })

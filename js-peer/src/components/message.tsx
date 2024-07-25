@@ -8,24 +8,11 @@ interface Props extends ChatMessage {
   dm: boolean
 }
 
-export const Message = ({
-  msgId,
-  msg,
-  fileObjectUrl,
-  from,
-  peerId,
-  read,
-  dm,
-  receivedAt,
-}: Props) => {
-  const {
-    messageHistory,
-    setMessageHistory,
-    directMessages,
-    setDirectMessages,
-  } = useChatContext()
-
+export const Message = ({ msgId, msg, fileObjectUrl, peerId, read, dm, receivedAt }: Props) => {
+  const { messageHistory, setMessageHistory, directMessages, setDirectMessages } = useChatContext()
   const { libp2p } = useLibp2pContext()
+
+  const isSelf: boolean = libp2p.peerId.equals(peerId)
 
   useEffect(() => {
     if (read) {
@@ -49,22 +36,19 @@ export const Message = ({
         setMessageHistory((prev) => updateMessages(prev))
       }
     }
-  }, [
-    dm,
-    directMessages,
-    messageHistory,
-    msgId,
-    peerId,
-    read,
-    setDirectMessages,
-    setMessageHistory,
-  ])
+  }, [dm, directMessages, messageHistory, msgId, peerId, read, setDirectMessages, setMessageHistory])
 
   const timestamp = new Date(receivedAt).toLocaleString()
 
   return (
-    <li className={`flex ${from === 'me' && 'flex-row-reverse'} gap-2`}>
-      <Peer key={peerId} peer={peerIdFromString(peerId)} self={from === 'me'} withName={false} withUnread={false} />
+    <li className={`flex ${isSelf && 'flex-row-reverse'} gap-2`}>
+      <Peer
+        key={peerId}
+        peer={peerIdFromString(peerId)}
+        self={isSelf}
+        withName={false}
+        withUnread={false}
+      />
       <div className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow bg-white">
         <div className="block">
           {msg}
@@ -80,9 +64,7 @@ export const Message = ({
           <p className="italic text-gray-400">
             {peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null}{' '}
           </p>
-        <span className="relative pl-1 text-xs text-slate-400">
-          {timestamp}
-        </span>
+          <span className="relative pl-1 text-xs text-slate-400">{timestamp}</span>
         </div>
       </div>
     </li>
