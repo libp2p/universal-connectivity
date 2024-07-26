@@ -2,7 +2,7 @@ import { useLibp2pContext } from '@/context/ctx'
 import { CHAT_TOPIC } from '@/lib/constants'
 import React, { useEffect, useState } from 'react'
 import type { PeerId } from '@libp2p/interface'
-import { Peer } from './peer'
+import { PeerWrapper } from './peer'
 
 export function ChatPeerList() {
   const { libp2p } = useLibp2pContext()
@@ -24,12 +24,12 @@ export function ChatPeerList() {
     <div className="border-l border-gray-300 lg:col-span-1">
       <h2 className="my-2 mb-2 ml-2 text-lg text-gray-600">Peers</h2>
       <div className="overflow-auto h-[32rem]">
-        <div className="flex items-center px-3 py-2 text-sm transition duration-150 ease-in-out border-b border-gray-300 focus:outline-none">
-          {<Peer peer={libp2p.peerId} self withName={true} withUnread={false} />}
+        <div className="px-3 py-2 border-b border-gray-300 focus:outline-none">
+          {<PeerWrapper peer={libp2p.peerId} self withName={true} withUnread={false} />}
         </div>
         {subscribers.map((p) => (
-          <div key={p.toString()} className="flex items-center px-3 py-2 text-sm transition duration-150 ease-in-out border-b border-gray-300 focus:outline-none">
-            <Peer peer={p} self={false} withName={true} withUnread={true} />
+          <div key={p.toString()} className="px-3 py-2 border-b border-gray-300 focus:outline-none">
+            <PeerWrapper peer={p} self={false} withName={true} withUnread={true} />
           </div>
         ))}
       </div>

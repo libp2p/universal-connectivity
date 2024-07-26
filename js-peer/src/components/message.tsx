@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useLibp2pContext } from '@/context/ctx'
 import { ChatMessage, useChatContext } from '@/context/chat-ctx'
-import { Peer } from './peer'
+import { PeerWrapper } from './peer'
 import { peerIdFromString } from '@libp2p/peer-id'
 
 interface Props extends ChatMessage {
@@ -42,7 +42,7 @@ export const Message = ({ msgId, msg, fileObjectUrl, peerId, read, dm, receivedA
 
   return (
     <li className={`flex ${isSelf && 'flex-row-reverse'} gap-2`}>
-      <Peer
+      <PeerWrapper
         key={peerId}
         peer={peerIdFromString(peerId)}
         self={isSelf}
@@ -62,7 +62,7 @@ export const Message = ({ msgId, msg, fileObjectUrl, peerId, read, dm, receivedA
             )}
           </p>
           <p className="italic text-gray-400">
-            {peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null}{' '}
+            {!dm && peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null}{' '}
           </p>
           <span className="relative pl-1 text-xs text-slate-400">{timestamp}</span>
         </div>
