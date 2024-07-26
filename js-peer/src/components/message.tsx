@@ -3,42 +3,20 @@ import { useLibp2pContext } from '@/context/ctx'
 import { ChatMessage, useChatContext } from '@/context/chat-ctx'
 import { PeerWrapper } from './peer'
 import { peerIdFromString } from '@libp2p/peer-id'
+import { useMarkAsRead } from '@/hooks/useMarkAsRead'
 
 interface Props extends ChatMessage {
   dm: boolean
 }
 
 export const Message = ({ msgId, msg, fileObjectUrl, peerId, read, dm, receivedAt }: Props) => {
-  const { messageHistory, setMessageHistory, directMessages, setDirectMessages } = useChatContext()
   const { libp2p } = useLibp2pContext()
 
   const isSelf: boolean = libp2p.peerId.equals(peerId)
 
-  useEffect(() => {
-    if (read) {
-      return
-    }
-
-    const updateMessages = (messages: ChatMessage[]) =>
-      messages.map((m) => (m.msgId === msgId ? { ...m, read: true } : m))
-
-    if (dm) {
-      const updatedDMs = directMessages[peerId]
-
-      if (updatedDMs.some((m) => m.msgId === msgId && !m.read)) {
-        setDirectMessages((prev) => ({
-          ...prev,
-          [peerId]: updateMessages(updatedDMs),
-        }))
-      }
-    } else {
-      if (messageHistory.some((m) => m.msgId === msgId && !m.read)) {
-        setMessageHistory((prev) => updateMessages(prev))
-      }
-    }
-  }, [dm, directMessages, messageHistory, msgId, peerId, read, setDirectMessages, setMessageHistory])
-
   const timestamp = new Date(receivedAt).toLocaleString()
+
+  useMarkAsRead(msgId, peerId, read, dm)
 
   return (
     <li className={`flex ${isSelf && 'flex-row-reverse'} gap-2`}>
