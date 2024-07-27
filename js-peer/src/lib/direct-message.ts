@@ -155,31 +155,47 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
     return true
   }
 
-  async receive(stream: Stream, connection: Connection) {
-    const datastream = pbStream(stream)
+  async receive(stream: Stream, connection: Connection): Promise<void> {
+    try {
+      const datastream = pbStream(stream)
 
-    const req = await datastream.read(dm.DirectMessageRequest)
+      const signal = AbortSignal.timeout(5000)
 
-    const res: dm.DirectMessageResponse = {
-      status: dm.Status.OK,
-      metadata: {
-        clientVersion: dmClientVersion,
-        timestamp: BigInt(Date.now()),
-      },
+      const req = await datastream.read(dm.DirectMessageRequest, { signal })
+
+      const res: dm.DirectMessageResponse = {
+        status: dm.Status.OK,
+        metadata: {
+          clientVersion: dmClientVersion,
+          timestamp: BigInt(Date.now()),
+        },
+      }
+
+      await datastream.write(res, dm.DirectMessageResponse, { signal })
+
+      const detail: DirectMessageEvent = {
+        content: req.content,
+        type: req.type,
+        stream: stream,
+        connection: connection
+      }
+
+      this.dispatchEvent(
+        new CustomEvent(directMessageEvent, { detail })
+      )
+    } catch (e: any) {
+      stream?.abort(e)
+      throw e
+    } finally {
+      try {
+        await stream?.close({
+          signal: AbortSignal.timeout(5000),
+        })
+      } catch (err: any) {
+        stream?.abort(err)
+        throw err
+      }
     }
-
-    await datastream.write(res, dm.DirectMessageResponse)
-
-    const detail: DirectMessageEvent = {
-      content: req.content,
-      type: req.type,
-      stream: stream,
-      connection: connection
-    }
-
-    this.dispatchEvent(
-      new CustomEvent(directMessageEvent, { detail })
-    )
   }
 }
 
