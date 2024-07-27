@@ -1,16 +1,32 @@
+import React, { useEffect } from 'react'
 import { useLibp2pContext } from '@/context/ctx'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ChatMessage } from '@/context/chat-ctx'
-import Blockies from 'react-18-blockies'
+import { ChatMessage, useChatContext } from '@/context/chat-ctx'
+import { PeerWrapper } from './peer'
+import { peerIdFromString } from '@libp2p/peer-id'
+import { useMarkAsRead } from '@/hooks/useMarkAsRead'
 
-interface MessageProps extends ChatMessage {}
+interface Props extends ChatMessage {
+  dm: boolean
+}
 
-export function MessageComponent({ msg, fileObjectUrl, from, peerId }: MessageProps) {
+export const Message = ({ msgId, msg, fileObjectUrl, peerId, read, dm, receivedAt }: Props) => {
   const { libp2p } = useLibp2pContext()
 
+  const isSelf: boolean = libp2p.peerId.equals(peerId)
+
+  const timestamp = new Date(receivedAt).toLocaleString()
+
+  useMarkAsRead(msgId, peerId, read, dm)
+
   return (
-    <li className={`flex ${from === 'me' && 'flex-row-reverse'} gap-2`}>
-      <Blockies seed={peerId} size={15} scale={3} className="rounded max-h-10 max-w-10" />
+    <li className={`flex ${isSelf && 'flex-row-reverse'} gap-2`}>
+      <PeerWrapper
+        key={peerId}
+        peer={peerIdFromString(peerId)}
+        self={isSelf}
+        withName={false}
+        withUnread={false}
+      />
       <div className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow bg-white">
         <div className="block">
           {msg}
@@ -24,8 +40,9 @@ export function MessageComponent({ msg, fileObjectUrl, from, peerId }: MessagePr
             )}
           </p>
           <p className="italic text-gray-400">
-            {peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null}{' '}
+            {!dm && peerId !== libp2p.peerId.toString() ? `from: ${peerId.slice(-4)}` : null}{' '}
           </p>
+          <span className="relative pl-1 text-xs text-slate-400">{timestamp}</span>
         </div>
       </div>
     </li>
