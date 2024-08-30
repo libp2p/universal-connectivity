@@ -172,8 +172,7 @@ func main() {
 		libp2p.Transport(webtransport.New),
 		libp2p.Transport(webrtc.New),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport"),
-		// 👇 webrtc-direct cannot listen on the same port as QUIC or WebTransport
-		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9096/webrtc-direct"),
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/webrtc-direct"),
 		libp2p.ListenAddrStrings("/ip6/::/udp/9095/quic-v1", "/ip6/::/udp/9095/quic-v1/webtransport"),
 	)
 
