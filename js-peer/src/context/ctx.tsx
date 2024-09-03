@@ -5,6 +5,7 @@ import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
 import { PubSub } from '@libp2p/interface'
 import { Identify } from '@libp2p/identify'
+import { Booting } from '@/components/booting'
 
 type Libp2pType = Libp2p<{ pubsub: PubSub; identify: Identify }>
 
@@ -21,6 +22,7 @@ interface WrapperProps {
 let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
   const [libp2p, setLibp2p] = useState<Libp2pType>()
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const init = async () => {
@@ -35,6 +37,7 @@ export function AppWrapper({ children }: WrapperProps) {
         setLibp2p(libp2p)
       } catch (e) {
         console.error('failed to start libp2p', e)
+        setError(`failed to start libp2p ${e}`)
       }
     }
 
@@ -43,9 +46,7 @@ export function AppWrapper({ children }: WrapperProps) {
 
   if (!libp2p) {
     return (
-      <div>
-        <h2>Initializing libp2p peer...</h2>
-      </div>
+        <Booting error={error} />
     )
   }
 
