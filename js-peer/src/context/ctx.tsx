@@ -5,6 +5,7 @@ import type { Libp2p, PubSub } from '@libp2p/interface'
 import type { Identify } from '@libp2p/identify'
 import type { DirectMessage } from '@/lib/direct-message'
 import type { DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
+import { Booting } from '@/components/booting'
 
 export type Libp2pType = Libp2p<{
   pubsub: PubSub;
@@ -26,6 +27,7 @@ interface WrapperProps {
 let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
   const [libp2p, setLibp2p] = useState<Libp2pType | undefined>(undefined)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const init = async () => {
@@ -44,6 +46,7 @@ export function AppWrapper({ children }: WrapperProps) {
 
       } catch (e) {
         console.error('failed to start libp2p', e)
+        setError(`failed to start libp2p ${e}`)
       }
     }
 
@@ -52,9 +55,7 @@ export function AppWrapper({ children }: WrapperProps) {
 
   if (!libp2p) {
     return (
-      <div>
-        <h2>Initializing libp2p peer...</h2>
-      </div>
+        <Booting error={error} />
     )
   }
 
