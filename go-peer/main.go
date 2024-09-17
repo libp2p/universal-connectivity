@@ -22,6 +22,7 @@ import (
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	libp2pwebrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
@@ -169,8 +170,17 @@ func main() {
 		libp2p.Identity(privk),
 		libp2p.Transport(quicTransport.NewTransport),
 		libp2p.Transport(webtransport.New),
-		libp2p.ListenAddrStrings("/ip4/0.0.0.0/udp/9095/quic-v1", "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport"),
-		libp2p.ListenAddrStrings("/ip6/::/udp/9095/quic-v1", "/ip6/::/udp/9095/quic-v1/webtransport"),
+		libp2p.Transport(libp2pwebrtc.New),
+		libp2p.ListenAddrStrings(
+			"/ip4/0.0.0.0/udp/9095/quic-v1",
+			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/9096/webrtc-direct",
+		),
+		libp2p.ListenAddrStrings(
+			"/ip6/::/udp/9095/quic-v1",
+			"/ip6/::/udp/9095/quic-v1/webtransport",
+			"/ip6/::/udp/9096/webrtc-direct",
+		),
 	)
 
 	// create a new libp2p Host with lots of options
