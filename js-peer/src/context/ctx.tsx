@@ -1,13 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-
-import type { Libp2p } from 'libp2p'
 import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
-import { PubSub } from '@libp2p/interface'
-import { Identify } from '@libp2p/identify'
+import type { Libp2p, PubSub } from '@libp2p/interface'
+import type { Identify } from '@libp2p/identify'
+import type { DirectMessage } from '@/lib/direct-message'
+import type { DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
 import { Booting } from '@/components/booting'
 
-type Libp2pType = Libp2p<{ pubsub: PubSub; identify: Identify }>
+export type Libp2pType = Libp2p<{
+  pubsub: PubSub;
+  identify: Identify;
+  directMessage: DirectMessage;
+  delegatedRouting: DelegatedRoutingV1HttpApiClient;
+}>
 
 export const libp2pContext = createContext<{ libp2p: Libp2pType }>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
@@ -21,7 +26,7 @@ interface WrapperProps {
 // This is needed to prevent libp2p from instantiating more than once
 let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
-  const [libp2p, setLibp2p] = useState<Libp2pType>()
+  const [libp2p, setLibp2p] = useState<Libp2pType | undefined>(undefined)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -31,10 +36,14 @@ export function AppWrapper({ children }: WrapperProps) {
         loaded = true
         const libp2p = await startLibp2p()
 
+        if (!libp2p) {
+          throw new Error('failed to start libp2p')
+        }
         // @ts-ignore
         window.libp2p = libp2p
 
-        setLibp2p(libp2p)
+        setLibp2p(libp2p as Libp2pType)
+
       } catch (e) {
         console.error('failed to start libp2p', e)
         setError(`failed to start libp2p ${e}`)

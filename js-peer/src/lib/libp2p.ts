@@ -2,7 +2,7 @@ import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
 } from '@helia/delegated-routing-v1-http-api-client'
-import { createLibp2p, Libp2p } from 'libp2p'
+import { createLibp2p } from 'libp2p'
 import { identify } from '@libp2p/identify'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { noise } from '@chainsafe/libp2p-noise'
@@ -10,7 +10,7 @@ import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
 import { Multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
-import type { Connection, Message, SignedMessage, PeerId } from '@libp2p/interface'
+import type { Connection, Message, SignedMessage, PeerId, Libp2p } from '@libp2p/interface'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
@@ -20,18 +20,23 @@ import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, PUBSUB_PEER_DISCOVERY } from './constants'
 import first from 'it-first'
 import { forComponent } from './logger'
+import { directMessage } from './direct-message'
+import type { Libp2pType } from '@/context/ctx'
 
 const log = forComponent('libp2p')
 
-export async function startLibp2p() {
+export async function startLibp2p(): Promise<Libp2pType> {
   // enable verbose logging in browser console to view debug logs
   localStorage.debug = 'ui*,libp2p*,-libp2p:connection-manager*,-*:trace'
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
+
   const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
   log('starting libp2p with bootstrapAddrs %o and relayListenAddrs: %o', bootstrapAddrs, relayListenAddrs)
 
-  const libp2p = await createLibp2p({
+  let libp2p: Libp2pType
+
+  libp2p = await createLibp2p({
     addresses: {
       listen: [
         // 👇 Listen for webRTC connection
@@ -92,8 +97,14 @@ export async function startLibp2p() {
       // This relies on the public delegated routing endpoint https://docs.ipfs.tech/concepts/public-utilities/#delegated-routing
       delegatedRouting: () => delegatedClient,
       identify: identify(),
+      // Custom protocol for direct messaging
+      directMessage: directMessage(),
     },
   })
+
+  if (!libp2p) {
+    throw new Error('Failed to create libp2p node')
+  }
 
   libp2p.services.pubsub.subscribe(CHAT_TOPIC)
   libp2p.services.pubsub.subscribe(CHAT_FILE_TOPIC)
