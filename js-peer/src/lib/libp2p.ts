@@ -17,6 +17,7 @@ import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
+import { ping } from '@libp2p/ping'
 import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, PUBSUB_PEER_DISCOVERY } from './constants'
 import first from 'it-first'
 import { forComponent } from './logger'
@@ -68,9 +69,8 @@ export async function startLibp2p(): Promise<Libp2pType> {
     ],
     connectionManager: {
       maxConnections: 30,
-      minConnections: 5,
     },
-    connectionEncryption: [noise()],
+    connectionEncrypters: [noise()],
     streamMuxers: [yamux()],
     connectionGater: {
       denyDialMultiaddr: async () => false,
@@ -99,6 +99,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
       identify: identify(),
       // Custom protocol for direct messaging
       directMessage: directMessage(),
+      ping: ping(),
     },
   })
 
@@ -114,18 +115,17 @@ export async function startLibp2p(): Promise<Libp2pType> {
     log(`changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`)
   })
 
-  // 👇 explicitly dialling peers discovered via pubsub is only necessary
-  //  when minConnections is set to 0 and the connection manager doesn't autodial
-  // libp2p.addEventListener('peer:discovery', (event) => {
-  //   const { multiaddrs, id } = event.detail
+  // 👇 explicitly dial peers discovered via pubsub
+  libp2p.addEventListener('peer:discovery', (event) => {
+    const { multiaddrs, id } = event.detail
 
-  //   if (libp2p.getConnections(id)?.length > 0) {
-  //     log(`Already connected to peer %s. Will not try dialling`, id)
-  //     return
-  //   }
+    if (libp2p.getConnections(id)?.length > 0) {
+      log(`Already connected to peer %s. Will not try dialling`, id)
+      return
+    }
 
-  //   dialWebRTCMaddrs(libp2p, multiaddrs)
-  // })
+    dialWebRTCMaddrs(libp2p, multiaddrs)
+  })
 
   return libp2p
 }

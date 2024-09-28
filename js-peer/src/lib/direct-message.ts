@@ -1,4 +1,4 @@
-import { PeerId, Stream, Connection, CustomEvent, TypedEventEmitter, Startable } from '@libp2p/interface'
+import { PeerId, Stream, Connection, TypedEventEmitter, Startable } from '@libp2p/interface'
 import { DIRECT_MESSAGE_PROTOCOL, MIME_TEXT_PLAIN } from '@/lib/constants'
 import { serviceCapabilities, serviceDependencies } from '@libp2p/interface'
 import type { ConnectionManager } from '@libp2p/interface-internal'
