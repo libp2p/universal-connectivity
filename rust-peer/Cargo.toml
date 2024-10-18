@@ -9,7 +9,7 @@ edition = "2021"
 anyhow = "1.0"
 clap = { version = "4.1.11", features = ["derive", "env"] }
 env_logger = "0.10.0"
-futures = "0.3.27"
+futures = "0.3.30"
 futures-timer = "3.0.2"
 libp2p = { version = "0.52.3", features = ["identify", "ping", "tokio", "gossipsub", "macros", "relay", "kad", "rsa", "ed25519", "quic", "request-response", "dns", "memory-connection-limits"] }
 libp2p-webrtc = { version = "0.6.0-alpha", features = ["tokio", "pem"] }
