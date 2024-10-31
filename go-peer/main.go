@@ -182,7 +182,6 @@ func main() {
 		panic(err)
 	}
 
-	_, err = relayv2.New(h)
 	resources := relayv2.DefaultResources()
 	resources.MaxReservations = 256
 	_, err = relayv2.New(h, relayv2.WithResources(resources))
