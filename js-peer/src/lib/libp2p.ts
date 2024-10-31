@@ -55,9 +55,6 @@ export async function startLibp2p(): Promise<Libp2pType> {
       // 👇 Required to create circuit relay reservations in order to hole punch browser-to-browser WebRTC connections
       circuitRelayTransport(),
     ],
-    connectionManager: {
-      maxConnections: 30,
-    },
     connectionEncrypters: [noise()],
     streamMuxers: [yamux()],
     connectionGater: {
