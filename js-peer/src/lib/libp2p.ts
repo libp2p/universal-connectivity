@@ -20,7 +20,7 @@ import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { ping } from '@libp2p/ping'
 import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, PUBSUB_PEER_DISCOVERY } from './constants'
 import first from 'it-first'
-import { forComponent } from './logger'
+import { forComponent, enable } from './logger'
 import { directMessage } from './direct-message'
 import type { Libp2pType } from '@/context/ctx'
 
@@ -28,7 +28,7 @@ const log = forComponent('libp2p')
 
 export async function startLibp2p(): Promise<Libp2pType> {
   // enable verbose logging in browser console to view debug logs
-  localStorage.debug = 'ui*,libp2p*,-libp2p:connection-manager*,-*:trace'
+  enable('ui*,libp2p*,-libp2p:connection-manager*,-*:trace')
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
 
@@ -37,35 +37,23 @@ export async function startLibp2p(): Promise<Libp2pType> {
 
   let libp2p: Libp2pType
 
+
   libp2p = await createLibp2p({
     addresses: {
       listen: [
         // 👇 Listen for webRTC connection
         '/webrtc',
-        // Use the app's bootstrap nodes as circuit relays
-        ...relayListenAddrs,
+        ...relayListenAddrs
       ],
     },
     transports: [
       webTransport(),
       webSockets(),
-      webRTC({
-        rtcConfiguration: {
-          iceServers: [
-            {
-              // STUN servers help the browser discover its own public IPs
-              urls: ['stun:stun.l.google.com:19302', 'stun:global.stun.twilio.com:3478'],
-            },
-          ],
-        },
-      }),
+      webRTC(),
       // 👇 Required to estalbish connections with peers supporting WebRTC-direct, e.g. the Rust-peer
       webRTCDirect(),
       // 👇 Required to create circuit relay reservations in order to hole punch browser-to-browser WebRTC connections
-      circuitRelayTransport({
-        // When set to >0, this will look up the magic CID in order to discover circuit relay peers it can create a reservation with
-        discoverRelays: 0,
-      }),
+      circuitRelayTransport(),
     ],
     connectionManager: {
       maxConnections: 30,
@@ -82,7 +70,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
         listenOnly: false,
       }),
       bootstrap({
-        // The app-specific go and rust bootstrappers use WebTransport and WebRTC-direct which have ephemeral multiadrrs
+        // The app-specific bootstrappers that use WebTransport and WebRTC-direct and have ephemeral multiadrrs
         // that are resolved above using the delegated routing API
         list: bootstrapAddrs,
       }),
