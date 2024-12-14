@@ -197,7 +197,7 @@ func main() {
 
 	gossipSubOpts := []pubsub.Option{}
 
-	if *bootstrapper == true {
+	if *bootstrapper {
 		gossipSubOpts = append(gossipSubOpts, pubsub.WithPeerExchange(true))
 
 		pubsub.WithFloodPublish(true)
