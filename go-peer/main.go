@@ -123,6 +123,7 @@ func main() {
 	keyPath := flag.String("tls-key-path", "", "path to the tls key file (for websockets")
 	useLogger := flag.Bool("logger", false, "write logs to file")
 	headless := flag.Bool("headless", false, "run without chat UI")
+	bootstrapper := flag.Bool("bootstrapper", false, "run as a bootstrap peer")
 
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
@@ -194,8 +195,22 @@ func main() {
 		panic(err)
 	}
 
+	gossipSubOpts := []pubsub.Option{}
+
+	if *bootstrapper == true {
+		gossipSubOpts = append(gossipSubOpts, pubsub.WithPeerExchange(true))
+
+		pubsub.WithFloodPublish(true)
+
+		// See https://github.com/libp2p/specs/blob/master/pubsub/gossipsub/gossipsub-v1.1.md#recommendations-for-network-operators
+		pubsub.GossipSubD = 0
+		pubsub.GossipSubDlo = 0
+		pubsub.GossipSubDhi = 0
+		pubsub.GossipSubDout = 0
+	}
+
 	// create a new PubSub service using the GossipSub router
-	ps, err := pubsub.NewGossipSub(ctx, h)
+	ps, err := pubsub.NewGossipSub(ctx, h, gossipSubOpts...)
 	if err != nil {
 		panic(err)
 	}
