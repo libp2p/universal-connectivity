@@ -125,6 +125,9 @@ func main() {
 	headless := flag.Bool("headless", false, "run without chat UI")
 	bootstrapper := flag.Bool("bootstrapper", false, "run as a bootstrap peer")
 
+	var directPeers stringSlice
+	flag.Var(&directPeers, "directpeer", "reciprocal gossipsub bootstrap peers (can be used multiple times)")
+
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
 
@@ -199,6 +202,11 @@ func main() {
 
 	if *bootstrapper {
 		gossipSubOpts = append(gossipSubOpts, pubsub.WithPeerExchange(true))
+
+		if len(directPeers) > 0 {
+			dp := peerStrSliceToAddrInfoSlice(directPeers)
+			gossipSubOpts = append(gossipSubOpts, pubsub.WithDirectPeers(dp))
+		}
 
 		pubsub.WithFloodPublish(true)
 
@@ -279,6 +287,24 @@ func main() {
 			printErr("error running text UI: %s", err)
 		}
 	}
+}
+
+func peerStrSliceToAddrInfoSlice(peerStrs []string) []peer.AddrInfo {
+	var addrInfos []peer.AddrInfo
+
+	if len(peerStrs) > 0 {
+		for _, addr := range peerStrs {
+			peerInfo, err := peer.AddrInfoFromString(addr)
+			if err != nil {
+				LogMsgf("Failed to parse multiaddr: %s", err.Error())
+				continue
+			}
+
+			addrInfos = append(addrInfos, *peerInfo)
+		}
+	}
+
+	return addrInfos
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
