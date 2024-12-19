@@ -100,17 +100,17 @@ export async function startLibp2p(): Promise<Libp2pType> {
     log(`changed multiaddrs: peer ${peer.id.toString()} multiaddrs: ${multiaddrs}`)
   })
 
-  // // 👇 explicitly dial peers discovered via pubsub
-  // libp2p.addEventListener('peer:discovery', (event) => {
-  //   const { multiaddrs, id } = event.detail
-  //
-  //   if (libp2p.getConnections(id)?.length > 0) {
-  //     log(`Already connected to peer %s. Will not try dialling`, id)
-  //     return
-  //   }
-  //
-  //   dialWebRTCMaddrs(libp2p, multiaddrs)
-  // })
+  // 👇 explicitly dial peers discovered via pubsub
+  libp2p.addEventListener('peer:discovery', (event) => {
+    const { multiaddrs, id } = event.detail
+
+    if (libp2p.getConnections(id)?.length > 0) {
+      log(`Already connected to peer %s. Will not try dialling`, id)
+      return
+    }
+
+    dialWebRTCMaddrs(libp2p, multiaddrs)
+  })
 
   return libp2p
 }
