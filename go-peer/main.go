@@ -206,6 +206,7 @@ func main() {
 		if len(directPeers) > 0 {
 			dp := peerStrSliceToAddrInfoSlice(directPeers)
 			gossipSubOpts = append(gossipSubOpts, pubsub.WithDirectPeers(dp))
+			pubsub.WithDirectConnectTicks(60) // attempt to reconnect to direct peers every 60 ticks (seconds)
 		}
 
 		pubsub.WithFloodPublish(true)
