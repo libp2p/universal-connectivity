@@ -69,7 +69,14 @@ export async function startLibp2p(): Promise<Libp2pType> {
       bootstrap({
         // The app-specific bootstrappers that use WebTransport and WebRTC-direct and have ephemeral multiadrrs
         // that are resolved above using the delegated routing API
-        list: bootstrapAddrs,
+        list: [
+          `${bootstrapAddrs}`,
+          "/ip6/2604:1380:4642:6600::3/udp/9095/quic-v1/webtransport/certhash/uEiAFmismVS4uGGz9zF8yLRC10wtqPciwcBD1BuAch4sX3A/certhash/uEiBEvL3ao0UqfMSkj2JCOvjG_4BEiiEnjFr7qmDPALgG5Q",
+        "/ip6/2604:1380:4642:6600::3/udp/9095/quic-v1",
+        "/ip4/147.28.186.157/udp/9095/webrtc-direct/certhash/uEiC6yY8kGKhTw9gr74_eDLWf08PNyAiSKgs22JHc_rD8qw",
+        "/ip4/147.28.186.157/udp/9095/quic-v1",
+        "/ip4/147.28.186.157/udp/9095/quic-v1/webtransport/certhash/uEiAFmismVS4uGGz9zF8yLRC10wtqPciwcBD1BuAch4sX3A/certhash/uEiBEvL3ao0UqfMSkj2JCOvjG_4BEiiEnjFr7qmDPALgG5Q"
+        ],
       }),
     ],
     services: {
