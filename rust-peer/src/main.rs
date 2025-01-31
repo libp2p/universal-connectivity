@@ -361,7 +361,6 @@ fn create_swarm(
         })?
         .with_dns()?
         .with_behaviour(|_key| behaviour)?
-        //.with_connection_timeout(Duration::from_secs(60))
         .build())
 }
 
