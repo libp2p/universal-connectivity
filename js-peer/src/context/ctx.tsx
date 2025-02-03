@@ -1,23 +1,35 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { startLibp2p } from '../lib/libp2p'
+import { findPeerById, startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
-import type { Libp2p, PubSub } from '@libp2p/interface'
+import type { Libp2p, PeerInfo, PubSub } from '@libp2p/interface'
 import type { Identify } from '@libp2p/identify'
 import type { DirectMessage } from '@/lib/direct-message'
 import type { DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
 import { Booting } from '@/components/booting'
+import { KadDHT } from '@libp2p/kad-dht'
 
 export type Libp2pType = Libp2p<{
   pubsub: PubSub;
   identify: Identify;
   directMessage: DirectMessage;
   delegatedRouting: DelegatedRoutingV1HttpApiClient;
+  dht: KadDHT;
 }>
 
-export const libp2pContext = createContext<{ libp2p: Libp2pType }>({
-  // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
+// export const libp2pContext = createContext<{ libp2p: Libp2pType }>({
+//   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
+//   libp2p: undefined,
+// })
+
+export const libp2pContext = createContext<{ 
+  libp2p: Libp2pType;
+  findPeerById: (peerId: string) => Promise<PeerInfo | null>;
+}>({
+  // @ts-ignore
   libp2p: undefined,
+  findPeerById: async () => null,
 })
+
 
 interface WrapperProps {
   children?: ReactNode
@@ -59,8 +71,14 @@ export function AppWrapper({ children }: WrapperProps) {
     )
   }
 
+  const handleFindPeer = async (peerId: string) => {
+    if (!libp2p) return null
+    return await findPeerById(libp2p)(peerId)
+  }
+
+
   return (
-    <libp2pContext.Provider value={{ libp2p }}>
+    <libp2pContext.Provider value={{ libp2p, findPeerById: handleFindPeer as (peerId: string) => Promise<PeerInfo | null> }}>
       <ChatProvider>{children}</ChatProvider>
     </libp2pContext.Provider>
   )
