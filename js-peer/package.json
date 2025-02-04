@@ -2,10 +2,10 @@
   "name": "universal-connectivity-browser",
   "scripts": {
     "dev": "next dev --experimental-https",
-    "build": "prettier . --check && next build",
+    "build": "next build",
     "start": "next start",
     "format": "prettier --write src",
-    "lint": "next lint",
+    "lint": "prettier . --check && next lint",
     "tsc": "tsc --noEmit -p tsconfig.json",
     "protobuf": "protons src/lib/protobuf/*.proto"
   },
