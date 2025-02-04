@@ -4,7 +4,6 @@ import { Badge } from './badge'
 import { useCallback } from 'react'
 import { useLibp2pContext } from '@/context/ctx'
 
-
 interface PeerListProps {
   connections: Connection[]
 }
@@ -31,12 +30,12 @@ function Peer({ connection }: PeerProps) {
     },
     [libp2p],
   )
-  
+
   let ipAddr
   try {
     const nodeAddr = connection.remoteAddr?.nodeAddress()
     ipAddr = `${nodeAddr.address}:${nodeAddr.port} |`
-  } catch(e) {
+  } catch (e) {
     ipAddr = null
   }
 
@@ -52,9 +51,7 @@ function Peer({ connection }: PeerProps) {
         <div className="min-w-0 flex-auto">
           <p className="text-sm font-semibold leading-6 text-gray-900">
             {connection.remotePeer.toString()}{' '}
-            {connection.remoteAddr.protoNames().includes('webrtc') ? (
-              <Badge color="indigo">P2P Browser</Badge>
-            ) : null}
+            {connection.remoteAddr.protoNames().includes('webrtc') ? <Badge color="indigo">P2P Browser</Badge> : null}
           </p>
           <p className="mt-1 truncate text-xs leading-5 text-gray-500">
             {ipAddr} {connection.remoteAddr.protoNames().join(', ')}
@@ -65,9 +62,9 @@ function Peer({ connection }: PeerProps) {
       {/* <div className="flex gap-x-2 items-center "> */}
       <div className="hidden  sm:flex sm:flex-col sm:items-end">
         <button
-        onClick={() => handleDisconnectPeer(connection.remotePeer)}
-         className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex flex-row"
-         >
+          onClick={() => handleDisconnectPeer(connection.remotePeer)}
+          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex flex-row"
+        >
           <XCircleIcon className="w-6 h-6" />
           <span className="pl-1">Disconnect</span>
         </button>

@@ -8,10 +8,10 @@ import type { DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v
 import { Booting } from '@/components/booting'
 
 export type Libp2pType = Libp2p<{
-  pubsub: PubSub;
-  identify: Identify;
-  directMessage: DirectMessage;
-  delegatedRouting: DelegatedRoutingV1HttpApiClient;
+  pubsub: PubSub
+  identify: Identify
+  directMessage: DirectMessage
+  delegatedRouting: DelegatedRoutingV1HttpApiClient
 }>
 
 export const libp2pContext = createContext<{ libp2p: Libp2pType }>({
@@ -43,7 +43,6 @@ export function AppWrapper({ children }: WrapperProps) {
         window.libp2p = libp2p
 
         setLibp2p(libp2p as Libp2pType)
-
       } catch (e) {
         console.error('failed to start libp2p', e)
         setError(`failed to start libp2p ${e}`)
@@ -54,9 +53,7 @@ export function AppWrapper({ children }: WrapperProps) {
   }, [])
 
   if (!libp2p) {
-    return (
-        <Booting error={error} />
-    )
+    return <Booting error={error} />
   }
 
   return (
