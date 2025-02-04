@@ -3,8 +3,12 @@ name: js-peer build
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'js-peer/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'js-peer/**'
 
 jobs:
   build-frontend:
