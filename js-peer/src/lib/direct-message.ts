@@ -15,7 +15,7 @@ const ERRORS = {
   NO_STREAM: 'Failed to create stream',
   NO_RESPONSE: 'No response received',
   NO_METADATA: 'No metadata in response',
-  STATUS_NOT_OK: (status: dm.Status) => `Received status: ${status}, expected OK`
+  STATUS_NOT_OK: (status: dm.Status) => `Received status: ${status}, expected OK`,
 }
 
 export interface DirectMessageEvent {
@@ -26,7 +26,7 @@ export interface DirectMessageEvent {
 }
 
 export interface DirectMessageEvents {
-  'message': CustomEvent<DirectMessageEvent>
+  message: CustomEvent<DirectMessageEvent>
 }
 
 interface DirectMessageComponents {
@@ -42,9 +42,7 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
     '@libp2p/stream-multiplexing',
   ]
 
-  readonly [serviceCapabilities]: string[] = [
-    '@universal-connectivity/direct-message'
-  ]
+  readonly [serviceCapabilities]: string[] = ['@universal-connectivity/direct-message']
 
   private topologyId?: string
   private readonly components: DirectMessageComponents
@@ -58,17 +56,14 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
   async start(): Promise<void> {
     this.topologyId = await this.components.registrar.register(DIRECT_MESSAGE_PROTOCOL, {
       onConnect: this.handleConnect.bind(this),
-      onDisconnect: this.handleDisconnect.bind(this)
+      onDisconnect: this.handleDisconnect.bind(this),
     })
   }
 
   async afterStart(): Promise<void> {
-    await this.components.registrar.handle(
-      DIRECT_MESSAGE_PROTOCOL,
-      async ({ stream, connection }) => {
-        await this.receive(stream, connection)
-      },
-    )
+    await this.components.registrar.handle(DIRECT_MESSAGE_PROTOCOL, async ({ stream, connection }) => {
+      await this.receive(stream, connection)
+    })
   }
 
   stop(): void {
@@ -104,7 +99,9 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
       }
 
       // Single protocols can skip full negotiation
-      const stream = await conn.newStream(DIRECT_MESSAGE_PROTOCOL, { negotiateFully: false })
+      const stream = await conn.newStream(DIRECT_MESSAGE_PROTOCOL, {
+        negotiateFully: false,
+      })
 
       if (!stream) {
         throw new Error(ERRORS.NO_STREAM)
@@ -144,7 +141,7 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
     } finally {
       try {
         await stream?.close({
-          signal: AbortSignal.timeout(5000)
+          signal: AbortSignal.timeout(5000),
         })
       } catch (err: any) {
         stream?.abort(err)
@@ -177,12 +174,10 @@ export class DirectMessage extends TypedEventEmitter<DirectMessageEvents> implem
         content: req.content,
         type: req.type,
         stream: stream,
-        connection: connection
+        connection: connection,
       }
 
-      this.dispatchEvent(
-        new CustomEvent(directMessageEvent, { detail })
-      )
+      this.dispatchEvent(new CustomEvent(directMessageEvent, { detail }))
     } catch (e: any) {
       stream?.abort(e)
       throw e

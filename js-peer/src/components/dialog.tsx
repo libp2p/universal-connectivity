@@ -30,7 +30,10 @@ export function Dialog({
   className,
   children,
   ...props
-}: { size?: keyof typeof sizes; children: React.ReactNode } & HeadlessDialogProps) {
+}: {
+  size?: keyof typeof sizes
+  children: React.ReactNode
+} & HeadlessDialogProps) {
   return (
     <HeadlessTransition appear show={open} {...props}>
       <HeadlessDialog onClose={onClose}>
@@ -59,7 +62,7 @@ export function Dialog({
                 className={clsx(
                   className,
                   sizes[size],
-                  'row-start-2 w-full min-w-0 rounded-t-3xl bg-white p-[--gutter] shadow-lg ring-1 ring-zinc-950/10 [--gutter:theme(spacing.8)] sm:mb-auto sm:rounded-2xl dark:bg-zinc-900 dark:ring-white/10 forced-colors:outline'
+                  'row-start-2 w-full min-w-0 rounded-t-3xl bg-white p-[--gutter] shadow-lg ring-1 ring-zinc-950/10 [--gutter:theme(spacing.8)] sm:mb-auto sm:rounded-2xl dark:bg-zinc-900 dark:ring-white/10 forced-colors:outline',
                 )}
               >
                 {children}
@@ -95,7 +98,7 @@ export function DialogActions({ className, ...props }: React.ComponentPropsWitho
       {...props}
       className={clsx(
         className,
-        'mt-8 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto'
+        'mt-8 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto',
       )}
     />
   )

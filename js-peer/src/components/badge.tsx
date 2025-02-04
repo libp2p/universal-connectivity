@@ -43,7 +43,7 @@ export function Badge({ color = 'zinc', className, ...props }: BadgeProps & Reac
       className={clsx(
         className,
         'inline-flex items-center gap-x-1.5 rounded-md px-1.5 py-0.5 text-sm/5 font-medium sm:text-xs/5 forced-colors:outline',
-        colors[color]
+        colors[color],
       )}
     />
   )
@@ -56,11 +56,11 @@ export const BadgeButton = React.forwardRef(function BadgeButton(
     children,
     ...props
   }: BadgeProps & { children: React.ReactNode } & (HeadlessButtonProps | React.ComponentPropsWithoutRef<typeof Link>),
-  ref: React.ForwardedRef<HTMLElement>
+  ref: React.ForwardedRef<HTMLElement>,
 ) {
   let classes = clsx(
     className,
-    'group relative inline-flex rounded-md focus:outline-none data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-offset-2 data-[focus]:outline-blue-500'
+    'group relative inline-flex rounded-md focus:outline-none data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-offset-2 data-[focus]:outline-blue-500',
   )
 
   return 'href' in props ? (
