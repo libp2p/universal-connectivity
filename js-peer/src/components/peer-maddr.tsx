@@ -3,6 +3,7 @@ import { multiaddr } from '@multiformats/multiaddr'
 import { useState } from 'react'
 import Spinner from '@/components/spinner'
 import { connectToMultiaddr } from '../lib/libp2p'
+import type { PeerId } from '@libp2p/interface'
 
 interface PeerMaddrListProps {
   resolvedMultiaddrs: string[]
@@ -33,55 +34,134 @@ interface MaddrItemProps {
 
 function MaddrItem({ addr, setResolvedMultiaddrs, setError }: MaddrItemProps) {
   const [loading, setLoading] = useState(false)
-  const { libp2p } = useLibp2pContext()
+  const { libp2p, connections, setConnections } = useLibp2pContext()
+
+  // Helper to check if address is external
+  const isExternalAddress = (addr: string) => {
+    return !addr.includes('127.0.0.1') && !addr.includes('localhost') && !addr.includes('::1')
+  }
+
+  // Helper to validate transport stack
+  const hasValidTransportStack = (addr: string) => {
+    const hasWebTransport = addr.includes('webtransport') && addr.includes('certhash')
+    const hasWebRTC = addr.includes('webrtc') && addr.includes('certhash')
+    const hasQuic = addr.includes('quic-v1')
+
+    return hasWebTransport || (hasWebRTC && hasQuic)
+  }
 
   const handleConnect = async () => {
+    setLoading(true)
     try {
-      setLoading(true)
-      const maddr = multiaddr(addr.toString())
-      await connectToMultiaddr(libp2p)(maddr)
+      const maddr = multiaddr(addr)
+      const peerId = maddr.getPeerId()
+
+      if (!peerId) {
+        throw new Error('No peer ID found in multiaddr')
+      }
+
+      if (!isExternalAddress(addr)) {
+        console.warn('⚠️ Attempting to connect to local address, this might fail:', addr)
+      }
+
+      if (!hasValidTransportStack(addr)) {
+        throw new Error('Invalid or incomplete transport protocol stack')
+      }
+      console.log(`🔌 Attempting to connect to ${addr}`)
+
+      // Ensure the multiaddr includes the peer ID
+      const fullAddr = addr.includes(`/p2p/${peerId}`) ? addr : `${addr}/p2p/${peerId}`
+      const fullMaddr = multiaddr(fullAddr)
+      // Attempt connection
+      await connectToMultiaddr(libp2p)(fullMaddr)
+      console.log('✅ Successfully connected via:', fullAddr)
+
+      if (connections && !connections.find((conn) => conn.remotePeer.toString() === peerId)) {
+        const newConnections = [...connections]
+        const peerConnections = libp2p.getConnections(peerId as unknown as PeerId)
+        if (peerConnections.length > 0) {
+          newConnections.push(peerConnections[0])
+          setConnections(newConnections)
+        }
+      }
+
+      setError('✅ Successfully connected to peer!')
       setResolvedMultiaddrs([])
-    } catch (e: any) {
-      setError(e?.message ?? 'Error connecting')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      console.error('❌ Connection failed:', errorMessage)
+      setError(`❌ Failed to connect: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
   }
 
+  // Only show valid multiaddrs that can be used for connection
+  const isValidMultiaddr = () => {
+    try {
+      const maddr = multiaddr(addr)
+      return !!maddr.getPeerId() // Only show if it has a peer ID
+    } catch {
+      return false
+    }
+  }
+
+  // Only show promising connection candidates
+  const getConnectionPriority = () => {
+    if (!isValidMultiaddr()) return 0
+    let priority = 1
+    if (isExternalAddress(addr)) priority += 2
+    if (addr.includes('webtransport')) priority += 3
+    if (addr.includes('webrtc')) priority += 2
+    return priority
+  }
+
+  // Don't render if priority is 0 (invalid)
+  if (getConnectionPriority() === 0) {
+    return null
+  }
+
   return (
-    // <li className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all">
-    //   <span className="w-full sm:w-3/4 text-sm md:text-base font-medium text-gray-700 break-all">
-    //     {addr}
-    //   </span>
-    //   <button
-    //     onClick={handleConnect}
-    //     className="w-full sm:w-auto whitespace-nowrap px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-md font-medium transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-    //     disabled={loading}
-    //   >
-    //     {loading && <Spinner />}
-    //     <span>{loading ? 'Connecting...' : 'Connect to Peer'}</span>
-    //   </button>
-    // </li>
     <li className="flex justify-between gap-x-6 py-3">
       <div className="flex min-w-0 gap-x-4">
-        <div className="mt-1 flex items-center gap-x-1.5">
-          <div className="flex-none rounded-full bg-emerald-500/20 p-1">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          </div>
-        </div>
         <div className="min-w-0 flex-auto">
-          <p className="text-sm font-semibold leading-6 text-gray-900 break-all">{addr}</p>
+          <p className="text-sm font-semibold leading-6 text-gray-900 break-all">
+            <span
+              className={`inline-block px-2 py-1 text-xs rounded-full mr-2 
+            ${
+              addr.includes('webtransport')
+                ? 'bg-green-100 text-green-800'
+                : addr.includes('webrtc')
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-purple-100 text-purple-800'
+            }`}
+            >
+              {addr.includes('webtransport') ? '🌐 WebTransport' : addr.includes('webrtc') ? '🔌 WebRTC' : '🚀 QUIC'}
+              {!isExternalAddress(addr) && ' (Local)'}
+            </span>
+            {addr}
+          </p>
         </div>
       </div>
 
       <div className="hidden sm:flex sm:flex-col sm:items-end">
         <button
           onClick={handleConnect}
-          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex flex-row items-center disabled:opacity-70 disabled:cursor-not-allowed"
+          className={`font-bold py-2 px-4 rounded flex flex-row items-center
+          ${
+            loading
+              ? 'bg-gray-400 cursor-not-allowed'
+              : getConnectionPriority() > 3
+                ? 'bg-green-600 hover:bg-green-700'
+                : 'bg-yellow-600 hover:bg-yellow-700'
+          } 
+          text-white disabled:opacity-70`}
           disabled={loading}
         >
           {loading && <Spinner />}
-          <span className="pl-1">{loading ? 'Connecting...' : 'Connect'}</span>
+          <span className="pl-1">
+            {loading ? 'Connecting...' : getConnectionPriority() > 3 ? 'Connect (Recommended)' : 'Connect'}
+          </span>
         </button>
       </div>
     </li>

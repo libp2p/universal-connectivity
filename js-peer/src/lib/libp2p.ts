@@ -8,7 +8,7 @@ import { peerIdFromString } from '@libp2p/peer-id'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
-import { Multiaddr } from '@multiformats/multiaddr'
+import { multiaddr, Multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
 import type { Connection, Message, SignedMessage, PeerId, Libp2p } from '@libp2p/interface'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
@@ -133,8 +133,17 @@ export const findPeerById = (libp2p: Libp2pType) => async (peerIdStr: string) =>
     // Step 1: Check if the peer is already known in the peerstore
     const knownPeer = await libp2p.peerStore.get(peerId)
     if (knownPeer?.addresses?.length) {
-      console.log(`✅ Found peer in peerStore with ${knownPeer.addresses.length} addresses`)
-      return knownPeer
+      // Ensure each multiaddr includes the peer ID
+      const validAddresses = knownPeer.addresses.map((addr) => {
+        const maddr = addr.multiaddr
+        const addrStr = maddr.toString()
+        return {
+          multiaddr: addrStr.includes(`/p2p/${peerIdStr}`) ? maddr : multiaddr(`${addrStr}/p2p/${peerIdStr}`),
+          isCertified: addr.isCertified,
+        }
+      })
+      console.log(`✅ Found peer in peerStore with ${validAddresses.length} valid addresses`)
+      return { ...knownPeer, addresses: validAddresses }
     }
 
     // Step 2: Use peerRouting to find the peer
@@ -144,17 +153,22 @@ export const findPeerById = (libp2p: Libp2pType) => async (peerIdStr: string) =>
     })
 
     if (peer?.multiaddrs.length > 0) {
+      // Ensure each multiaddr includes the peer ID
+      const validAddresses = peer.multiaddrs.map((maddr) => ({
+        multiaddr: maddr.toString().includes(`/p2p/${peerIdStr}`)
+          ? maddr
+          : multiaddr(`${maddr.toString()}/p2p/${peerIdStr}`),
+        isCertified: true,
+      }))
+
       const peerInfo = {
         id: peer.id,
-        addresses: peer.multiaddrs.map((maddr) => ({
-          multiaddr: maddr,
-          isCertified: true,
-        })),
+        addresses: validAddresses,
         protocols: [],
         metadata: new Map(),
         tags: new Map(),
       }
-      console.log(`✅ Found peer via routing with ${peerInfo.addresses.length} addresses`)
+      console.log(`✅ Found peer via routing with ${peerInfo.addresses.length} valid addresses`)
       return peerInfo
     }
 
