@@ -37,13 +37,12 @@ export async function startLibp2p(): Promise<Libp2pType> {
 
   let libp2p: Libp2pType
 
-
   libp2p = await createLibp2p({
     addresses: {
       listen: [
         // 👇 Listen for webRTC connection
         '/webrtc',
-        ...relayListenAddrs
+        ...relayListenAddrs,
       ],
     },
     transports: [
@@ -210,12 +209,8 @@ export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiadd
 
 // Function which resolves PeerIDs of rust/go bootstrap nodes to multiaddrs dialable from the browser
 // Returns both the dialable multiaddrs in addition to the relay
-async function getBootstrapMultiaddrs(
-  client: DelegatedRoutingV1HttpApiClient,
-): Promise<BootstrapsMultiaddrs> {
-  const peers = await Promise.all(
-    BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId)))),
-  )
+async function getBootstrapMultiaddrs(client: DelegatedRoutingV1HttpApiClient): Promise<BootstrapsMultiaddrs> {
+  const peers = await Promise.all(BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId)))))
 
   const bootstrapAddrs = []
   const relayListenAddrs = []
@@ -223,10 +218,7 @@ async function getBootstrapMultiaddrs(
     if (p && p.Addrs.length > 0) {
       for (const maddr of p.Addrs) {
         const protos = maddr.protoNames()
-        if (
-          (protos.includes('webtransport') || protos.includes('webrtc-direct')) &&
-          protos.includes('certhash')
-        ) {
+        if ((protos.includes('webtransport') || protos.includes('webrtc-direct')) && protos.includes('certhash')) {
           if (maddr.nodeAddress().address === '127.0.0.1') continue // skip loopback
           bootstrapAddrs.push(maddr.toString())
           relayListenAddrs.push(getRelayListenAddr(maddr, p.ID))

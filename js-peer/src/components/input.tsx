@@ -7,7 +7,9 @@ type DateType = (typeof dateTypes)[number]
 
 export const Input = forwardRef<
   HTMLInputElement,
-  { type?: 'email' | 'number' | 'password' | 'search' | 'tel' | 'text' | 'url' | DateType } & HeadlessInputProps
+  {
+    type?: 'email' | 'number' | 'password' | 'search' | 'tel' | 'text' | 'url' | DateType
+  } & HeadlessInputProps
 >(function Input({ className, ...props }, ref) {
   return (
     <span

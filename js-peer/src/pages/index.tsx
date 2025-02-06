@@ -137,7 +137,11 @@ export default function Home() {
               </ul>
               Addresses:
               <ul className="my-2 space-y-2 break-all">
-                {listenAddresses.map((ma, index) => (<li className='text-xs text-gray-700' key={`ma-${index}`}>{ma.toString()}</li>))}
+                {listenAddresses.map((ma, index) => (
+                  <li className="text-xs text-gray-700" key={`ma-${index}`}>
+                    {ma.toString()}
+                  </li>
+                ))}
               </ul>
               <div className="my-6 w-1/2">
                 <label htmlFor="peer-id" className="block text-sm font-medium leading-6 text-gray-900">

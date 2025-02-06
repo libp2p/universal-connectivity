@@ -27,10 +27,7 @@ export default function ChatContainer() {
   const sendPublicMessage = useCallback(async () => {
     if (input === '') return
 
-    log(
-      `peers in gossip for topic ${CHAT_TOPIC}:`,
-      libp2p.services.pubsub.getSubscribers(CHAT_TOPIC).toString(),
-    )
+    log(`peers in gossip for topic ${CHAT_TOPIC}:`, libp2p.services.pubsub.getSubscribers(CHAT_TOPIC).toString())
 
     const res = await libp2p.services.pubsub.publish(CHAT_TOPIC, new TextEncoder().encode(input))
     log(
@@ -76,9 +73,7 @@ export default function ChatContainer() {
         receivedAt: Date.now(),
       }
 
-      const updatedMessages = directMessages[roomId]
-        ? [...directMessages[roomId], newMessage]
-        : [newMessage]
+      const updatedMessages = directMessages[roomId] ? [...directMessages[roomId], newMessage] : [newMessage]
 
       setDirectMessages({
         ...directMessages,
@@ -90,7 +85,6 @@ export default function ChatContainer() {
       log(e)
     }
   }, [libp2p, setDirectMessages, directMessages, roomId, input])
-
 
   const sendFile = useCallback(
     async (readerEvent: ProgressEvent<FileReader>) => {
@@ -198,31 +192,20 @@ export default function ChatContainer() {
     }
   }, [roomId, directMessages, messageHistory])
 
-
   return (
     <div className="container mx-auto">
       <div className="min-w-full border rounded lg:grid lg:grid-cols-6">
         <div className="lg:col-span-5 lg:block">
           <div className="w-full">
             <div className="relative flex items-center p-3 border-b border-gray-300">
-              {roomId === PUBLIC_CHAT_ROOM_ID &&
+              {roomId === PUBLIC_CHAT_ROOM_ID && (
                 <span className="block ml-2 font-bold text-gray-600">{PUBLIC_CHAT_ROOM_NAME}</span>
-              }
+              )}
               {roomId !== PUBLIC_CHAT_ROOM_ID && (
                 <>
-                  <Blockies
-                    seed={roomId}
-                    size={8}
-                    scale={3}
-                    className="rounded mr-2 max-h-10 max-w-10"
-                  />
-                  <span className={`text-gray-500 flex`}>
-                    {roomId.toString().slice(-7)}
-                  </span>
-                  <button
-                    onClick={handleBackToPublic}
-                    className="text-gray-500 flex ml-auto"
-                  >
+                  <Blockies seed={roomId} size={8} scale={3} className="rounded mr-2 max-h-10 max-w-10" />
+                  <span className={`text-gray-500 flex`}>{roomId.toString().slice(-7)}</span>
+                  <button onClick={handleBackToPublic} className="text-gray-500 flex ml-auto">
                     <ChevronLeftIcon className="w-6 h-6 text-gray-500" />
                     <span>Back to Public Chat</span>
                   </button>
@@ -231,27 +214,18 @@ export default function ChatContainer() {
             </div>
             <div className="relative w-full flex flex-col-reverse p-3 overflow-y-auto h-[40rem] bg-gray-100">
               <ul className="space-y-2">
-                  {messages.map(
-                    ({
-                      msgId,
-                      msg,
-                      fileObjectUrl,
-                      peerId,
-                      read,
-                      receivedAt,
-                    }: ChatMessage) => (
-                      <Message
-                        key={msgId}
-                        dm={roomId !== ''}
-                        msg={msg}
-                        fileObjectUrl={fileObjectUrl}
-                        peerId={peerId}
-                        read={read}
-                        msgId={msgId}
-                        receivedAt={receivedAt}
-                      />
-                    ),
-                  )}
+                {messages.map(({ msgId, msg, fileObjectUrl, peerId, read, receivedAt }: ChatMessage) => (
+                  <Message
+                    key={msgId}
+                    dm={roomId !== ''}
+                    msg={msg}
+                    fileObjectUrl={fileObjectUrl}
+                    peerId={peerId}
+                    read={read}
+                    msgId={msgId}
+                    receivedAt={receivedAt}
+                  />
+                ))}
               </ul>
             </div>
 
@@ -266,7 +240,7 @@ export default function ChatContainer() {
               <button
                 onClick={handleFileSend}
                 disabled={roomId !== PUBLIC_CHAT_ROOM_ID}
-                title={roomId === PUBLIC_CHAT_ROOM_ID ? 'Upload file' : "Unsupported in DM's" }
+                title={roomId === PUBLIC_CHAT_ROOM_ID ? 'Upload file' : "Unsupported in DM's"}
                 className={roomId === PUBLIC_CHAT_ROOM_ID ? '' : 'cursor-not-allowed'}
               >
                 <svg

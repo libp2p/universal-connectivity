@@ -121,7 +121,7 @@ export function Listbox<T>({
             'bg-white/75 backdrop-blur-xl dark:bg-zinc-800/75',
 
             // Shadows
-            'shadow-lg ring-1 ring-zinc-950/10 dark:ring-inset dark:ring-white/10'
+            'shadow-lg ring-1 ring-zinc-950/10 dark:ring-inset dark:ring-white/10',
           )}
         >
           {options}
@@ -144,7 +144,7 @@ export function ListboxOption<T>({
     '[&>[data-slot=icon]]:size-5 [&>[data-slot=icon]]:shrink-0 [&>[data-slot=icon]]:text-zinc-500 [&>[data-slot=icon]]:group-data-[focus]/option:text-white sm:[&>[data-slot=icon]]:size-4 forced-colors:[&>[data-slot=icon]]:text-[CanvasText] forced-colors:[&>[data-slot=icon]]:group-data-[focus]/option:text-[Canvas]',
 
     // Avatars
-    '[&>[data-slot=avatar]]:size-6 sm:[&>[data-slot=avatar]]:size-5'
+    '[&>[data-slot=avatar]]:size-6 sm:[&>[data-slot=avatar]]:size-5',
   )
 
   return (
@@ -170,7 +170,7 @@ export function ListboxOption<T>({
               'forced-color-adjust-none forced-colors:data-[focus]:bg-[Highlight] forced-colors:data-[focus]:text-[HighlightText]',
 
               // Disabled
-              'data-[disabled]:opacity-50'
+              'data-[disabled]:opacity-50',
             )}
           >
             <svg
@@ -198,7 +198,7 @@ export function ListboxDescription({ className, children, ...props }: React.Comp
     <span
       className={clsx(
         className,
-        'flex flex-1 overflow-hidden text-zinc-500 before:w-2 before:min-w-0 before:shrink group-data-[focus]/option:text-white dark:text-zinc-400'
+        'flex flex-1 overflow-hidden text-zinc-500 before:w-2 before:min-w-0 before:shrink group-data-[focus]/option:text-white dark:text-zinc-400',
       )}
       {...props}
     >

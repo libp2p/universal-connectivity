@@ -20,13 +20,7 @@ export const Message = ({ msgId, msg, fileObjectUrl, peerId, read, dm, receivedA
 
   return (
     <li className={`flex ${isSelf && 'flex-row-reverse'} gap-2`}>
-      <PeerWrapper
-        key={peerId}
-        peer={peerIdFromString(peerId)}
-        self={isSelf}
-        withName={false}
-        withUnread={false}
-      />
+      <PeerWrapper key={peerId} peer={peerIdFromString(peerId)} self={isSelf} withName={false} withUnread={false} />
       <div className="flex relative max-w-xl px-4 py-2 text-gray-700 rounded shadow bg-white">
         <div className="block">
           {msg}
