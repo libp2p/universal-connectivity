@@ -1,25 +1,43 @@
 import { XCircleIcon } from '@heroicons/react/24/solid'
-import type { PeerId, Connection } from '@libp2p/interface'
-import { Badge } from './badge'
+import type { PeerId } from '@libp2p/interface'
 import { useCallback } from 'react'
 import { useLibp2pContext } from '@/context/ctx'
+import { Multiaddr } from '@multiformats/multiaddr'
 
 interface PeerListProps {
-  connections: Connection[]
+  connections: Array<{
+    id: string
+    remotePeer: PeerId
+    remoteAddr: Multiaddr
+    status: string
+    timeline: {
+      open: number
+    }
+  }>
 }
 
 export default function PeerList({ connections }: PeerListProps) {
   return (
-    <ul role="list" className="divide-y divide-gray-100">
-      {connections.map((connection) => (
-        <Peer key={connection.id} connection={connection} />
-      ))}
-    </ul>
+    <div className="mt-4">
+      <ul className="divide-y divide-gray-100">
+        {connections.map((connection) => (
+          <Peer key={connection.id} connection={connection} />
+        ))}
+      </ul>
+    </div>
   )
 }
 
 interface PeerProps {
-  connection: Connection
+  connection: {
+    id: string
+    remotePeer: PeerId
+    remoteAddr: Multiaddr
+    status: string
+    timeline: {
+      open: number
+    }
+  }
 }
 function Peer({ connection }: PeerProps) {
   const { libp2p } = useLibp2pContext()
@@ -40,26 +58,26 @@ function Peer({ connection }: PeerProps) {
   }
 
   return (
-    <li key={connection.id} className="flex justify-between gap-x-6 py-3">
+    <li key={connection.id} className="flex justify-between flex-wrap mx-2 py-2 gap-x-6 py-5">
       <div className="flex min-w-0 gap-x-4">
         <div className="mt-1 flex items-center gap-x-1.5">
           <div className="flex-none rounded-full bg-emerald-500/20 p-1">
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           </div>
         </div>
-        {/* <img className="h-12 w-12 flex-none rounded-full bg-gray-50" src={person.imageUrl} alt="" /> */}
         <div className="min-w-0 flex-auto">
-          <p className="text-sm font-semibold leading-6 text-gray-900">
-            {connection.remotePeer.toString()}{' '}
-            {connection.remoteAddr.protoNames().includes('webrtc') ? <Badge color="indigo">P2P Browser</Badge> : null}
-          </p>
-          <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-            {ipAddr} {connection.remoteAddr.protoNames().join(', ')}
+          <p className="text-sm font-semibold leading-6 text-gray-900">{connection.remotePeer.toString()}</p>
+          <p className="mt-1 truncate text-xs leading-5 text-gray-500">{connection.remoteAddr.toString()}</p>
+          <p className="mt-1 text-xs leading-5 text-gray-500">
+            Connected: {new Date(connection.timeline.open).toLocaleString()}
           </p>
         </div>
       </div>
-
-      {/* <div className="flex gap-x-2 items-center "> */}
+      <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+        <p className={`text-sm leading-6 ${connection.status === 'open' ? 'text-green-500' : 'text-gray-500'}`}>
+          {connection.status === 'open' ? '🟢 Connected' : '⚫ Closed'}
+        </p>
+      </div>
       <div className="hidden  sm:flex sm:flex-col sm:items-end">
         <button
           onClick={() => handleDisconnectPeer(connection.remotePeer)}
