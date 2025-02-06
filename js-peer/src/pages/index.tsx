@@ -8,7 +8,7 @@ import { Multiaddr, multiaddr } from '@multiformats/multiaddr'
 import { connectToMultiaddr, findPeerById } from '../lib/libp2p'
 import Spinner from '@/components/spinner'
 import PeerList from '@/components/peer-list'
-import PeerMaddrList from "@/components/peer-maddr";
+import PeerMaddrList from '@/components/peer-maddr'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
@@ -18,47 +18,47 @@ export default function Home() {
   const [dialling, setDialling] = useState(false)
   const [err, setErr] = useState('')
   /*peerID */
-  const [peerIdInput, setPeerIdInput] = useState("");
-  const [resolvedMultiaddrs, setResolvedMultiaddrs] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>("");
-  const [loading, setLoading] = useState(false);
+  const [peerIdInput, setPeerIdInput] = useState('')
+  const [resolvedMultiaddrs, setResolvedMultiaddrs] = useState<string[]>([])
+  const [error, setError] = useState<string | null>('')
+  const [loading, setLoading] = useState(false)
 
   const handleFindPeer = async () => {
-    setError("");
-    setResolvedMultiaddrs([]);
-    
+    setError('')
+    setResolvedMultiaddrs([])
+
     // Input validation
     if (!peerIdInput.trim()) {
-      setError("❌ Please enter a valid PeerID");
-      return;
+      setError('❌ Please enter a valid PeerID')
+      return
     }
-  
+
     if (!libp2p) {
-      setError("❌ Libp2p instance not found");
-      return;
+      setError('❌ Libp2p instance not found')
+      return
     }
-  
-    setLoading(true);
+
+    setLoading(true)
     try {
-      const peerInfo = await findPeerById(libp2p)(peerIdInput.trim());
-      
+      const peerInfo = await findPeerById(libp2p)(peerIdInput.trim())
+
       if (!peerInfo?.addresses?.length) {
-        setError("⚠️ Peer not found or no multiaddrs available");
-        return;
+        setError('⚠️ Peer not found or no multiaddrs available')
+        return
       }
-  
+
       // Extract multiaddrs from peer info
-      const multiaddrs = peerInfo.addresses.map(addr => addr.multiaddr.toString());
-      console.log("✅ Found peer with addresses:", multiaddrs);
-      setResolvedMultiaddrs(multiaddrs);
-      setPeerIdInput(""); 
+      const multiaddrs = peerInfo.addresses.map((addr) => addr.multiaddr.toString())
+      console.log('✅ Found peer with addresses:', multiaddrs)
+      setResolvedMultiaddrs(multiaddrs)
+      setPeerIdInput('')
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      setError(`❌ Error finding peer: ${errorMessage}`);
+      const errorMessage = e instanceof Error ? e.message : String(e)
+      setError(`❌ Error finding peer: ${errorMessage}`)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     const onConnection = () => {
@@ -183,10 +183,7 @@ export default function Home() {
               {/* CONNECT BY PEER-ID */}
               <div className="my-6 w-full max-w-2xl">
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <label
-                    htmlFor="peer-cid"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
+                  <label htmlFor="peer-cid" className="block text-sm font-medium text-gray-900 mb-2">
                     Find Peer by PeerID
                   </label>
                   <div className="flex gap-2">
@@ -203,11 +200,7 @@ export default function Home() {
                     <button
                       type="button"
                       className={`inline-flex items-center px-4 py-2 rounded-md
-                        ${
-                          loading
-                          ? "bg-indigo-400 cursor-not-allowed"
-                          : "bg-indigo-600 hover:bg-indigo-500"
-                        }
+                        ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500'}
           text-white font-semibold text-sm transition-colors`}
                       onClick={handleFindPeer}
                       disabled={loading}
@@ -217,14 +210,14 @@ export default function Home() {
                           <Spinner />
                           Searching...
                         </>
-                      ) : ("Find Peer")}
+                      ) : (
+                        'Find Peer'
+                      )}
                     </button>
                   </div>
 
                   {/* Error Message */}
-                  {error && (
-                    <div className="mt-2 text-sm text-red-600">{error}</div>
-                  )}
+                  {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
                   {resolvedMultiaddrs.length > 0 && (
                     <div className="mt-4">
                       <h4 className="text-sm font-medium text-gray-900 mb-2">

@@ -4,33 +4,21 @@ import { useState } from 'react'
 import Spinner from '@/components/spinner'
 import { connectToMultiaddr } from '../lib/libp2p'
 
-
 interface PeerMaddrListProps {
   resolvedMultiaddrs: string[]
   setResolvedMultiaddrs: (addrs: string[]) => void
   setError: (error: string | null) => void
 }
 
-export default function PeerMaddrList({ 
-  resolvedMultiaddrs, 
-  setResolvedMultiaddrs,
-  setError 
-}: PeerMaddrListProps) {
+export default function PeerMaddrList({ resolvedMultiaddrs, setResolvedMultiaddrs, setError }: PeerMaddrListProps) {
   if (resolvedMultiaddrs.length === 0) return null
 
   return (
     <div className="mt-6 w-full">
-      <h4 className="text-lg font-semibold text-gray-900 mb-3">
-        Found {resolvedMultiaddrs.length} addresses:
-      </h4>
+      <h4 className="text-lg font-semibold text-gray-900 mb-3">Found {resolvedMultiaddrs.length} addresses:</h4>
       <ul className="p-4 border rounded-lg bg-gray-50 shadow-sm space-y-3">
         {resolvedMultiaddrs.map((addr, index) => (
-          <MaddrItem 
-            key={index} 
-            addr={addr} 
-            setResolvedMultiaddrs={setResolvedMultiaddrs}
-            setError={setError}
-          />
+          <MaddrItem key={index} addr={addr} setResolvedMultiaddrs={setResolvedMultiaddrs} setError={setError} />
         ))}
       </ul>
     </div>
@@ -75,29 +63,27 @@ function MaddrItem({ addr, setResolvedMultiaddrs, setError }: MaddrItemProps) {
     //   </button>
     // </li>
     <li className="flex justify-between gap-x-6 py-3">
-    <div className="flex min-w-0 gap-x-4">
-      <div className="mt-1 flex items-center gap-x-1.5">
-        <div className="flex-none rounded-full bg-emerald-500/20 p-1">
-          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+      <div className="flex min-w-0 gap-x-4">
+        <div className="mt-1 flex items-center gap-x-1.5">
+          <div className="flex-none rounded-full bg-emerald-500/20 p-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          </div>
+        </div>
+        <div className="min-w-0 flex-auto">
+          <p className="text-sm font-semibold leading-6 text-gray-900 break-all">{addr}</p>
         </div>
       </div>
-      <div className="min-w-0 flex-auto">
-        <p className="text-sm font-semibold leading-6 text-gray-900 break-all">
-          {addr}
-        </p>
-      </div>
-    </div>
 
-    <div className="hidden sm:flex sm:flex-col sm:items-end">
-      <button
-        onClick={handleConnect}
-        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex flex-row items-center disabled:opacity-70 disabled:cursor-not-allowed"
-        disabled={loading}
-      >
-        {loading && <Spinner />}
-        <span className="pl-1">{loading ? 'Connecting...' : 'Connect'}</span>
-      </button>
-    </div>
-  </li>
+      <div className="hidden sm:flex sm:flex-col sm:items-end">
+        <button
+          onClick={handleConnect}
+          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex flex-row items-center disabled:opacity-70 disabled:cursor-not-allowed"
+          disabled={loading}
+        >
+          {loading && <Spinner />}
+          <span className="pl-1">{loading ? 'Connecting...' : 'Connect'}</span>
+        </button>
+      </div>
+    </li>
   )
 }

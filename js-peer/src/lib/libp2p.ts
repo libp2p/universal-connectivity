@@ -70,11 +70,11 @@ export async function startLibp2p(): Promise<Libp2pType> {
         // that are resolved above using the delegated routing API
         list: [
           `${bootstrapAddrs}`,
-          "/ip6/2604:1380:4642:6600::3/udp/9095/quic-v1/webtransport/certhash/uEiAFmismVS4uGGz9zF8yLRC10wtqPciwcBD1BuAch4sX3A/certhash/uEiBEvL3ao0UqfMSkj2JCOvjG_4BEiiEnjFr7qmDPALgG5Q",
-          "/ip6/2604:1380:4642:6600::3/udp/9095/quic-v1",
-          "/ip4/147.28.186.157/udp/9095/webrtc-direct/certhash/uEiC6yY8kGKhTw9gr74_eDLWf08PNyAiSKgs22JHc_rD8qw",
-          "/ip4/147.28.186.157/udp/9095/quic-v1",
-          "/ip4/147.28.186.157/udp/9095/quic-v1/webtransport/certhash/uEiAFmismVS4uGGz9zF8yLRC10wtqPciwcBD1BuAch4sX3A/certhash/uEiBEvL3ao0UqfMSkj2JCOvjG_4BEiiEnjFr7qmDPALgG5Q",
+          '/ip6/2604:1380:4642:6600::3/udp/9095/quic-v1/webtransport/certhash/uEiAFmismVS4uGGz9zF8yLRC10wtqPciwcBD1BuAch4sX3A/certhash/uEiBEvL3ao0UqfMSkj2JCOvjG_4BEiiEnjFr7qmDPALgG5Q',
+          '/ip6/2604:1380:4642:6600::3/udp/9095/quic-v1',
+          '/ip4/147.28.186.157/udp/9095/webrtc-direct/certhash/uEiC6yY8kGKhTw9gr74_eDLWf08PNyAiSKgs22JHc_rD8qw',
+          '/ip4/147.28.186.157/udp/9095/quic-v1',
+          '/ip4/147.28.186.157/udp/9095/quic-v1/webtransport/certhash/uEiAFmismVS4uGGz9zF8yLRC10wtqPciwcBD1BuAch4sX3A/certhash/uEiBEvL3ao0UqfMSkj2JCOvjG_4BEiiEnjFr7qmDPALgG5Q',
         ],
       }),
     ],
@@ -110,13 +110,13 @@ export async function startLibp2p(): Promise<Libp2pType> {
   libp2p.addEventListener('peer:discovery', (event) => {
     const { multiaddrs, id } = event.detail
     let accioPeers = []
-      const peerId = id.toString()
-      accioPeers.push(peerId)
-      console.log("Discovered Peer:", peerId)
-      if (libp2p.getConnections(id)?.length > 0) {
-        log(`Already connected to peer %s. Will not try dialling`, id)
-        return
-      }
+    const peerId = id.toString()
+    accioPeers.push(peerId)
+    console.log('Discovered Peer:', peerId)
+    if (libp2p.getConnections(id)?.length > 0) {
+      log(`Already connected to peer %s. Will not try dialling`, id)
+      return
+    }
 
     dialWebRTCMaddrs(libp2p, multiaddrs)
   })
@@ -124,48 +124,47 @@ export async function startLibp2p(): Promise<Libp2pType> {
   return libp2p
 }
 
- /* ability to Connect via peer-ID */
- export const findPeerById = (libp2p: Libp2pType) => async (peerIdStr: string) => {
-  console.log(`🔍 Searching for PeerID: ${peerIdStr}`);
+/* ability to Connect via peer-ID */
+export const findPeerById = (libp2p: Libp2pType) => async (peerIdStr: string) => {
+  console.log(`🔍 Searching for PeerID: ${peerIdStr}`)
   try {
-    const peerId = peerIdFromString(peerIdStr);
+    const peerId = peerIdFromString(peerIdStr)
 
     // Step 1: Check if the peer is already known in the peerstore
-    const knownPeer = await libp2p.peerStore.get(peerId);
+    const knownPeer = await libp2p.peerStore.get(peerId)
     if (knownPeer?.addresses?.length) {
-      console.log(`✅ Found peer in peerStore with ${knownPeer.addresses.length} addresses`);
-      return knownPeer;
+      console.log(`✅ Found peer in peerStore with ${knownPeer.addresses.length} addresses`)
+      return knownPeer
     }
 
     // Step 2: Use peerRouting to find the peer
-    console.log(`🔄 Searching for peer via routing...`);
+    console.log(`🔄 Searching for peer via routing...`)
     const peer = await libp2p.peerRouting.findPeer(peerId, {
-      signal: AbortSignal.timeout(10000)
-    });
+      signal: AbortSignal.timeout(10000),
+    })
 
     if (peer?.multiaddrs.length > 0) {
       const peerInfo = {
         id: peer.id,
-        addresses: peer.multiaddrs.map(maddr => ({
+        addresses: peer.multiaddrs.map((maddr) => ({
           multiaddr: maddr,
-          isCertified: true
+          isCertified: true,
         })),
         protocols: [],
         metadata: new Map(),
-        tags: new Map()
-      };
-      console.log(`✅ Found peer via routing with ${peerInfo.addresses.length} addresses`);
-      return peerInfo;
+        tags: new Map(),
+      }
+      console.log(`✅ Found peer via routing with ${peerInfo.addresses.length} addresses`)
+      return peerInfo
     }
 
-    console.warn(`⚠️ No valid peer information found`);
-    return null;
-
+    console.warn(`⚠️ No valid peer information found`)
+    return null
   } catch (error) {
-    console.error(`❌ Peer lookup failed:`, error);
-    return null;
+    console.error(`❌ Peer lookup failed:`, error)
+    return null
   }
-};
+}
 
 // message IDs are used to dedupe inbound messages
 // every agent in network should use the same message id function
