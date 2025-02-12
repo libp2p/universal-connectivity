@@ -3,14 +3,12 @@ FROM golang:1.23-alpine AS builder
 
 WORKDIR /usr/src/app
 
-# Copy only the dependency files first
+# pre-copy/cache go.mod for pre-downloading dependencies
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-# Copy source code, excluding unnecessary files
-COPY *.go ./
-COPY internal/ ./internal/
-COPY pkg/ ./pkg/
+# Copy the source code
+COPY . .
 
 # Build the application with security flags
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -v -o /usr/local/bin/universal-chat-go ./...
