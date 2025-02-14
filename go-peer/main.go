@@ -4,11 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io"
-	"log"
 	"os"
-	"sync"
 	"time"
+
+	"github.com/ipfs/go-log/v2"
 
 	"github.com/caddyserver/certmagic"
 	p2pforge "github.com/ipshipyard/p2p-forge/client"
@@ -38,6 +37,8 @@ const DiscoveryServiceTag = "universal-connectivity"
 
 var SysMsgChan chan *ChatMessage
 
+var logger = log.Logger("app")
+
 // Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
 // If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
@@ -54,22 +55,6 @@ func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Mult
 	if err = kdht.Bootstrap(ctx); err != nil {
 		return nil, err
 	}
-
-	var wg sync.WaitGroup
-	for _, peerAddr := range bootstrapPeers {
-		peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if err := host.Connect(ctx, *peerinfo); err != nil {
-				LogMsgf("Error while connecting to node %q: %-v", peerinfo, err)
-			} else {
-				LogMsgf("Connection established with bootstrap node: %q", *peerinfo)
-			}
-		}()
-	}
-	wg.Wait()
 
 	return kdht, nil
 }
@@ -121,7 +106,6 @@ func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
-	useLogger := flag.Bool("logger", false, "write logs to file")
 	headless := flag.Bool("headless", false, "run without chat UI")
 
 	var addrsToConnectTo stringSlice
@@ -129,20 +113,11 @@ func main() {
 
 	flag.Parse()
 
-	if *useLogger {
-		f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			fmt.Println("failed to open log file", err)
-			log.SetOutput(io.Discard)
-		} else {
-			defer f.Close()
-			log.SetOutput(f)
-		}
-	} else {
-		log.SetOutput(io.Discard)
-	}
-
 	ctx := context.Background()
+
+	log.SetLogLevel("app", "debug")
+	log.SetLogLevel("autotls", "debug")
+	log.SetLogLevel("p2p-forge", "debug")
 
 	// Create a channel to signal when the cert is loaded
 	certLoaded := make(chan bool, 1)
@@ -151,14 +126,20 @@ func main() {
 	certManager, err := p2pforge.NewP2PForgeCertMgr(
 		p2pforge.WithCertificateStorage(&certmagic.FileStorage{Path: "p2p-forge-certs"}),
 		p2pforge.WithUserAgent("go-libp2p/example/autotls"),
+		p2pforge.WithCAEndpoint(p2pforge.DefaultCAEndpoint),
 		p2pforge.WithOnCertLoaded(func() { certLoaded <- true }), // Signal when cert is loaded
+		p2pforge.WithLogger(logger.Desugar().Sugar().Named("autotls")),
 	)
 	if err != nil {
 		panic(err)
 	}
 
 	// Start the cert manager
-	certManager.Start()
+	logger.Info("Starting cert manager")
+	err = certManager.Start()
+	if err != nil {
+		panic(err)
+	}
 	defer certManager.Stop()
 
 	// Load identity key
@@ -184,8 +165,8 @@ func main() {
 			fmt.Sprintf("/ip6/::/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
 		),
 
-		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Transport(quic.NewTransport),
+		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Transport(webrtc.New),
 
 		// Share the same TCP listener between the TCP and WS transports
@@ -193,7 +174,9 @@ func main() {
 
 		// Configure the WS transport with the AutoTLS cert manager
 		libp2p.Transport(ws.New, ws.WithTLSConfig(certManager.TLSConfig())),
+
 		libp2p.UserAgent("universal-connectivity/go-peer"),
+
 		libp2p.AddrsFactory(certManager.AddressFactory()),
 	}
 
@@ -203,7 +186,9 @@ func main() {
 		panic(err)
 	}
 
-	log.Println("Host created with PeerID: ", h.ID())
+	certManager.ProvideHost(h)
+
+	logger.Info("Host created with PeerID: ", h.ID())
 
 	resources := relayv2.DefaultResources()
 	resources.MaxReservations = 256
@@ -267,7 +252,7 @@ func main() {
 	LogMsgf("PeerID: %s", h.ID().String())
 	for _, addr := range h.Addrs() {
 		if *headless {
-			fmt.Printf("Listening on: %s/p2p/%s\n", addr.String(), h.ID())
+			logger.Infof("Listening on: %s/p2p/%s", addr.String(), h.ID())
 		} else {
 			LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
 		}
@@ -277,7 +262,7 @@ func main() {
 		<-certLoaded
 		for _, addr := range h.Addrs() {
 			if *headless {
-				fmt.Printf("Listening on: %s/p2p/%s\n", addr.String(), h.ID())
+				logger.Infof("Listening on: %s/p2p/%s", addr.String(), h.ID())
 			} else {
 				LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
 			}
