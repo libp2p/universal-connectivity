@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // DiscoveryInterval is how often we re-publish our mDNS records.
@@ -103,10 +105,18 @@ func LogMsgf(f string, msg ...any) {
 }
 
 func main() {
+	log.SetLogLevel("app", "debug")
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
 	headless := flag.Bool("headless", false, "run without chat UI")
+	metrics := flag.Bool("metrics", false, "run metrics server")
+	metricsAddr := flag.String("metrics-addr", ":9096", `metrics server address,
+	Allowed formats:
+	:port (e.g. :9096) - listens on all interfaces on specified port
+	host:port (e.g. localhost:9096) - listens on specific interface/host
+	127.0.0.1:port - listens only on localhost
+	0.0.0.0:port - listens on all interfaces`)
 
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
@@ -183,6 +193,17 @@ func main() {
 	}
 
 	certManager.ProvideHost(h)
+
+	// Start metrics server
+	if *metrics {
+		logger.Info("Starting metrics server on ", *metricsAddr)
+		go func() {
+			http.Handle("/metrics", promhttp.Handler())
+			if err := http.ListenAndServe(*metricsAddr, nil); err != nil {
+				logger.Error("metrics server error: ", err)
+			}
+		}()
+	}
 
 	logger.Info("Host created with PeerID: ", h.ID())
 
