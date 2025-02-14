@@ -13,17 +13,17 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import type { Connection, Message, SignedMessage, PeerId, Libp2p } from '@libp2p/interface'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
-import { webTransport } from '@libp2p/webtransport'
 import { webRTC, webRTCDirect } from '@libp2p/webrtc'
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { ping } from '@libp2p/ping'
-import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, GO_MESSAGE_BOOTSTRAP_PEER_ID, PUBSUB_PEER_DISCOVERY } from './constants'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC, GO_MESSAGE_BOOTSTRAP_PEER_ID, PUBSUB_PEER_DISCOVERY } from './constants'
 import first from 'it-first'
 import { forComponent, enable } from './logger'
 import { directMessage } from './direct-message'
 import type { Libp2pType } from '@/context/ctx'
 import { kadDHT } from '@libp2p/kad-dht'
+
 const log = forComponent('libp2p')
 
 // IPFS Amino DHT bootstrappers. Useful for finding circuit relay nodes
@@ -34,7 +34,7 @@ const AMINO_BOOTSTRAP_ADDRESSES = [
   // va1 is not in the TXT records for _dnsaddr.bootstrap.libp2p.io yet
   // so use the host name directly
   '/dnsaddr/va1.bootstrap.libp2p.io/p2p/12D3KooWKnDdG3iXw9eTFijk3EWSunZcFi54Zka4wmtqtt6rPxc8',
-  '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ'
+  '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ',
 ]
 
 export async function startLibp2p(): Promise<Libp2pType> {
@@ -43,7 +43,6 @@ export async function startLibp2p(): Promise<Libp2pType> {
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
 
-  // const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
   log('starting libp2p')
 
   let libp2p: Libp2pType
@@ -53,7 +52,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
       listen: [
         // 👇 Listen for webRTC connection
         '/webrtc',
-        // '/p2p-circuit', // this will cause libp2p to start a random walk to find a circuit relay reservation
+        '/p2p-circuit', // this will cause libp2p to start a random walk to find a circuit relay reservation
       ],
     },
     transports: [
@@ -75,9 +74,9 @@ export async function startLibp2p(): Promise<Libp2pType> {
         topics: [PUBSUB_PEER_DISCOVERY],
         listenOnly: false,
       }),
-      // bootstrap({
-      //   list: AMINO_BOOTSTRAP_ADDRESSES,
-      // }),
+      bootstrap({
+        list: AMINO_BOOTSTRAP_ADDRESSES,
+      }),
     ],
     services: {
       pubsub: gossipsub({
@@ -85,7 +84,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
         msgIdFn: msgIdFnStrictNoSign,
         ignoreDuplicatePublishError: true,
       }),
-      // dht: kadDHT(),
+      dht: kadDHT(),
       // Delegated routing helps us discover the ephemeral multiaddrs of the dedicated go and rust bootstrap peers
       // This relies on the public delegated routing endpoint https://docs.ipfs.tech/concepts/public-utilities/#delegated-routing
       delegatedRouting: () => delegatedClient,
@@ -96,8 +95,12 @@ export async function startLibp2p(): Promise<Libp2pType> {
     },
   })
 
-  // 👇 dial the dedicated bootstrapper subscribed to the pubsub topic `universal-connectivity` for relaying messages
-  libp2p.dial(peerIdFromString(GO_MESSAGE_BOOTSTRAP_PEER_ID))
+  try {
+    // 👇 dial the dedicated bootstrapper subscribed to the pubsub topic `universal-connectivity` for relaying messages
+    libp2p.dial(peerIdFromString(GO_MESSAGE_BOOTSTRAP_PEER_ID))
+  } catch (e) {
+    log.error('failed to dial go message bootstrapper', e)
+  }
 
   libp2p.services.pubsub.subscribe(CHAT_TOPIC)
   libp2p.services.pubsub.subscribe(CHAT_FILE_TOPIC)
@@ -161,22 +164,3 @@ export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiadd
     throw e
   }
 }
-
-
-interface BootstrapsMultiaddrs {
-  // Multiaddrs that are dialable from the browser
-  bootstrapAddrs: string[]
-
-  // multiaddr string representing the circuit relay v2 listen addr
-  relayListenAddrs: string[]
-}
-
-// Constructs a multiaddr string representing the circuit relay v2 listen address for a relayed connection to the given peer.
-const getRelayListenAddr = (maddr: Multiaddr, peer: PeerId): string =>
-  `${maddr.toString()}/p2p/${peer.toString()}/p2p-circuit`
-
-export const getFormattedConnections = (connections: Connection[]) =>
-  connections.map((conn) => ({
-    peerId: conn.remotePeer,
-    protocols: [...new Set(conn.remoteAddr.protoNames())],
-  }))
