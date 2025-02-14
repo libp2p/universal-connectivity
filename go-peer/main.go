@@ -21,13 +21,13 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
-	"github.com/multiformats/go-multiaddr"
-
 	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
+	"github.com/multiformats/go-multiaddr"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -265,6 +265,29 @@ func main() {
 			}
 		}
 	}
+
+	// Start a background ticker to periodically log connected peers
+	go func() {
+		ticker := time.NewTicker(time.Second * 10)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				rm := h.Network().ResourceManager()
+				rm.ViewSystem(
+					func(rs network.ResourceScope) error {
+						fmt.Printf("Stats: %+v\n", rs.Stat())
+						if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
+							fmt.Printf("Limits: %+v\n", r.Limit())
+						}
+						return nil
+					},
+				)
+			}
+		}
+	}()
 
 	LogMsgf("PeerID: %s", h.ID().String())
 	for _, addr := range h.Addrs() {
