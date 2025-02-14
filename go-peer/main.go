@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/caddyserver/certmagic"
+	p2pforge "github.com/ipshipyard/p2p-forge/client"
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -21,11 +22,12 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
-	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	"github.com/multiformats/go-multiaddr"
+
+	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
-	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
-	"github.com/multiformats/go-multiaddr"
 )
 
 // DiscoveryInterval is how often we re-publish our mDNS records.
@@ -119,8 +121,6 @@ func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
-	certPath := flag.String("tls-cert-path", "", "path to the tls cert file (for websockets)")
-	keyPath := flag.String("tls-key-path", "", "path to the tls key file (for websockets")
 	useLogger := flag.Bool("logger", false, "write logs to file")
 	headless := flag.Bool("headless", false, "run without chat UI")
 
@@ -132,7 +132,7 @@ func main() {
 	if *useLogger {
 		f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			log.Println("failed to open log file", err)
+			fmt.Println("failed to open log file", err)
 			log.SetOutput(io.Discard)
 		} else {
 			defer f.Close()
@@ -144,48 +144,66 @@ func main() {
 
 	ctx := context.Background()
 
-	// load our private key to generate the same peerID each time
+	// Create a channel to signal when the cert is loaded
+	certLoaded := make(chan bool, 1)
+
+	// Initialize the certificate manager
+	certManager, err := p2pforge.NewP2PForgeCertMgr(
+		p2pforge.WithCertificateStorage(&certmagic.FileStorage{Path: "p2p-forge-certs"}),
+		p2pforge.WithUserAgent("go-libp2p/example/autotls"),
+		p2pforge.WithOnCertLoaded(func() { certLoaded <- true }), // Signal when cert is loaded
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Start the cert manager
+	certManager.Start()
+	defer certManager.Stop()
+
+	// Load identity key
 	privk, err := LoadIdentity(*idPath)
 	if err != nil {
 		panic(err)
 	}
 
-	// TLS stuff
-	var opts []libp2p.Option
+	// Configure libp2p options with AutoTLS
+	opts := []libp2p.Option{
+		libp2p.Identity(privk),
+		libp2p.NATPortMap(),
+		libp2p.ListenAddrStrings(
+			"/ip4/0.0.0.0/tcp/9095",
+			"/ip4/0.0.0.0/udp/9095/quic-v1",
+			// "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/9095/webrtc-direct",
+			"/ip6/::/tcp/9095",
+			"/ip6/::/udp/9095/quic-v1",
+			// "/ip6/::/udp/9095/quic-v1/webtransport",
+			"/ip6/::/udp/9095/webrtc-direct",
+			fmt.Sprintf("/ip4/0.0.0.0/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+			fmt.Sprintf("/ip6/::/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+		),
 
-	if *certPath != "" && *keyPath != "" {
-		certs := make([]tls.Certificate, 1)
-		certs[0], err = tls.LoadX509KeyPair(*certPath, *keyPath)
-		if err != nil {
-			panic(err)
-		}
+		libp2p.Transport(tcp.NewTCPTransport),
+		libp2p.Transport(quic.NewTransport),
+		libp2p.Transport(webrtc.New),
 
-		opts = append(opts,
-			libp2p.Transport(ws.New, ws.WithTLSConfig(&tls.Config{Certificates: certs})),
-			libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0/ws"),
-		)
+		// Share the same TCP listener between the TCP and WS transports
+		libp2p.ShareTCPListener(),
+
+		// Configure the WS transport with the AutoTLS cert manager
+		libp2p.Transport(ws.New, ws.WithTLSConfig(certManager.TLSConfig())),
+		libp2p.UserAgent("universal-connectivity/go-peer"),
+		libp2p.AddrsFactory(certManager.AddressFactory()),
 	}
 
-	opts = append(opts,
-		libp2p.Identity(privk),
-		libp2p.Transport(quicTransport.NewTransport),
-		libp2p.Transport(webtransport.New),
-		libp2p.Transport(webrtc.New),
-		libp2p.ListenAddrStrings(
-			"/ip4/0.0.0.0/udp/9095/quic-v1",
-			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
-			"/ip4/0.0.0.0/udp/9095/webrtc-direct",
-			"/ip6/::/udp/9095/quic-v1",
-			"/ip6/::/udp/9095/quic-v1/webtransport",
-			"/ip6/::/udp/9095/webrtc-direct",
-		),
-	)
-
-	// create a new libp2p Host with lots of options
+	// Create a new libp2p Host
 	h, err := libp2p.New(opts...)
 	if err != nil {
 		panic(err)
 	}
+
+	log.Println("Host created with PeerID: ", h.ID())
 
 	resources := relayv2.DefaultResources()
 	resources.MaxReservations = 256
@@ -254,6 +272,17 @@ func main() {
 			LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
 		}
 	}
+
+	go func() {
+		<-certLoaded
+		for _, addr := range h.Addrs() {
+			if *headless {
+				fmt.Printf("Listening on: %s/p2p/%s\n", addr.String(), h.ID())
+			} else {
+				LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
+			}
+		}
+	}()
 
 	if *headless {
 		select {}
