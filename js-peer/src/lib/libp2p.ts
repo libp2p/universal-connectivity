@@ -18,13 +18,24 @@ import { webRTC, webRTCDirect } from '@libp2p/webrtc'
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { ping } from '@libp2p/ping'
-import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, PUBSUB_PEER_DISCOVERY } from './constants'
+import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, GO_MESSAGE_BOOTSTRAP_PEER_ID, PUBSUB_PEER_DISCOVERY } from './constants'
 import first from 'it-first'
 import { forComponent, enable } from './logger'
 import { directMessage } from './direct-message'
 import type { Libp2pType } from '@/context/ctx'
-
+import { kadDHT } from '@libp2p/kad-dht'
 const log = forComponent('libp2p')
+
+// IPFS Amino DHT bootstrappers. Useful for finding circuit relay nodes
+const AMINO_BOOTSTRAP_ADDRESSES = [
+  '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+  '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+  '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
+  // va1 is not in the TXT records for _dnsaddr.bootstrap.libp2p.io yet
+  // so use the host name directly
+  '/dnsaddr/va1.bootstrap.libp2p.io/p2p/12D3KooWKnDdG3iXw9eTFijk3EWSunZcFi54Zka4wmtqtt6rPxc8',
+  '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ'
+]
 
 export async function startLibp2p(): Promise<Libp2pType> {
   // enable verbose logging in browser console to view debug logs
@@ -32,8 +43,8 @@ export async function startLibp2p(): Promise<Libp2pType> {
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
 
-  const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
-  log('starting libp2p with bootstrapAddrs %o and relayListenAddrs: %o', bootstrapAddrs, relayListenAddrs)
+  // const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
+  log('starting libp2p')
 
   let libp2p: Libp2pType
 
@@ -42,11 +53,10 @@ export async function startLibp2p(): Promise<Libp2pType> {
       listen: [
         // 👇 Listen for webRTC connection
         '/webrtc',
-        ...relayListenAddrs,
+        // '/p2p-circuit', // this will cause libp2p to start a random walk to find a circuit relay reservation
       ],
     },
     transports: [
-      webTransport(),
       webSockets(),
       webRTC(),
       // 👇 Required to estalbish connections with peers supporting WebRTC-direct, e.g. the Rust-peer
@@ -65,11 +75,9 @@ export async function startLibp2p(): Promise<Libp2pType> {
         topics: [PUBSUB_PEER_DISCOVERY],
         listenOnly: false,
       }),
-      bootstrap({
-        // The app-specific bootstrappers that use WebTransport and WebRTC-direct and have ephemeral multiadrrs
-        // that are resolved above using the delegated routing API
-        list: bootstrapAddrs,
-      }),
+      // bootstrap({
+      //   list: AMINO_BOOTSTRAP_ADDRESSES,
+      // }),
     ],
     services: {
       pubsub: gossipsub({
@@ -77,6 +85,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
         msgIdFn: msgIdFnStrictNoSign,
         ignoreDuplicatePublishError: true,
       }),
+      // dht: kadDHT(),
       // Delegated routing helps us discover the ephemeral multiaddrs of the dedicated go and rust bootstrap peers
       // This relies on the public delegated routing endpoint https://docs.ipfs.tech/concepts/public-utilities/#delegated-routing
       delegatedRouting: () => delegatedClient,
@@ -87,9 +96,8 @@ export async function startLibp2p(): Promise<Libp2pType> {
     },
   })
 
-  if (!libp2p) {
-    throw new Error('Failed to create libp2p node')
-  }
+  // 👇 dial the dedicated bootstrapper subscribed to the pubsub topic `universal-connectivity` for relaying messages
+  libp2p.dial(peerIdFromString(GO_MESSAGE_BOOTSTRAP_PEER_ID))
 
   libp2p.services.pubsub.subscribe(CHAT_TOPIC)
   libp2p.services.pubsub.subscribe(CHAT_FILE_TOPIC)
@@ -154,27 +162,6 @@ export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiadd
   }
 }
 
-// Function which resolves PeerIDs of rust/go bootstrap nodes to multiaddrs dialable from the browser
-// Returns both the dialable multiaddrs in addition to the relay
-async function getBootstrapMultiaddrs(client: DelegatedRoutingV1HttpApiClient): Promise<BootstrapsMultiaddrs> {
-  const peers = await Promise.all(BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId)))))
-
-  const bootstrapAddrs = []
-  const relayListenAddrs = []
-  for (const p of peers) {
-    if (p && p.Addrs.length > 0) {
-      for (const maddr of p.Addrs) {
-        const protos = maddr.protoNames()
-        if ((protos.includes('webtransport') || protos.includes('webrtc-direct')) && protos.includes('certhash')) {
-          if (maddr.nodeAddress().address === '127.0.0.1') continue // skip loopback
-          bootstrapAddrs.push(maddr.toString())
-          relayListenAddrs.push(getRelayListenAddr(maddr, p.ID))
-        }
-      }
-    }
-  }
-  return { bootstrapAddrs, relayListenAddrs }
-}
 
 interface BootstrapsMultiaddrs {
   // Multiaddrs that are dialable from the browser
