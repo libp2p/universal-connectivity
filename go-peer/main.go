@@ -115,10 +115,6 @@ func main() {
 
 	ctx := context.Background()
 
-	log.SetLogLevel("app", "debug")
-	log.SetLogLevel("autotls", "debug")
-	log.SetLogLevel("p2p-forge", "debug")
-
 	// Create a channel to signal when the cert is loaded
 	certLoaded := make(chan bool, 1)
 
