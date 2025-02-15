@@ -1,22 +1,21 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useLibp2pContext } from './ctx'
-import type { Message, PeerId } from '@libp2p/interface'
-import { peerIdFromString } from '@libp2p/peer-id'
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useLibp2pContext } from './ctx';
+import type { Message, PeerId } from '@libp2p/interface';
+import { peerIdFromString } from '@libp2p/peer-id';
 import {
   CHAT_FILE_TOPIC,
   CHAT_TOPIC,
   FILE_EXCHANGE_PROTOCOL,
   MIME_TEXT_PLAIN,
   PUBSUB_PEER_DISCOVERY,
-} from '@/lib/constants'
-import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { pipe } from 'it-pipe'
-import map from 'it-map'
-import * as lp from 'it-length-prefixed'
-import { forComponent } from '@/lib/logger'
-import { messageStore } from '@/lib/message-store'
-import { DirectMessageEvent, directMessageEvent } from '@/lib/direct-message'
+} from '@/lib/constants';
+import { toString as uint8ArrayToString, fromString as uint8ArrayFromString } from 'uint8arrays';
+import { pipe } from 'it-pipe';
+import map from 'it-map';
+import { encode, decode } from 'it-length-prefixed';
+import { forComponent } from '@/lib/logger';
+import { messageStore } from '@/lib/message-store';
+import { DirectMessageEvent, directMessageEvent } from '@/lib/direct-message';
 
 const log = forComponent('chat-context')
 
@@ -161,9 +160,9 @@ export const ChatProvider = ({ children }: any) => {
       const stream = await libp2p.dialProtocol(senderPeerId, FILE_EXCHANGE_PROTOCOL)
       await pipe(
         [uint8ArrayFromString(fileId)],
-        (source) => lp.encode(source),
+        (source) => encode(source),
         stream,
-        (source) => lp.decode(source),
+        (source) => decode(source),
         async function (source) {
           for await (const data of source) {
             const body: Uint8Array = data.subarray()
@@ -237,21 +236,21 @@ export const ChatProvider = ({ children }: any) => {
     libp2p.handle(FILE_EXCHANGE_PROTOCOL, ({ stream }) => {
       pipe(
         stream.source,
-        (source) => lp.decode(source),
+        (source) => decode(source),
         (source) =>
           map(source, async (msg) => {
             const fileId = uint8ArrayToString(msg.subarray())
             const file = files.get(fileId)!
             return file.body
           }),
-        (source) => lp.encode(source),
+        (source) => encode(source),
         stream.sink,
       )
     })
 
     return () => {
       ;(async () => {
-        // Cleanup handlers 👇
+        // Cleanup handlers 
         libp2p.services.pubsub.removeEventListener('message', messageCB)
         libp2p.services.videoCall.removeEventListener('incomingCall', handleIncomingCall)
         libp2p.services.videoCall.removeEventListener('callEnded', handleCallEnded)
