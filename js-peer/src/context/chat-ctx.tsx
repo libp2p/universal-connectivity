@@ -85,9 +85,17 @@ export const ChatProvider = ({ children }: any) => {
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const messages = await messageStore.getMessagesByTopic(CHAT_TOPIC)
-        if (messages.length > 0) {
-          setMessageHistory(messages)
+        // Load public chat messages
+        const chatMessages = await messageStore.getMessagesByTopic(CHAT_TOPIC)
+        
+        // Load file messages
+        const fileMessages = await messageStore.getMessagesByTopic(CHAT_FILE_TOPIC)
+        
+        // Combine and sort all messages by timestamp
+        const allMessages = [...chatMessages, ...fileMessages].sort((a, b) => a.receivedAt - b.receivedAt)
+        
+        if (allMessages.length > 0) {
+          setMessageHistory(allMessages)
         }
       } catch (error) {
         log('Error loading message history:', error)
@@ -133,14 +141,17 @@ export const ChatProvider = ({ children }: any) => {
         receivedAt: Date.now(),
       }
 
-      // Store message in IndexedDB
-      await messageStore.storeMessage(topic, message)
+      try {
+        // Store message in IndexedDB
+        await messageStore.storeMessage(topic, message)
 
-      // Update UI state
-      setMessageHistory([
-        ...messageHistory,
-        message
-      ])
+        // Update UI state using function form to avoid race conditions
+        setMessageHistory(prevMessages => [...prevMessages, message])
+      } catch (error) {
+        log('Error storing message:', error)
+        // Still update UI state even if storage fails
+        setMessageHistory(prevMessages => [...prevMessages, message])
+      }
     }
   }
 
@@ -176,7 +187,17 @@ export const ChatProvider = ({ children }: any) => {
               read: false,
               receivedAt: Date.now(),
             }
-            setMessageHistory([...messageHistory, msg])
+            try {
+              // Store file message in IndexedDB
+              await messageStore.storeMessage(CHAT_FILE_TOPIC, msg)
+              
+              // Update UI state using function form to avoid race conditions
+              setMessageHistory(prevMessages => [...prevMessages, msg])
+            } catch (error) {
+              log('Error storing file message:', error)
+              // Still update UI state even if storage fails
+              setMessageHistory(prevMessages => [...prevMessages, msg])
+            }
           }
         },
       )
