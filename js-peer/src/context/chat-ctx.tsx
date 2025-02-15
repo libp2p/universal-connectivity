@@ -84,22 +84,21 @@ export const ChatProvider = ({ children }: any) => {
   // Load message history when component mounts
   useEffect(() => {
     const loadHistory = async () => {
-      try {
-        // Load public chat messages
-        const chatMessages = await messageStore.getMessagesByTopic(CHAT_TOPIC)
-        
-        // Load file messages
-        const fileMessages = await messageStore.getMessagesByTopic(CHAT_FILE_TOPIC)
-        
-        // Combine and sort all messages by timestamp
-        const allMessages = [...chatMessages, ...fileMessages].sort((a, b) => a.receivedAt - b.receivedAt)
-        
-        if (allMessages.length > 0) {
-          setMessageHistory(allMessages)
-        }
-      } catch (error) {
-        log('Error loading message history:', error)
+      console.log('Loading message history...');
+      console.log('Loading public chat messages...');
+      const chatMessages = await messageStore.getMessagesByTopic(CHAT_TOPIC);
+      console.log(`Loaded ${chatMessages.length} public chat messages.`);
+      console.log('Loading file messages...');
+      const fileMessages = await messageStore.getMessagesByTopic(CHAT_FILE_TOPIC);
+      console.log(`Loaded ${fileMessages.length} file messages.`);
+      console.log('Merging and sorting messages...');
+      const allMessages = [...chatMessages, ...fileMessages].sort((a, b) => a.receivedAt - b.receivedAt);
+      console.log(`Total messages to set: ${allMessages.length}`);
+      console.log('Setting message history...');
+      if (allMessages.length > 0) {
+        setMessageHistory(allMessages)
       }
+      console.log('Message history loaded.');
     }
     loadHistory()
   }, [setMessageHistory])
@@ -141,6 +140,8 @@ export const ChatProvider = ({ children }: any) => {
         receivedAt: Date.now(),
       }
 
+      console.log('Received chat message:', message);
+      console.log('Storing message in IndexedDB...');
       try {
         // Store message in IndexedDB
         await messageStore.storeMessage(topic, message)
@@ -148,6 +149,7 @@ export const ChatProvider = ({ children }: any) => {
         // Update UI state using function form to avoid race conditions
         setMessageHistory(prevMessages => [...prevMessages, message])
       } catch (error) {
+        console.error('Error storing message:', error);
         log('Error storing message:', error)
         // Still update UI state even if storage fails
         setMessageHistory(prevMessages => [...prevMessages, message])
@@ -166,6 +168,11 @@ export const ChatProvider = ({ children }: any) => {
       return
     }
     const senderPeerId = evt.detail.from
+
+    console.log('Received file message from:', senderPeerId.toString());
+    console.log('File message ID:', fileId);
+    console.log('Received file message from:', senderPeerId.toString());
+    console.log('File message ID:', fileId);
 
     try {
       const stream = await libp2p.dialProtocol(senderPeerId, FILE_EXCHANGE_PROTOCOL)
@@ -187,6 +194,7 @@ export const ChatProvider = ({ children }: any) => {
               read: false,
               receivedAt: Date.now(),
             }
+            console.log('Storing file message in IndexedDB...');
             try {
               // Store file message in IndexedDB
               await messageStore.storeMessage(CHAT_FILE_TOPIC, msg)
@@ -194,7 +202,10 @@ export const ChatProvider = ({ children }: any) => {
               // Update UI state using function form to avoid race conditions
               setMessageHistory(prevMessages => [...prevMessages, msg])
             } catch (error) {
+              console.error('Error storing file message:', error);
               log('Error storing file message:', error)
+              console.error('Error handling file message:', error);
+              log('Error handling file message:', error)
               // Still update UI state even if storage fails
               setMessageHistory(prevMessages => [...prevMessages, msg])
             }
@@ -202,7 +213,8 @@ export const ChatProvider = ({ children }: any) => {
         },
       )
     } catch (e) {
-      console.error(e)
+      console.error('Error handling file message:', e);
+      log('Error handling file message:', e)
     }
   }
 
@@ -285,6 +297,7 @@ export const ChatProvider = ({ children }: any) => {
       await libp2p.services.videoCall.initiateCall(peerIdFromString(peerId))
       setActiveVideoCall(peerId)
     } catch (err) {
+      console.error('Error initiating video call:', err);
       log('Failed to initiate video call:', err)
       throw err
     }
