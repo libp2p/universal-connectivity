@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CHAT_FILE_TOPIC, CHAT_TOPIC } from '@/lib/constants'
 import { ChatFile, ChatMessage, useChatContext } from '../context/chat-ctx'
 import { v4 as uuidv4 } from 'uuid'
+import { VideoCall } from './video-call'
 import { Message } from './message'
 import { forComponent } from '@/lib/logger'
 import { ChatPeerList } from './chat-peer-list'
@@ -17,7 +18,7 @@ const PUBLIC_CHAT_ROOM_NAME = 'Public Chat'
 
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
-  const { roomId, setRoomId } = useChatContext()
+  const { roomId, setRoomId, activeVideoCall, setActiveVideoCall } = useChatContext()
   const { messageHistory, setMessageHistory, directMessages, setDirectMessages, files, setFiles } = useChatContext()
   const [input, setInput] = useState<string>('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -193,7 +194,13 @@ export default function ChatContainer() {
   }, [roomId, directMessages, messageHistory])
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto relative">
+      {activeVideoCall && (
+        <VideoCall
+          peerId={activeVideoCall}
+          onClose={() => setActiveVideoCall(null)}
+        />
+      )}
       <div className="min-w-full border rounded lg:grid lg:grid-cols-6">
         <div className="lg:col-span-5 lg:block">
           <div className="w-full">

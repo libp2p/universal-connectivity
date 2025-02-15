@@ -1,20 +1,21 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useLibp2pContext } from './ctx'
-import type { Message } from '@libp2p/interface'
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useLibp2pContext } from './ctx';
+import type { Message, PeerId } from '@libp2p/interface';
+import { peerIdFromString } from '@libp2p/peer-id';
 import {
   CHAT_FILE_TOPIC,
   CHAT_TOPIC,
   FILE_EXCHANGE_PROTOCOL,
   MIME_TEXT_PLAIN,
   PUBSUB_PEER_DISCOVERY,
-} from '@/lib/constants'
-import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { pipe } from 'it-pipe'
-import map from 'it-map'
-import * as lp from 'it-length-prefixed'
-import { forComponent } from '@/lib/logger'
-import { DirectMessageEvent, directMessageEvent } from '@/lib/direct-message'
+} from '@/lib/constants';
+import { toString as uint8ArrayToString, fromString as uint8ArrayFromString } from 'uint8arrays';
+import { pipe } from 'it-pipe';
+import map from 'it-map';
+import { encode, decode } from 'it-length-prefixed';
+import { forComponent } from '@/lib/logger';
+import { messageStore } from '@/lib/message-store';
+import { DirectMessageEvent, directMessageEvent } from '@/lib/direct-message';
 
 const log = forComponent('chat-context')
 
@@ -48,6 +49,9 @@ export interface ChatContextInterface {
   setRoomId: (chatRoom: Chatroom) => void
   files: Map<string, ChatFile>
   setFiles: (files: Map<string, ChatFile>) => void
+  activeVideoCall: string | null
+  setActiveVideoCall: (peerId: string | null) => void
+  initiateVideoCall: (peerId: string) => Promise<void>
 }
 
 export const chatContext = createContext<ChatContextInterface>({
@@ -59,6 +63,9 @@ export const chatContext = createContext<ChatContextInterface>({
   setRoomId: () => {},
   files: new Map<string, ChatFile>(),
   setFiles: () => {},
+  activeVideoCall: null,
+  setActiveVideoCall: () => {},
+  initiateVideoCall: async () => {},
 })
 
 export const useChatContext = () => {
@@ -70,8 +77,31 @@ export const ChatProvider = ({ children }: any) => {
   const [directMessages, setDirectMessages] = useState<DirectMessages>({})
   const [files, setFiles] = useState<Map<string, ChatFile>>(new Map<string, ChatFile>())
   const [roomId, setRoomId] = useState<Chatroom>('')
+  const [activeVideoCall, setActiveVideoCall] = useState<string | null>(null)
 
   const { libp2p } = useLibp2pContext()
+
+  // Load message history when component mounts
+  useEffect(() => {
+    const loadHistory = async () => {
+      console.log('Loading message history...');
+      console.log('Loading public chat messages...');
+      const chatMessages = await messageStore.getMessagesByTopic(CHAT_TOPIC);
+      console.log(`Loaded ${chatMessages.length} public chat messages.`);
+      console.log('Loading file messages...');
+      const fileMessages = await messageStore.getMessagesByTopic(CHAT_FILE_TOPIC);
+      console.log(`Loaded ${fileMessages.length} file messages.`);
+      console.log('Merging and sorting messages...');
+      const allMessages = [...chatMessages, ...fileMessages].sort((a, b) => a.receivedAt - b.receivedAt);
+      console.log(`Total messages to set: ${allMessages.length}`);
+      console.log('Setting message history...');
+      if (allMessages.length > 0) {
+        setMessageHistory(allMessages)
+      }
+      console.log('Message history loaded.');
+    }
+    loadHistory()
+  }, [setMessageHistory])
 
   const messageCB = (evt: CustomEvent<Message>) => {
     // FIXME: Why does 'from' not exist on type 'Message'?
@@ -95,23 +125,35 @@ export const ChatProvider = ({ children }: any) => {
     }
   }
 
-  const chatMessageCB = (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
+  const chatMessageCB = async (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
     const msg = new TextDecoder().decode(data)
     log(`${topic}: ${msg}`)
 
     // Append signed messages, otherwise discard
     if (evt.detail.type === 'signed') {
-      setMessageHistory([
-        ...messageHistory,
-        {
-          msgId: crypto.randomUUID(),
-          msg,
-          fileObjectUrl: undefined,
-          peerId: evt.detail.from.toString(),
-          read: false,
-          receivedAt: Date.now(),
-        },
-      ])
+      const message = {
+        msgId: crypto.randomUUID(),
+        msg,
+        fileObjectUrl: undefined,
+        peerId: evt.detail.from.toString(),
+        read: false,
+        receivedAt: Date.now(),
+      }
+
+      console.log('Received chat message:', message);
+      console.log('Storing message in IndexedDB...');
+      try {
+        // Store message in IndexedDB
+        await messageStore.storeMessage(topic, message)
+
+        // Update UI state using function form to avoid race conditions
+        setMessageHistory(prevMessages => [...prevMessages, message])
+      } catch (error) {
+        console.error('Error storing message:', error);
+        log('Error storing message:', error)
+        // Still update UI state even if storage fails
+        setMessageHistory(prevMessages => [...prevMessages, message])
+      }
     }
   }
 
@@ -127,13 +169,18 @@ export const ChatProvider = ({ children }: any) => {
     }
     const senderPeerId = evt.detail.from
 
+    console.log('Received file message from:', senderPeerId.toString());
+    console.log('File message ID:', fileId);
+    console.log('Received file message from:', senderPeerId.toString());
+    console.log('File message ID:', fileId);
+
     try {
       const stream = await libp2p.dialProtocol(senderPeerId, FILE_EXCHANGE_PROTOCOL)
       await pipe(
         [uint8ArrayFromString(fileId)],
-        (source) => lp.encode(source),
+        (source) => encode(source),
         stream,
-        (source) => lp.decode(source),
+        (source) => decode(source),
         async function (source) {
           for await (const data of source) {
             const body: Uint8Array = data.subarray()
@@ -147,12 +194,27 @@ export const ChatProvider = ({ children }: any) => {
               read: false,
               receivedAt: Date.now(),
             }
-            setMessageHistory([...messageHistory, msg])
+            console.log('Storing file message in IndexedDB...');
+            try {
+              // Store file message in IndexedDB
+              await messageStore.storeMessage(CHAT_FILE_TOPIC, msg)
+              
+              // Update UI state using function form to avoid race conditions
+              setMessageHistory(prevMessages => [...prevMessages, msg])
+            } catch (error) {
+              console.error('Error storing file message:', error);
+              log('Error storing file message:', error)
+              console.error('Error handling file message:', error);
+              log('Error handling file message:', error)
+              // Still update UI state even if storage fails
+              setMessageHistory(prevMessages => [...prevMessages, msg])
+            }
           }
         },
       )
     } catch (e) {
-      console.error(e)
+      console.error('Error handling file message:', e);
+      log('Error handling file message:', e)
     }
   }
 
@@ -191,29 +253,55 @@ export const ChatProvider = ({ children }: any) => {
   useEffect(() => {
     libp2p.services.pubsub.addEventListener('message', messageCB)
 
+    // Handle incoming video calls
+    const handleIncomingCall = (evt: CustomEvent<{ peerId: PeerId }>) => {
+      const peerId = evt.detail.peerId.toString()
+      setActiveVideoCall(peerId)
+    }
+    libp2p.services.videoCall.addEventListener('incomingCall', handleIncomingCall)
+
+    // Handle call ended
+    const handleCallEnded = () => {
+      setActiveVideoCall(null)
+    }
+    libp2p.services.videoCall.addEventListener('callEnded', handleCallEnded)
+
     libp2p.handle(FILE_EXCHANGE_PROTOCOL, ({ stream }) => {
       pipe(
         stream.source,
-        (source) => lp.decode(source),
+        (source) => decode(source),
         (source) =>
           map(source, async (msg) => {
             const fileId = uint8ArrayToString(msg.subarray())
             const file = files.get(fileId)!
             return file.body
           }),
-        (source) => lp.encode(source),
+        (source) => encode(source),
         stream.sink,
       )
     })
 
     return () => {
       ;(async () => {
-        // Cleanup handlers 👇
+        // Cleanup handlers 
         libp2p.services.pubsub.removeEventListener('message', messageCB)
+        libp2p.services.videoCall.removeEventListener('incomingCall', handleIncomingCall)
+        libp2p.services.videoCall.removeEventListener('callEnded', handleCallEnded)
         await libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
       })()
     }
-  })
+  }, [libp2p, files, messageCB])
+
+  const initiateVideoCall = async (peerId: string) => {
+    try {
+      await libp2p.services.videoCall.initiateCall(peerIdFromString(peerId))
+      setActiveVideoCall(peerId)
+    } catch (err) {
+      console.error('Error initiating video call:', err);
+      log('Failed to initiate video call:', err)
+      throw err
+    }
+  }
 
   return (
     <chatContext.Provider
@@ -226,6 +314,9 @@ export const ChatProvider = ({ children }: any) => {
         setDirectMessages,
         files,
         setFiles,
+        activeVideoCall,
+        setActiveVideoCall,
+        initiateVideoCall,
       }}
     >
       {children}
