@@ -15,6 +15,7 @@ import { pipe } from 'it-pipe'
 import map from 'it-map'
 import * as lp from 'it-length-prefixed'
 import { forComponent } from '@/lib/logger'
+import { messageStore } from '@/lib/message-store'
 import { DirectMessageEvent, directMessageEvent } from '@/lib/direct-message'
 
 const log = forComponent('chat-context')
@@ -81,6 +82,21 @@ export const ChatProvider = ({ children }: any) => {
 
   const { libp2p } = useLibp2pContext()
 
+  // Load message history when component mounts
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const messages = await messageStore.getMessagesByTopic(CHAT_TOPIC)
+        if (messages.length > 0) {
+          setMessageHistory(messages)
+        }
+      } catch (error) {
+        log('Error loading message history:', error)
+      }
+    }
+    loadHistory()
+  }, [setMessageHistory])
+
   const messageCB = (evt: CustomEvent<Message>) => {
     // FIXME: Why does 'from' not exist on type 'Message'?
     const { topic, data } = evt.detail
@@ -103,22 +119,28 @@ export const ChatProvider = ({ children }: any) => {
     }
   }
 
-  const chatMessageCB = (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
+  const chatMessageCB = async (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
     const msg = new TextDecoder().decode(data)
     log(`${topic}: ${msg}`)
 
     // Append signed messages, otherwise discard
     if (evt.detail.type === 'signed') {
+      const message = {
+        msgId: crypto.randomUUID(),
+        msg,
+        fileObjectUrl: undefined,
+        peerId: evt.detail.from.toString(),
+        read: false,
+        receivedAt: Date.now(),
+      }
+
+      // Store message in IndexedDB
+      await messageStore.storeMessage(topic, message)
+
+      // Update UI state
       setMessageHistory([
         ...messageHistory,
-        {
-          msgId: crypto.randomUUID(),
-          msg,
-          fileObjectUrl: undefined,
-          peerId: evt.detail.from.toString(),
-          read: false,
-          receivedAt: Date.now(),
-        },
+        message
       ])
     }
   }
@@ -236,7 +258,7 @@ export const ChatProvider = ({ children }: any) => {
         await libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
       })()
     }
-  })
+  }, [libp2p, files, messageCB])
 
   const initiateVideoCall = async (peerId: string) => {
     try {
