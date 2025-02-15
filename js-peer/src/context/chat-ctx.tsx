@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useLibp2pContext } from './ctx'
-import type { Message } from '@libp2p/interface'
+import type { Message, PeerId } from '@libp2p/interface'
+import { peerIdFromString } from '@libp2p/peer-id'
 import {
   CHAT_FILE_TOPIC,
   CHAT_TOPIC,
@@ -48,6 +49,9 @@ export interface ChatContextInterface {
   setRoomId: (chatRoom: Chatroom) => void
   files: Map<string, ChatFile>
   setFiles: (files: Map<string, ChatFile>) => void
+  activeVideoCall: string | null
+  setActiveVideoCall: (peerId: string | null) => void
+  initiateVideoCall: (peerId: string) => Promise<void>
 }
 
 export const chatContext = createContext<ChatContextInterface>({
@@ -59,6 +63,9 @@ export const chatContext = createContext<ChatContextInterface>({
   setRoomId: () => {},
   files: new Map<string, ChatFile>(),
   setFiles: () => {},
+  activeVideoCall: null,
+  setActiveVideoCall: () => {},
+  initiateVideoCall: async () => {},
 })
 
 export const useChatContext = () => {
@@ -70,6 +77,7 @@ export const ChatProvider = ({ children }: any) => {
   const [directMessages, setDirectMessages] = useState<DirectMessages>({})
   const [files, setFiles] = useState<Map<string, ChatFile>>(new Map<string, ChatFile>())
   const [roomId, setRoomId] = useState<Chatroom>('')
+  const [activeVideoCall, setActiveVideoCall] = useState<string | null>(null)
 
   const { libp2p } = useLibp2pContext()
 
@@ -191,6 +199,19 @@ export const ChatProvider = ({ children }: any) => {
   useEffect(() => {
     libp2p.services.pubsub.addEventListener('message', messageCB)
 
+    // Handle incoming video calls
+    const handleIncomingCall = (evt: CustomEvent<{ peerId: PeerId }>) => {
+      const peerId = evt.detail.peerId.toString()
+      setActiveVideoCall(peerId)
+    }
+    libp2p.services.videoCall.addEventListener('incomingCall', handleIncomingCall)
+
+    // Handle call ended
+    const handleCallEnded = () => {
+      setActiveVideoCall(null)
+    }
+    libp2p.services.videoCall.addEventListener('callEnded', handleCallEnded)
+
     libp2p.handle(FILE_EXCHANGE_PROTOCOL, ({ stream }) => {
       pipe(
         stream.source,
@@ -210,10 +231,22 @@ export const ChatProvider = ({ children }: any) => {
       ;(async () => {
         // Cleanup handlers 👇
         libp2p.services.pubsub.removeEventListener('message', messageCB)
+        libp2p.services.videoCall.removeEventListener('incomingCall', handleIncomingCall)
+        libp2p.services.videoCall.removeEventListener('callEnded', handleCallEnded)
         await libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
       })()
     }
   })
+
+  const initiateVideoCall = async (peerId: string) => {
+    try {
+      await libp2p.services.videoCall.initiateCall(peerIdFromString(peerId))
+      setActiveVideoCall(peerId)
+    } catch (err) {
+      log('Failed to initiate video call:', err)
+      throw err
+    }
+  }
 
   return (
     <chatContext.Provider
@@ -226,6 +259,9 @@ export const ChatProvider = ({ children }: any) => {
         setDirectMessages,
         files,
         setFiles,
+        activeVideoCall,
+        setActiveVideoCall,
+        initiateVideoCall,
       }}
     >
       {children}

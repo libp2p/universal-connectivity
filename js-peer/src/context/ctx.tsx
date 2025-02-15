@@ -4,6 +4,7 @@ import { ChatProvider } from './chat-ctx'
 import type { Libp2p, PubSub } from '@libp2p/interface'
 import type { Identify } from '@libp2p/identify'
 import type { DirectMessage } from '@/lib/direct-message'
+import type { VideoCallService } from '@/lib/video-call'
 import type { DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
 import { Booting } from '@/components/booting'
 
@@ -12,6 +13,7 @@ export type Libp2pType = Libp2p<{
   identify: Identify
   directMessage: DirectMessage
   delegatedRouting: DelegatedRoutingV1HttpApiClient
+  videoCall: VideoCallService
 }>
 
 export const libp2pContext = createContext<{ libp2p: Libp2pType }>({

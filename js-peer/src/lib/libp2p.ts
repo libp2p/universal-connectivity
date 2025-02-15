@@ -22,6 +22,7 @@ import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, PUBSUB_PEER_DISCOVERY 
 import first from 'it-first'
 import { forComponent, enable } from './logger'
 import { directMessage } from './direct-message'
+import { videoCall } from './video-call'
 import type { Libp2pType } from '@/context/ctx'
 
 const log = forComponent('libp2p')
@@ -83,6 +84,8 @@ export async function startLibp2p(): Promise<Libp2pType> {
       identify: identify(),
       // Custom protocol for direct messaging
       directMessage: directMessage(),
+      // Video call service for WebRTC-based video chat
+      videoCall: videoCall(),
       ping: ping(),
     },
   })
