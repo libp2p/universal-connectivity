@@ -8,7 +8,7 @@ import { peerIdFromString } from '@libp2p/peer-id'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
-import { multiaddr, Multiaddr } from '@multiformats/multiaddr'
+import { Multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
 import type { Connection, Message, SignedMessage, PeerId, Libp2p } from '@libp2p/interface'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
@@ -68,14 +68,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
       bootstrap({
         // The app-specific bootstrappers that use WebTransport and WebRTC-direct and have ephemeral multiadrrs
         // that are resolved above using the delegated routing API
-        list: [
-          `${bootstrapAddrs}`,
-          '/ip6/2604:1380:4642:6600::3/udp/9095/quic-v1/webtransport/certhash/uEiAFmismVS4uGGz9zF8yLRC10wtqPciwcBD1BuAch4sX3A/certhash/uEiBEvL3ao0UqfMSkj2JCOvjG_4BEiiEnjFr7qmDPALgG5Q',
-          '/ip6/2604:1380:4642:6600::3/udp/9095/quic-v1',
-          '/ip4/147.28.186.157/udp/9095/webrtc-direct/certhash/uEiC6yY8kGKhTw9gr74_eDLWf08PNyAiSKgs22JHc_rD8qw',
-          '/ip4/147.28.186.157/udp/9095/quic-v1',
-          '/ip4/147.28.186.157/udp/9095/quic-v1/webtransport/certhash/uEiAFmismVS4uGGz9zF8yLRC10wtqPciwcBD1BuAch4sX3A/certhash/uEiBEvL3ao0UqfMSkj2JCOvjG_4BEiiEnjFr7qmDPALgG5Q',
-        ],
+        list: bootstrapAddrs
       }),
     ],
     services: {
@@ -109,10 +102,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
   // 👇 explicitly dial peers discovered via pubsub
   libp2p.addEventListener('peer:discovery', (event) => {
     const { multiaddrs, id } = event.detail
-    let accioPeers = []
-    const peerId = id.toString()
-    accioPeers.push(peerId)
-    console.log('Discovered Peer:', peerId)
+
     if (libp2p.getConnections(id)?.length > 0) {
       log(`Already connected to peer %s. Will not try dialling`, id)
       return
@@ -124,61 +114,6 @@ export async function startLibp2p(): Promise<Libp2pType> {
   return libp2p
 }
 
-/* ability to Connect via peer-ID */
-export const findPeerById = (libp2p: Libp2pType) => async (peerIdStr: string) => {
-  console.log(`🔍 Searching for PeerID: ${peerIdStr}`)
-  try {
-    const peerId = peerIdFromString(peerIdStr)
-
-    // Step 1: Check if the peer is already known in the peerstore
-    const knownPeer = await libp2p.peerStore.get(peerId)
-    if (knownPeer?.addresses?.length) {
-      // Ensure each multiaddr includes the peer ID
-      const validAddresses = knownPeer.addresses.map((addr) => {
-        const maddr = addr.multiaddr
-        const addrStr = maddr.toString()
-        return {
-          multiaddr: addrStr.includes(`/p2p/${peerIdStr}`) ? maddr : multiaddr(`${addrStr}/p2p/${peerIdStr}`),
-          isCertified: addr.isCertified,
-        }
-      })
-      console.log(`✅ Found peer in peerStore with ${validAddresses.length} valid addresses`)
-      return { ...knownPeer, addresses: validAddresses }
-    }
-
-    // Step 2: Use peerRouting to find the peer
-    console.log(`🔄 Searching for peer via routing...`)
-    const peer = await libp2p.peerRouting.findPeer(peerId, {
-      signal: AbortSignal.timeout(10000),
-    })
-
-    if (peer?.multiaddrs.length > 0) {
-      // Ensure each multiaddr includes the peer ID
-      const validAddresses = peer.multiaddrs.map((maddr) => ({
-        multiaddr: maddr.toString().includes(`/p2p/${peerIdStr}`)
-          ? maddr
-          : multiaddr(`${maddr.toString()}/p2p/${peerIdStr}`),
-        isCertified: true,
-      }))
-
-      const peerInfo = {
-        id: peer.id,
-        addresses: validAddresses,
-        protocols: [],
-        metadata: new Map(),
-        tags: new Map(),
-      }
-      console.log(`✅ Found peer via routing with ${peerInfo.addresses.length} valid addresses`)
-      return peerInfo
-    }
-
-    console.warn(`⚠️ No valid peer information found`)
-    return null
-  } catch (error) {
-    console.error(`❌ Peer lookup failed:`, error)
-    return null
-  }
-}
 
 // message IDs are used to dedupe inbound messages
 // every agent in network should use the same message id function

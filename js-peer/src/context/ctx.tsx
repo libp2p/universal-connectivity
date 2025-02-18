@@ -37,6 +37,21 @@ export function AppWrapper({ children }: WrapperProps) {
   const [connections, setConnections] = useState<Connection[]>([])
 
   useEffect(() => {
+    if(!libp2p) return 
+    const onConnection = () => {
+    const connections = libp2p.getConnections()
+    setConnections(connections)
+    }
+    onConnection()
+    libp2p.addEventListener('connection:open', onConnection)
+    libp2p.addEventListener('connection:close', onConnection)
+    return () => {
+    libp2p.removeEventListener('connection:open', onConnection)
+    libp2p.removeEventListener('connection:close', onConnection)
+    }
+    }, [libp2p, setConnections])
+
+  useEffect(() => {
     const init = async () => {
       if (loaded) return
       try {
