@@ -13,8 +13,8 @@ jobs:
   go-check:
     uses: libp2p/uci/.github/workflows/go-check.yml@v0.0
     with:
-      go-version: '1.22.x'
+      go-version: '1.23.x'
   go-test:
     uses: libp2p/uci/.github/workflows/go-test.yml@v0.0
     with:
-      go-versions: '["1.22.x"]'
+      go-versions: '["1.23.x"]'
