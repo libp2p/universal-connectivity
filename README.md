@@ -20,7 +20,7 @@ Some of the cool and cutting-edge [transport protocols](https://connectivity.lib
 
 ## Packages
 
-| Packge                      | Description                     | WebTransport | WebRTC | WebRTC-direct | QUIC | TCP |
+| Package                     | Description                     | WebTransport | WebRTC | WebRTC-direct | QUIC | TCP |
 | :-------------------------- | :------------------------------ | ------------ | ------ | ------------- | ---- | --- |
 | [`js-peer`](./js-peer/)     | Browser Chat Peer in TypeScript | ✅           | ✅     | ✅            | ❌   | ❌  |
 | [`go-peer`](./go-peer/)     | Chat peer implemented in Go     | ✅           | ❌     | ✅            | ✅   | ✅  |
