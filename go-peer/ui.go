@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -161,7 +160,7 @@ func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 // with the sender's nick highlighted in green.
 func (ui *ChatUI) displaySysMessage(cm *ChatMessage) {
 	fmt.Fprintf(ui.sysW, "%s\n", cm.Message)
-	log.Println(cm.Message)
+	logger.Info(cm.Message)
 }
 
 // displaySelfMessage writes a message from ourself to the message window,
