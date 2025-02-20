@@ -363,13 +363,15 @@ func getResourceManager() network.ResourceManager {
 	}
 
 	scl := rcmgr.ScalingLimitConfig{
-		SystemBaseLimit:    baseLimits,
-		TransientBaseLimit: baseLimits,
-		ServiceBaseLimit:   baseLimits,
-		ProtocolBaseLimit:  baseLimits,
-		PeerBaseLimit:      baseLimits,
-		ConnBaseLimit:      baseLimits,
-		StreamBaseLimit:    baseLimits,
+		SystemBaseLimit:       baseLimits,
+		TransientBaseLimit:    baseLimits,
+		ServiceBaseLimit:      baseLimits,
+		ServicePeerBaseLimit:  baseLimits,
+		ProtocolBaseLimit:     baseLimits,
+		ProtocolPeerBaseLimit: baseLimits,
+		PeerBaseLimit:         baseLimits,
+		ConnBaseLimit:         baseLimits,
+		StreamBaseLimit:       baseLimits,
 	}
 	cl := scl.Scale(0, 0)
 	rcmgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
