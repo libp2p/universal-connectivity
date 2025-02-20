@@ -7,7 +7,6 @@ import { identify } from '@libp2p/identify'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
-import { bootstrap } from '@libp2p/bootstrap'
 import { Multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
 import type { Connection, Message, SignedMessage, PeerId, Libp2p } from '@libp2p/interface'
@@ -32,7 +31,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
 
-  const { relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
+  const relayListenAddrs = await getBootstrapMultiaddrs(delegatedClient)
   log('starting libp2p with relayListenAddrs: %o', relayListenAddrs)
 
   let libp2p: Libp2pType
