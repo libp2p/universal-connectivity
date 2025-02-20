@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -20,14 +21,14 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
-	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
-	"github.com/multiformats/go-multiaddr"
-
 	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
+	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
+	"github.com/multiformats/go-multiaddr"
 )
 
 // DiscoveryInterval is how often we re-publish our mDNS records.
@@ -163,7 +164,7 @@ func main() {
 			fmt.Sprintf("/ip4/0.0.0.0/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
 			fmt.Sprintf("/ip6/::/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
 		),
-
+		libp2p.ResourceManager(getResourceManager()),
 		libp2p.Transport(webtransport.New),
 		libp2p.Transport(quic.NewTransport),
 		libp2p.Transport(tcp.NewTCPTransport),
@@ -249,6 +250,29 @@ func main() {
 		}
 	}
 
+	// Start a background ticker to periodically log connected peers
+	go func() {
+		ticker := time.NewTicker(time.Second * 10)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				rm := h.Network().ResourceManager()
+				rm.ViewSystem(
+					func(rs network.ResourceScope) error {
+						fmt.Printf("Stats: %+v\n", rs.Stat())
+						if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
+							fmt.Printf("Limits: %+v\n", r.Limit())
+						}
+						return nil
+					},
+				)
+			}
+		}
+	}()
+
 	LogMsgf("PeerID: %s", h.ID().String())
 	for _, addr := range h.Addrs() {
 		if *headless {
@@ -319,4 +343,38 @@ func setupDiscovery(h host.Host) error {
 	// setup mDNS discovery to find local peers
 	s := mdns.NewMdnsService(h, DiscoveryServiceTag, &discoveryNotifee{h: h})
 	return s.Start()
+}
+
+// creates and returns a libp2p resource manager with very permissive limits.
+// This resource manager is configured with maximum values for most limits to prevent resource constraints
+// from blocking connections and streams.
+//
+// Note: Using maximum values for limits could lead to resource exhaustion.
+func getResourceManager() network.ResourceManager {
+	baseLimits := rcmgr.BaseLimit{
+		Streams:         math.MaxInt,
+		StreamsInbound:  math.MaxInt,
+		StreamsOutbound: math.MaxInt,
+		Conns:           math.MaxInt,
+		ConnsInbound:    1000,
+		ConnsOutbound:   math.MaxInt,
+		FD:              math.MaxInt,
+		Memory:          math.MaxInt64,
+	}
+
+	scl := rcmgr.ScalingLimitConfig{
+		SystemBaseLimit:    baseLimits,
+		TransientBaseLimit: baseLimits,
+		ServiceBaseLimit:   baseLimits,
+		ProtocolBaseLimit:  baseLimits,
+		PeerBaseLimit:      baseLimits,
+		ConnBaseLimit:      baseLimits,
+		StreamBaseLimit:    baseLimits,
+	}
+	cl := scl.Scale(0, 0)
+	rcmgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
+	if err != nil {
+		panic(err)
+	}
+	return rcmgr
 }
