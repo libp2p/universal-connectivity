@@ -21,6 +21,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
 
 	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
@@ -113,6 +114,8 @@ func main() {
 
 	flag.Parse()
 
+	log.SetLogLevel("app", "debug")
+
 	ctx := context.Background()
 
 	// Create a channel to signal when the cert is loaded
@@ -151,16 +154,17 @@ func main() {
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/tcp/9095",
 			"/ip4/0.0.0.0/udp/9095/quic-v1",
-			// "/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
 			"/ip4/0.0.0.0/udp/9095/webrtc-direct",
 			"/ip6/::/tcp/9095",
 			"/ip6/::/udp/9095/quic-v1",
-			// "/ip6/::/udp/9095/quic-v1/webtransport",
+			"/ip6/::/udp/9095/quic-v1/webtransport",
 			"/ip6/::/udp/9095/webrtc-direct",
 			fmt.Sprintf("/ip4/0.0.0.0/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
 			fmt.Sprintf("/ip6/::/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
 		),
 
+		libp2p.Transport(webtransport.New),
 		libp2p.Transport(quic.NewTransport),
 		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Transport(webrtc.New),
