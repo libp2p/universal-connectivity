@@ -63,7 +63,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
         interval: 10_000,
         topics: [PUBSUB_PEER_DISCOVERY],
         listenOnly: false,
-      })
+      }),
     ],
     services: {
       pubsub: gossipsub({
@@ -84,7 +84,6 @@ export async function startLibp2p(): Promise<Libp2pType> {
   if (!libp2p) {
     throw new Error('Failed to create libp2p node')
   }
-
 
   libp2p.services.pubsub.subscribe(CHAT_TOPIC)
   libp2p.services.pubsub.subscribe(CHAT_FILE_TOPIC)
