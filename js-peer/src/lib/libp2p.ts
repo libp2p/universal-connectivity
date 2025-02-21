@@ -68,7 +68,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
       bootstrap({
         // The app-specific bootstrappers that use WebTransport and WebRTC-direct and have ephemeral multiadrrs
         // that are resolved above using the delegated routing API
-        list: bootstrapAddrs
+        list: bootstrapAddrs,
       }),
     ],
     services: {
@@ -113,7 +113,6 @@ export async function startLibp2p(): Promise<Libp2pType> {
 
   return libp2p
 }
-
 
 // message IDs are used to dedupe inbound messages
 // every agent in network should use the same message id function
