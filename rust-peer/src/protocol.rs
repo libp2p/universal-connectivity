@@ -2,7 +2,22 @@ use async_trait::async_trait;
 use futures::{io, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use libp2p::{request_response, StreamProtocol};
 
-// Simple file exchange protocol
+// Simple file exchange protocol. The format that the peers support consists of two different
+// messages, one to request a file and one to receive the file.
+//
+// To request a file a peer sends the varuint encoded length of the file id string followed by the
+// file id string itself.
+//
+// FileRequest:
+//  varuint - file id length
+//  bytes - file id
+//
+// The file response message consists of a varuint length followed by the contents of the file.
+//
+// FileResponse:
+//  varuint - file contents length
+//  bytes - file contents
+//
 
 #[derive(Default, Clone)]
 pub struct FileExchangeCodec;

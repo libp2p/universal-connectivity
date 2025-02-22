@@ -20,7 +20,6 @@ use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
 use protocol::FileExchangeCodec;
-use std::iter;
 use std::net::IpAddr;
 use std::path::Path;
 use std::{
@@ -346,9 +345,8 @@ fn create_swarm(
             },
         ),
         request_response: request_response::Behaviour::new(
-            // TODO: support ProtocolSupport::Full
-            iter::once((FILE_EXCHANGE_PROTOCOL, ProtocolSupport::Outbound)),
-            Default::default(),
+            [(FILE_EXCHANGE_PROTOCOL, ProtocolSupport::Full)],
+            request_response::Config::default(),
         ),
         connection_limits: memory_connection_limits::Behaviour::with_max_percentage(0.9),
     };
