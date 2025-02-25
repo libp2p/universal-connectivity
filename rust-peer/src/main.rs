@@ -4,23 +4,22 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use futures::future::{select, Either};
 use futures::StreamExt;
-use libp2p::request_response::{self, ProtocolSupport};
 use libp2p::{
     core::muxing::StreamMuxerBox,
-    dns, gossipsub, identify, identity,
-    kad::record::store::MemoryStore,
-    kad::{Kademlia, KademliaConfig},
+    gossipsub, identify, identity,
+    kad::store::MemoryStore,
+    kad::{Behaviour as Kademlia, Config as KademliaConfig},
     memory_connection_limits,
     multiaddr::{Multiaddr, Protocol},
-    quic, relay,
-    swarm::{NetworkBehaviour, Swarm, SwarmBuilder, SwarmEvent},
-    PeerId, StreamProtocol, Transport,
+    relay,
+    request_response::{self, ProtocolSupport},
+    swarm::{NetworkBehaviour, Swarm, SwarmEvent},
+    PeerId, StreamProtocol, SwarmBuilder, Transport,
 };
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use log::{debug, error, info, warn};
 use protocol::FileExchangeCodec;
-use std::iter;
 use std::net::IpAddr;
 use std::path::Path;
 use std::{
@@ -198,7 +197,7 @@ async fn main() -> Result<()> {
                 SwarmEvent::Behaviour(BehaviourEvent::Identify(e)) => {
                     info!("BehaviourEvent::Identify {:?}", e);
 
-                    if let identify::Event::Error { peer_id, error } = e {
+                    if let identify::Event::Error { peer_id, error, .. } = e {
                         match error {
                             libp2p::swarm::StreamUpgradeError::Timeout => {
                                 // When a browser tab closes, we don't get a swarm event
@@ -212,39 +211,14 @@ async fn main() -> Result<()> {
                             }
                         }
                     } else if let identify::Event::Received {
-                        peer_id,
-                        info:
-                            identify::Info {
-                                listen_addrs,
-                                protocols,
-                                observed_addr,
-                                ..
-                            },
+                        info: identify::Info { observed_addr, .. },
+                        ..
                     } = e
                     {
                         debug!("identify::Event::Received observed_addr: {}", observed_addr);
 
-                        // Disable to see if it's the cause of the wrong multiaddrs getting announced
-                        // swarm.add_external_address(observed_addr);
-
-                        // TODO: The following should no longer be necessary after https://github.com/libp2p/rust-libp2p/pull/4371.
-                        if protocols.iter().any(|p| p == &KADEMLIA_PROTOCOL_NAME) {
-                            for addr in listen_addrs {
-                                debug!("identify::Event::Received listen addr: {}", addr);
-                                // TODO (fixme): the below doesn't work because the address is still missing /webrtc/p2p even after https://github.com/libp2p/js-libp2p-webrtc/pull/121
-                                // swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
-
-                                let webrtc_address = addr
-                                    .with(Protocol::WebRTCDirect)
-                                    .with(Protocol::P2p(peer_id));
-
-                                swarm
-                                    .behaviour_mut()
-                                    .kademlia
-                                    .add_address(&peer_id, webrtc_address.clone());
-                                info!("Added {webrtc_address} to the routing table.");
-                            }
-                        }
+                        // this should switch us from client to server mode in kademlia
+                        swarm.add_external_address(observed_addr);
                     }
                 }
                 SwarmEvent::Behaviour(BehaviourEvent::Kademlia(e)) => {
@@ -344,26 +318,13 @@ fn create_swarm(
     gossipsub.subscribe(&gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC))?;
     gossipsub.subscribe(&gossipsub::IdentTopic::new(GOSSIPSUB_PEER_DISCOVERY))?;
 
-    let transport = {
-        let webrtc = webrtc::tokio::Transport::new(local_key.clone(), certificate);
-        let quic = quic::tokio::Transport::new(quic::Config::new(&local_key));
-
-        let mapped = webrtc.or_transport(quic).map(|fut, _| match fut {
-            Either::Right((local_peer_id, conn)) => (local_peer_id, StreamMuxerBox::new(conn)),
-            Either::Left((local_peer_id, conn)) => (local_peer_id, StreamMuxerBox::new(conn)),
-        });
-
-        dns::TokioDnsConfig::system(mapped)?.boxed()
-    };
-
     let identify_config = identify::Behaviour::new(
         identify::Config::new("/ipfs/0.1.0".into(), local_key.public())
             .with_interval(Duration::from_secs(60)), // do this so we can get timeouts for dropped WebRTC connections
     );
 
     // Create a Kademlia behaviour.
-    let mut cfg = KademliaConfig::default();
-    cfg.set_protocol_names(vec![KADEMLIA_PROTOCOL_NAME]);
+    let cfg = KademliaConfig::new(KADEMLIA_PROTOCOL_NAME);
     let store = MemoryStore::new(local_peer_id);
     let kad_behaviour = Kademlia::with_config(local_peer_id, store, cfg);
 
@@ -384,17 +345,21 @@ fn create_swarm(
             },
         ),
         request_response: request_response::Behaviour::new(
-            // TODO: support ProtocolSupport::Full
-            iter::once((FILE_EXCHANGE_PROTOCOL, ProtocolSupport::Outbound)),
-            Default::default(),
+            [(FILE_EXCHANGE_PROTOCOL, ProtocolSupport::Full)],
+            request_response::Config::default(),
         ),
         connection_limits: memory_connection_limits::Behaviour::with_max_percentage(0.9),
     };
-    Ok(
-        SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id)
-            .idle_connection_timeout(Duration::from_secs(60))
-            .build(),
-    )
+    Ok(SwarmBuilder::with_existing_identity(local_key.clone())
+        .with_tokio()
+        .with_quic()
+        .with_other_transport(|id_keys| {
+            Ok(webrtc::tokio::Transport::new(id_keys.clone(), certificate)
+                .map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn))))
+        })?
+        .with_dns()?
+        .with_behaviour(|_key| behaviour)?
+        .build())
 }
 
 async fn read_or_create_certificate(path: &Path) -> Result<Certificate> {
