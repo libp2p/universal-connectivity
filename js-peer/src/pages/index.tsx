@@ -1,35 +1,21 @@
 import Head from 'next/head'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
-import type { PeerUpdate, Connection } from '@libp2p/interface'
+import type { PeerUpdate } from '@libp2p/interface'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Multiaddr, multiaddr } from '@multiformats/multiaddr'
 import { connectToMultiaddr } from '../lib/libp2p'
 import Spinner from '@/components/spinner'
 import PeerList from '@/components/peer-list'
+import { peerIdFromString } from '@libp2p/peer-id'
 
 export default function Home() {
-  const { libp2p } = useLibp2pContext()
-  const [connections, setConnections] = useState<Connection[]>([])
+  const { libp2p, connections } = useLibp2pContext()
   const [listenAddresses, setListenAddresses] = useState<Multiaddr[]>([])
   const [maddr, setMultiaddr] = useState('')
   const [dialling, setDialling] = useState(false)
   const [err, setErr] = useState('')
-
-  useEffect(() => {
-    const onConnection = () => {
-      const connections = libp2p.getConnections()
-      setConnections(connections)
-    }
-    onConnection()
-    libp2p.addEventListener('connection:open', onConnection)
-    libp2p.addEventListener('connection:close', onConnection)
-    return () => {
-      libp2p.removeEventListener('connection:open', onConnection)
-      libp2p.removeEventListener('connection:clone', onConnection)
-    }
-  }, [libp2p, setConnections])
 
   useEffect(() => {
     const onPeerUpdate = (evt: CustomEvent<PeerUpdate>) => {
@@ -51,7 +37,14 @@ export default function Home() {
       }
       setDialling(true)
       try {
-        await connectToMultiaddr(libp2p)(multiaddr(maddr))
+        if (maddr.startsWith('/')) {
+          await connectToMultiaddr(libp2p)(multiaddr(maddr))
+          setMultiaddr('')
+        } else {
+          const peerId = peerIdFromString(maddr.trim())
+          await libp2p.dial(peerId)
+          setMultiaddr('')
+        }
       } catch (e: any) {
         setErr(e?.message ?? 'Error connecting')
       } finally {
@@ -102,7 +95,7 @@ export default function Home() {
               </ul>
               <div className="my-6 w-1/2">
                 <label htmlFor="peer-id" className="block text-sm font-medium leading-6 text-gray-900">
-                  multiaddr to connect to
+                  multiaddr or PeerID to connect to
                 </label>
                 <div className="mt-2">
                   <input
@@ -111,7 +104,7 @@ export default function Home() {
                     name="peer-id"
                     id="peer-id"
                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    placeholder="12D3Koo..."
+                    placeholder="/ip4/127.0.0.1/.. or 12D3Koo..."
                     aria-describedby="multiaddr-id-description"
                     onChange={handleMultiaddrChange}
                   />
@@ -125,7 +118,7 @@ export default function Home() {
                   onClick={handleConnectToMultiaddr}
                   disabled={dialling}
                 >
-                  {dialling && <Spinner />} Connect{dialling && 'ing'} to multiaddr
+                  {dialling && <Spinner />} Connect{dialling && 'ing'}
                 </button>
                 {err && <p className="text-red-500">{err}</p>}
               </div>
