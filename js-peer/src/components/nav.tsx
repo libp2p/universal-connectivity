@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { useRouter } from 'next/router'
 
 const navigationItems = [
-  { name: 'Connecting to a Peer', href: '/' },
   { name: 'Chat', href: '/chat' },
   { name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' },
 ]
@@ -20,7 +19,7 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function Navigation() {
+export default function Navigation({ connectionInfoButton }: { connectionInfoButton?: React.ReactNode }) {
   const router = useRouter()
 
   return (
@@ -32,6 +31,10 @@ export default function Navigation() {
               <div className="flex">
                 <div className="flex flex-shrink-0 items-center">
                   <Image src="/libp2p-logo.svg" alt="libp2p logo" height="46" width="46" />
+                  <div className="ml-3 flex items-center">
+                    <h1 className="text-xl font-semibold text-gray-900 hidden sm:block">Universal Connectivity</h1>
+                    <Image src="/libp2p-hero.svg" alt="libp2p hero" height="24" width="24" className="ml-2 hidden sm:block" />
+                  </div>
                 </div>
                 <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
                   {navigationItems.map((item) => (
@@ -53,25 +56,19 @@ export default function Navigation() {
                 </div>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:items-center">
-                <button
+                {connectionInfoButton}
+                
+                {/* <button
                   type="button"
-                  className="rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  className="ml-3 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
                   <span className="sr-only">View notifications</span>
                   <BellIcon className="h-6 w-6" aria-hidden="true" />
-                </button>
+                </button> */}
 
                 {/* Profile dropdown */}
                 <Menu as="div" className="relative ml-3">
                   <div>
-                    {/* <Menu.Button className="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                          <span className="sr-only">Open user menu</span>
-                          <img
-                            className="h-8 w-8 rounded-full"
-                            src={user.imageUrl}
-                            alt=""
-                          />
-                        </Menu.Button> */}
                   </div>
                   <Transition
                     as={Fragment}
@@ -118,12 +115,16 @@ export default function Navigation() {
 
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 pt-2 pb-3">
+              <div className="px-4 py-2">
+                <div className="flex items-center">
+                  <h1 className="text-lg font-semibold text-gray-900">Universal Connectivity</h1>
+                  <Image src="/libp2p-hero.svg" alt="libp2p hero" height="20" width="20" className="ml-2" />
+                </div>
+              </div>
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href} legacyBehavior>
                   <Disclosure.Button
                     key={item.href}
-                    // as="a"
-                    // href={item.href}
                     className={classNames(
                       router.pathname === item.href
                         ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
@@ -136,6 +137,15 @@ export default function Navigation() {
                   </Disclosure.Button>
                 </Link>
               ))}
+            </div>
+            <div className="border-t border-gray-200 pt-4 pb-3">
+              <div className="flex items-center px-4">
+                {connectionInfoButton && (
+                  <div className="flex-shrink-0">
+                    {connectionInfoButton}
+                  </div>
+                )}
+              </div>
             </div>
           </Disclosure.Panel>
         </>
