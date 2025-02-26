@@ -7,13 +7,27 @@ version: 2
 updates:
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/js-peer" # Location of package manifests
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "deps"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"
     directory: "/go-peer"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "deps"
     schedule:
       interval: "weekly"
   - package-ecosystem: "cargo"
     directory: "/rust-peer"
+    open-pull-requests-limit: 2
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "deps"
+    groups:
+      libp2p:
+        patterns:
+          - "libp2p"
+          - "libp2p-*"

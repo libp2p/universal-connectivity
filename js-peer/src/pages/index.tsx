@@ -1,104 +1,59 @@
 import Head from 'next/head'
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
-import type { Connection } from '@libp2p/interface'
-import { usePeerContext } from '../context/peer-ctx'
+import type { PeerUpdate, Connection } from '@libp2p/interface'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
-import { multiaddr } from '@multiformats/multiaddr'
+import { Multiaddr, multiaddr } from '@multiformats/multiaddr'
 import { connectToMultiaddr } from '../lib/libp2p'
-import { useListenAddressesContext } from '../context/listen-addresses-ctx'
 import Spinner from '@/components/spinner'
+import PeerList from '@/components/peer-list'
 
 export default function Home() {
   const { libp2p } = useLibp2pContext()
-  const { peerStats, setPeerStats } = usePeerContext()
-  const { listenAddresses, setListenAddresses } = useListenAddressesContext()
+  const [connections, setConnections] = useState<Connection[]>([])
+  const [listenAddresses, setListenAddresses] = useState<Multiaddr[]>([])
   const [maddr, setMultiaddr] = useState('')
   const [dialling, setDialling] = useState(false)
   const [err, setErr] = useState('')
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const onConnection = () => {
       const connections = libp2p.getConnections()
-
-      setPeerStats({
-        ...peerStats,
-        peerIds: connections.map(conn => conn.remotePeer),
-        connections: connections,
-        connected: connections.length > 0,
-      })
-    }, 1000)
-
-    return () => {
-      clearInterval(interval)
+      setConnections(connections)
     }
-  }, [libp2p, peerStats, setPeerStats])
+    onConnection()
+    libp2p.addEventListener('connection:open', onConnection)
+    libp2p.addEventListener('connection:close', onConnection)
+    return () => {
+      libp2p.removeEventListener('connection:open', onConnection)
+      libp2p.removeEventListener('connection:clone', onConnection)
+    }
+  }, [libp2p, setConnections])
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const multiaddrs = libp2p.getMultiaddrs()
-
-      setListenAddresses({
-        ...listenAddresses,
-        multiaddrs
-      })
-    }, 1000)
+    const onPeerUpdate = (evt: CustomEvent<PeerUpdate>) => {
+      const maddrs = evt.detail.peer.addresses?.map((p) => p.multiaddr)
+      setListenAddresses(maddrs ?? [])
+    }
+    libp2p.addEventListener('self:peer:update', onPeerUpdate)
 
     return () => {
-      clearInterval(interval)
+      libp2p.removeEventListener('self:peer:update', onPeerUpdate)
     }
-  }, [libp2p, listenAddresses, setListenAddresses])
-
-  type PeerProtoTuple = {
-    peerId: string
-    protocols: string[]
-  }
-
-  const getFormattedConnections = (connections: Connection[]): PeerProtoTuple[] => {
-    const protoNames: Map<string, string[]> = new Map()
-
-    connections.forEach((conn) => {
-      const exists = protoNames.get(conn.remotePeer.toString())
-      const dedupedProtonames = [...new Set(conn.remoteAddr.protoNames())]
-
-      if (exists?.length) {
-        const namesToAdd = dedupedProtonames.filter((name) => !exists.includes(name))
-        // console.log('namesToAdd: ', namesToAdd)
-        protoNames.set(conn.remotePeer.toString(), [...exists, ...namesToAdd])
-
-      } else {
-        protoNames.set(conn.remotePeer.toString(), dedupedProtonames)
-      }
-    })
-
-    return [...protoNames.entries()].map(([peerId, protocols]) => ({
-      peerId,
-      protocols,
-    }))
-  }
+  }, [libp2p, setListenAddresses])
 
   const handleConnectToMultiaddr = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       setErr('')
-
       if (!maddr) {
         return
       }
-
       setDialling(true)
-
       try {
-        const connection = await connectToMultiaddr(libp2p)(multiaddr(maddr))
-        console.log('connection: ', connection)
-
-        return connection
+        await connectToMultiaddr(libp2p)(multiaddr(maddr))
       } catch (e: any) {
-        if (e && e.message) {
-          setErr(e.message)
-        }
-        console.error(e)
+        setErr(e?.message ?? 'Error connecting')
       } finally {
         setDialling(false)
       }
@@ -128,12 +83,7 @@ export default function Home() {
             <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
               <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900 flex flex-row">
                 <p className="mr-4">Universal Connectivity</p>
-                <Image
-                  src="/libp2p-hero.svg"
-                  alt="libp2p logo"
-                  height="46"
-                  width="46"
-                />
+                <Image src="/libp2p-hero.svg" alt="libp2p logo" height="46" width="46" />
               </h1>
             </div>
           </header>
@@ -144,19 +94,14 @@ export default function Home() {
               </ul>
               Addresses:
               <ul className="my-2 space-y-2 break-all">
-                {
-                  listenAddresses.multiaddrs.map((ma, index) => {
-                    return (
-                      <li key={`ma-${index}`}>{ma.toString()}</li>
-                    )
-                  })
-                }
+                {listenAddresses.map((ma, index) => (
+                  <li className="text-xs text-gray-700" key={`ma-${index}`}>
+                    {ma.toString()}
+                  </li>
+                ))}
               </ul>
               <div className="my-6 w-1/2">
-                <label
-                  htmlFor="peer-id"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label htmlFor="peer-id" className="block text-sm font-medium leading-6 text-gray-900">
                   multiaddr to connect to
                 </label>
                 <div className="mt-2">
@@ -173,39 +118,22 @@ export default function Home() {
                 </div>
                 <button
                   type="button"
-                  className={"rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" + (dialling ? ' cursor-not-allowed' : '')}
+                  className={
+                    'rounded-md bg-indigo-600 my-2 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600' +
+                    (dialling ? ' cursor-not-allowed' : '')
+                  }
                   onClick={handleConnectToMultiaddr}
                   disabled={dialling}
                 >
-                  {dialling && <Spinner />}{' '}
-                  Connect{dialling && 'ing'} to multiaddr
+                  {dialling && <Spinner />} Connect{dialling && 'ing'} to multiaddr
                 </button>
                 {err && <p className="text-red-500">{err}</p>}
               </div>
-
-              <div className="my-4 inline-flex items-center text-xl">
-                Connected:{' '}
-                {peerStats.connected ? (
-                  <CheckCircleIcon className="inline w-6 h-6 text-green-500" />
-                ) : (
-                  <XCircleIcon className="w-6 h-6 text-red-500" />
-                )}
-              </div>
               <div>
-                {peerStats.peerIds.length > 0 ? (
+                {connections.length > 0 ? (
                   <>
-                    <h3 className="text-xl">
-                      {' '}
-                      Connected peers ({getFormattedConnections(peerStats.connections).length}) 👇
-                    </h3>
-                    <pre className="px-2">
-                      {getFormattedConnections(peerStats.connections)
-                        .map(
-                          (pair) =>
-                            `${pair.peerId} (${pair.protocols.join(', ')})`,
-                        )
-                        .join('\n')}
-                    </pre>
+                    <h3 className="text-xl">Connections ({connections.length}):</h3>
+                    <PeerList connections={connections} />
                   </>
                 ) : null}
               </div>

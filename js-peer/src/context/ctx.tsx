@@ -1,24 +1,20 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from 'react'
-
-import type { Libp2p } from 'libp2p'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
-import { PeerProvider } from './peer-ctx'
-import { ListenAddressesProvider } from './listen-addresses-ctx'
-import { PubSub,  } from '@libp2p/interface'
-import { Identify } from '@libp2p/identify'
+import type { Libp2p, PubSub } from '@libp2p/interface'
+import type { Identify } from '@libp2p/identify'
+import type { DirectMessage } from '@/lib/direct-message'
+import type { DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
+import { Booting } from '@/components/booting'
 
-// 👇 The context type will be avilable "anywhere" in the app
-interface Libp2pContextInterface {
-  libp2p: Libp2p<{ pubsub: PubSub }>
-}
-export const libp2pContext = createContext<Libp2pContextInterface>({
+export type Libp2pType = Libp2p<{
+  pubsub: PubSub
+  identify: Identify
+  directMessage: DirectMessage
+  delegatedRouting: DelegatedRoutingV1HttpApiClient
+}>
+
+export const libp2pContext = createContext<{ libp2p: Libp2pType }>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
   libp2p: undefined,
 })
@@ -26,9 +22,12 @@ export const libp2pContext = createContext<Libp2pContextInterface>({
 interface WrapperProps {
   children?: ReactNode
 }
+
+// This is needed to prevent libp2p from instantiating more than once
 let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
-  const [libp2p, setLibp2p] = useState<Libp2p<{ pubsub: PubSub }>>()
+  const [libp2p, setLibp2p] = useState<Libp2pType | undefined>(undefined)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const init = async () => {
@@ -37,12 +36,16 @@ export function AppWrapper({ children }: WrapperProps) {
         loaded = true
         const libp2p = await startLibp2p()
 
+        if (!libp2p) {
+          throw new Error('failed to start libp2p')
+        }
         // @ts-ignore
         window.libp2p = libp2p
 
-        setLibp2p(libp2p as Libp2p<{ pubsub: PubSub; identify: Identify }>)
+        setLibp2p(libp2p as Libp2pType)
       } catch (e) {
         console.error('failed to start libp2p', e)
+        setError(`failed to start libp2p ${e}`)
       }
     }
 
@@ -50,22 +53,12 @@ export function AppWrapper({ children }: WrapperProps) {
   }, [])
 
   if (!libp2p) {
-    return (
-      <div>
-        <h2>Initializing libp2p peer...</h2>
-      </div>
-    )
+    return <Booting error={error} />
   }
 
   return (
     <libp2pContext.Provider value={{ libp2p }}>
-      <ChatProvider>
-        <PeerProvider>
-          <ListenAddressesProvider>
-            {children}
-          </ListenAddressesProvider>
-        </PeerProvider>
-      </ChatProvider>
+      <ChatProvider>{children}</ChatProvider>
     </libp2pContext.Provider>
   )
 }
