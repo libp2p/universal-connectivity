@@ -11,7 +11,7 @@ import React from 'react'
 
 export const Link = React.forwardRef(function Link(
   props: { href: string } & React.ComponentPropsWithoutRef<'a'>,
-  ref: React.ForwardedRef<HTMLAnchorElement>
+  ref: React.ForwardedRef<HTMLAnchorElement>,
 ) {
   return (
     <HeadlessDataInteractive>

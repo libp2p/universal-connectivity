@@ -7,7 +7,6 @@ import { identify } from '@libp2p/identify'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
-import { bootstrap } from '@libp2p/bootstrap'
 import { Multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
 import type { Connection, Message, SignedMessage, PeerId, Libp2p } from '@libp2p/interface'
@@ -32,18 +31,17 @@ export async function startLibp2p(): Promise<Libp2pType> {
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
 
-  const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
-  log('starting libp2p with bootstrapAddrs %o and relayListenAddrs: %o', bootstrapAddrs, relayListenAddrs)
+  const relayListenAddrs = await getBootstrapMultiaddrs(delegatedClient)
+  log('starting libp2p with relayListenAddrs: %o', relayListenAddrs)
 
   let libp2p: Libp2pType
-
 
   libp2p = await createLibp2p({
     addresses: {
       listen: [
         // 👇 Listen for webRTC connection
         '/webrtc',
-        ...relayListenAddrs
+        ...relayListenAddrs,
       ],
     },
     transports: [
@@ -65,11 +63,6 @@ export async function startLibp2p(): Promise<Libp2pType> {
         interval: 10_000,
         topics: [PUBSUB_PEER_DISCOVERY],
         listenOnly: false,
-      }),
-      bootstrap({
-        // The app-specific bootstrappers that use WebTransport and WebRTC-direct and have ephemeral multiadrrs
-        // that are resolved above using the delegated routing API
-        list: bootstrapAddrs,
       }),
     ],
     services: {
@@ -157,39 +150,24 @@ export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiadd
 
 // Function which resolves PeerIDs of rust/go bootstrap nodes to multiaddrs dialable from the browser
 // Returns both the dialable multiaddrs in addition to the relay
-async function getBootstrapMultiaddrs(
-  client: DelegatedRoutingV1HttpApiClient,
-): Promise<BootstrapsMultiaddrs> {
-  const peers = await Promise.all(
-    BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId)))),
-  )
+async function getBootstrapMultiaddrs(client: DelegatedRoutingV1HttpApiClient): Promise<string[]> {
+  const peers = await Promise.all(BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId)))))
 
-  const bootstrapAddrs = []
   const relayListenAddrs = []
   for (const p of peers) {
     if (p && p.Addrs.length > 0) {
       for (const maddr of p.Addrs) {
         const protos = maddr.protoNames()
-        if (
-          (protos.includes('webtransport') || protos.includes('webrtc-direct')) &&
-          protos.includes('certhash')
-        ) {
+        // Note: narrowing to Secure WebSockets and IP4 addresses to avoid potential issues with ipv6
+        // https://github.com/libp2p/js-libp2p/issues/2977
+        if (protos.includes('tls') && protos.includes('ws') && protos.includes('ip4')) {
           if (maddr.nodeAddress().address === '127.0.0.1') continue // skip loopback
-          bootstrapAddrs.push(maddr.toString())
           relayListenAddrs.push(getRelayListenAddr(maddr, p.ID))
         }
       }
     }
   }
-  return { bootstrapAddrs, relayListenAddrs }
-}
-
-interface BootstrapsMultiaddrs {
-  // Multiaddrs that are dialable from the browser
-  bootstrapAddrs: string[]
-
-  // multiaddr string representing the circuit relay v2 listen addr
-  relayListenAddrs: string[]
+  return relayListenAddrs
 }
 
 // Constructs a multiaddr string representing the circuit relay v2 listen address for a relayed connection to the given peer.

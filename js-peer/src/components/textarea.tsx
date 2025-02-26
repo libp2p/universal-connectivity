@@ -57,5 +57,5 @@ export const Textarea = forwardRef<HTMLTextAreaElement, { resizable?: boolean } 
         />
       </span>
     )
-  }
+  },
 )
