@@ -7,13 +7,11 @@ permissions:
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'js-peer/**'
+    branches: [main] # Deploy every commit so we can CIDs for every commit on main
   pull_request:
     branches: [main]
     paths:
-      - 'js-peer/**'
+      - 'js-peer/**' # only run for PRs changing js-peer
 
 jobs:
   build-and-deploy:
