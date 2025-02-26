@@ -31,7 +31,8 @@ jobs:
         name: Deploy to IPFS
         id: deploy
         with:
-          path-to-deploy: out
+          # 👇 note that working-directory doesn't apply to action steps with `uses`, so we need to specify the full path
+          path-to-deploy: js-peer/out
           storacha-key: ${{ secrets.STORACHA_KEY }}
           storacha-proof: ${{ secrets.STORACHA_PROOF }}
           github-token: ${{ github.token }}
