@@ -17,4 +17,4 @@ export default function ConnectionInfoButton({ onClick }: ConnectionInfoButtonPr
       <span className="sm:hidden">Node</span>
     </button>
   )
-} 
+}

@@ -186,7 +186,7 @@ export default function ChatContainer() {
   }
 
   const toggleMobilePeerList = () => {
-    setShowMobilePeerList(!showMobilePeerList);
+    setShowMobilePeerList(!showMobilePeerList)
   }
 
   useEffect(() => {
@@ -207,8 +207,8 @@ export default function ChatContainer() {
               {roomId === PUBLIC_CHAT_ROOM_ID && (
                 <>
                   <span className="block ml-2 font-bold text-gray-600">{PUBLIC_CHAT_ROOM_NAME}</span>
-                  <button 
-                    onClick={toggleMobilePeerList} 
+                  <button
+                    onClick={toggleMobilePeerList}
                     className="ml-auto lg:hidden flex items-center text-gray-500 hover:text-gray-700"
                     aria-label="Toggle peer list"
                   >
@@ -222,8 +222,8 @@ export default function ChatContainer() {
                   <Blockies seed={roomId} size={8} scale={3} className="rounded mr-2 max-h-10 max-w-10" />
                   <span className={`text-gray-500 flex`}>{roomId.toString().slice(-7)}</span>
                   <div className="flex items-center ml-auto">
-                    <button 
-                      onClick={toggleMobilePeerList} 
+                    <button
+                      onClick={toggleMobilePeerList}
                       className="lg:hidden flex items-center text-gray-500 hover:text-gray-700 mr-4"
                       aria-label="Toggle peer list"
                     >
@@ -239,26 +239,30 @@ export default function ChatContainer() {
                 </>
               )}
             </div>
-            
+
             {/* Show mobile peer list when toggled */}
             {showMobilePeerList && (
               <div className="lg:hidden border-b border-gray-300">
                 <div className="flex items-center justify-between p-2 bg-gray-50">
                   <h2 className="text-lg text-gray-600">Peers</h2>
-                  <button 
+                  <button
                     onClick={toggleMobilePeerList}
                     className="text-gray-500 hover:text-gray-700"
                     aria-label="Close peer list"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </button>
                 </div>
                 <ChatPeerList hideHeader={true} />
               </div>
             )}
-            
+
             <div className="relative w-full flex flex-col-reverse p-3 overflow-y-auto h-[calc(60vh-8rem)] sm:h-[40rem] bg-gray-100">
               <ul className="space-y-2">
                 {messages.map(({ msgId, msg, fileObjectUrl, peerId, read, receivedAt }: ChatMessage) => (

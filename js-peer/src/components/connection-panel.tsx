@@ -6,7 +6,13 @@ import { connectToMultiaddr } from '../lib/libp2p'
 import Spinner from '@/components/spinner'
 import PeerList from '@/components/peer-list'
 import { Dialog, DialogTitle, DialogBody } from '@/components/dialog'
-import { XMarkIcon, ChevronDownIcon, ChevronUpIcon, ClipboardIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline'
+import {
+  XMarkIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ClipboardIcon,
+  ClipboardDocumentCheckIcon,
+} from '@heroicons/react/24/outline'
 
 export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { libp2p } = useLibp2pContext()
@@ -97,11 +103,7 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
     <Dialog open={isOpen} onClose={onClose} size="2xl">
       <div className="flex justify-between items-center">
         <DialogTitle>Connection Information</DialogTitle>
-        <button
-          type="button"
-          className="rounded-md text-gray-400 hover:text-gray-500"
-          onClick={onClose}
-        >
+        <button type="button" className="rounded-md text-gray-400 hover:text-gray-500" onClick={onClose}>
           <XMarkIcon className="h-6 w-6" aria-hidden="true" />
         </button>
       </div>
@@ -110,9 +112,7 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-sm font-medium text-gray-900">This PeerID:</h3>
             <div className="mt-1 flex items-center bg-white p-2 rounded border border-gray-200">
-              <p className="text-sm text-gray-700 break-all font-mono flex-grow">
-                {libp2p.peerId.toString()}
-              </p>
+              <p className="text-sm text-gray-700 break-all font-mono flex-grow">{libp2p.peerId.toString()}</p>
               <button
                 type="button"
                 onClick={copyPeerId}
@@ -127,18 +127,18 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
               </button>
             </div>
           </div>
-          
+
           <div className="bg-gray-50 p-4 rounded-lg">
-            <div 
-              className="flex justify-between items-center cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors" 
+            <div
+              className="flex justify-between items-center cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
               onClick={toggleAddresses}
             >
               <h3 className="text-sm font-medium text-gray-900">Addresses ({listenAddresses.length}):</h3>
-              <button 
+              <button
                 type="button"
                 className="text-gray-500 hover:text-gray-700"
                 aria-expanded={addressesExpanded}
-                aria-label={addressesExpanded ? "Collapse addresses" : "Expand addresses"}
+                aria-label={addressesExpanded ? 'Collapse addresses' : 'Expand addresses'}
               >
                 {addressesExpanded ? (
                   <ChevronUpIcon className="h-5 w-5" aria-hidden="true" />
@@ -154,16 +154,16 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
                 ) : (
                   <ul className="divide-y divide-gray-100">
                     {listenAddresses.map((ma, index) => (
-                      <li 
-                        className="text-xs text-gray-700 font-mono p-2 flex justify-between items-center hover:bg-gray-50" 
+                      <li
+                        className="text-xs text-gray-700 font-mono p-2 flex justify-between items-center hover:bg-gray-50"
                         key={`ma-${index}`}
                       >
                         <span className="break-all mr-2">{ma.toString()}</span>
                         <button
                           type="button"
                           onClick={(e) => {
-                            e.stopPropagation();
-                            copyAddress(index, ma.toString());
+                            e.stopPropagation()
+                            copyAddress(index, ma.toString())
                           }}
                           className="flex-shrink-0 text-gray-400 hover:text-gray-600"
                           title="Copy address"
@@ -184,7 +184,7 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
               <p className="mt-2 text-xs text-gray-500 italic">Click to show {listenAddresses.length} addresses</p>
             )}
           </div>
-          
+
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <label htmlFor="peer-id" className="block text-sm font-medium leading-6 text-gray-900">
               Multiaddr to connect to
@@ -214,19 +214,19 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
             </button>
             {err && <p className="mt-2 text-sm text-red-500">{err}</p>}
           </div>
-          
+
           {connections.length > 0 && (
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div 
-                className="flex justify-between items-center cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors" 
+              <div
+                className="flex justify-between items-center cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
                 onClick={toggleConnections}
               >
                 <h3 className="text-sm font-medium text-gray-900">Connections ({connections.length}):</h3>
-                <button 
+                <button
                   type="button"
                   className="text-gray-500 hover:text-gray-700"
                   aria-expanded={connectionsExpanded}
-                  aria-label={connectionsExpanded ? "Collapse connections" : "Expand connections"}
+                  aria-label={connectionsExpanded ? 'Collapse connections' : 'Expand connections'}
                 >
                   {connectionsExpanded ? (
                     <ChevronUpIcon className="h-5 w-5" aria-hidden="true" />
@@ -249,4 +249,4 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
       </DialogBody>
     </Dialog>
   )
-} 
+}

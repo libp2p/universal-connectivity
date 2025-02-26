@@ -5,7 +5,7 @@ import type { PeerId } from '@libp2p/interface'
 import { PeerWrapper } from './peer'
 
 interface ChatPeerListProps {
-  hideHeader?: boolean;
+  hideHeader?: boolean
 }
 
 export function ChatPeerList({ hideHeader = false }: ChatPeerListProps) {
@@ -26,9 +26,7 @@ export function ChatPeerList({ hideHeader = false }: ChatPeerListProps) {
 
   return (
     <div className="border-l border-gray-300 lg:col-span-1">
-      {!hideHeader && (
-        <h2 className="my-2 mb-2 ml-2 text-lg text-gray-600">Peers</h2>
-      )}
+      {!hideHeader && <h2 className="my-2 mb-2 ml-2 text-lg text-gray-600">Peers</h2>}
       <div className="overflow-auto h-[20rem] lg:h-[32rem]">
         <div className="px-3 py-2 border-b border-gray-300 focus:outline-none">
           {<PeerWrapper peer={libp2p.peerId} self withName={true} withUnread={false} />}

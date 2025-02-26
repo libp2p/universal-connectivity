@@ -5,9 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 
-const navigationItems = [
-  { name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' },
-]
+const navigationItems = [{ name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' }]
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
@@ -27,11 +25,17 @@ export default function Navigation({ connectionInfoButton }: { connectionInfoBut
                   <Image src="/libp2p-logo.svg" alt="libp2p logo" height="46" width="46" />
                   <div className="ml-3 flex items-center">
                     <h1 className="text-xl font-semibold text-gray-900 hidden sm:block">Universal Connectivity</h1>
-                    <Image src="/libp2p-hero.svg" alt="libp2p hero" height="24" width="24" className="ml-2 hidden sm:block" />
+                    <Image
+                      src="/libp2p-hero.svg"
+                      alt="libp2p hero"
+                      height="24"
+                      width="24"
+                      className="ml-2 hidden sm:block"
+                    />
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-4">
                   {navigationItems.map((item) => (
@@ -51,9 +55,7 @@ export default function Navigation({ connectionInfoButton }: { connectionInfoBut
                     </Link>
                   ))}
                 </div>
-                <div className="flex items-center">
-                  {connectionInfoButton}
-                </div>
+                <div className="flex items-center">{connectionInfoButton}</div>
               </div>
             </div>
           </div>
