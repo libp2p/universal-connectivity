@@ -17,12 +17,10 @@ export type Libp2pType = Libp2p<{
 export const libp2pContext = createContext<{
   libp2p: Libp2pType
   connections: Connection[]
-  setConnections: (connections: Connection[]) => void
 }>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
   libp2p: undefined,
   connections: [],
-  setConnections: () => {},
 })
 
 interface WrapperProps {
@@ -79,7 +77,7 @@ export function AppWrapper({ children }: WrapperProps) {
   }
 
   return (
-    <libp2pContext.Provider value={{ libp2p, connections, setConnections }}>
+    <libp2pContext.Provider value={{ libp2p, connections }}>
       <ChatProvider>{children}</ChatProvider>
     </libp2pContext.Provider>
   )
