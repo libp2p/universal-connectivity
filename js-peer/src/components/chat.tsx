@@ -7,6 +7,7 @@ import { Message } from './message'
 import { forComponent } from '@/lib/logger'
 import { ChatPeerList } from './chat-peer-list'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
+import { UsersIcon } from '@heroicons/react/24/outline'
 import Blockies from 'react-18-blockies'
 import { peerIdFromString } from '@libp2p/peer-id'
 
@@ -22,6 +23,7 @@ export default function ChatContainer() {
   const [input, setInput] = useState<string>('')
   const fileRef = useRef<HTMLInputElement>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [showMobilePeerList, setShowMobilePeerList] = useState(false)
 
   // Send message to public chat over gossipsub
   const sendPublicMessage = useCallback(async () => {
@@ -183,6 +185,10 @@ export default function ChatContainer() {
     setMessages(messageHistory)
   }
 
+  const toggleMobilePeerList = () => {
+    setShowMobilePeerList(!showMobilePeerList)
+  }
+
   useEffect(() => {
     // assumes a chat room is a peerId thus a direct message
     if (roomId === PUBLIC_CHAT_ROOM_ID) {
@@ -193,26 +199,71 @@ export default function ChatContainer() {
   }, [roomId, directMessages, messageHistory])
 
   return (
-    <div className="container mx-auto">
-      <div className="min-w-full border rounded lg:grid lg:grid-cols-6">
-        <div className="lg:col-span-5 lg:block">
+    <div className="container mx-auto w-full px-0">
+      <div className="min-w-full border-0 rounded-none lg:rounded grid grid-cols-1 lg:grid-cols-6">
+        <div className="col-span-1 lg:col-span-5">
           <div className="w-full">
             <div className="relative flex items-center p-3 border-b border-gray-300">
               {roomId === PUBLIC_CHAT_ROOM_ID && (
-                <span className="block ml-2 font-bold text-gray-600">{PUBLIC_CHAT_ROOM_NAME}</span>
+                <>
+                  <span className="block ml-2 font-bold text-gray-600">{PUBLIC_CHAT_ROOM_NAME}</span>
+                  <button
+                    onClick={toggleMobilePeerList}
+                    className="ml-auto lg:hidden flex items-center text-gray-500 hover:text-gray-700"
+                    aria-label="Toggle peer list"
+                  >
+                    <UsersIcon className="h-5 w-5" />
+                    <span className="ml-1 text-sm">Peers</span>
+                  </button>
+                </>
               )}
               {roomId !== PUBLIC_CHAT_ROOM_ID && (
                 <>
                   <Blockies seed={roomId} size={8} scale={3} className="rounded mr-2 max-h-10 max-w-10" />
                   <span className={`text-gray-500 flex`}>{roomId.toString().slice(-7)}</span>
-                  <button onClick={handleBackToPublic} className="text-gray-500 flex ml-auto">
-                    <ChevronLeftIcon className="w-6 h-6 text-gray-500" />
-                    <span>Back to Public Chat</span>
-                  </button>
+                  <div className="flex items-center ml-auto">
+                    <button
+                      onClick={toggleMobilePeerList}
+                      className="lg:hidden flex items-center text-gray-500 hover:text-gray-700 mr-4"
+                      aria-label="Toggle peer list"
+                    >
+                      <UsersIcon className="h-5 w-5" />
+                      <span className="ml-1 text-sm">Peers</span>
+                    </button>
+                    <button onClick={handleBackToPublic} className="text-gray-500 flex">
+                      <ChevronLeftIcon className="w-6 h-6 text-gray-500" />
+                      <span className="hidden sm:inline">Back to Public Chat</span>
+                      <span className="sm:hidden">Back</span>
+                    </button>
+                  </div>
                 </>
               )}
             </div>
-            <div className="relative w-full flex flex-col-reverse p-3 overflow-y-auto h-[40rem] bg-gray-100">
+
+            {/* Show mobile peer list when toggled */}
+            {showMobilePeerList && (
+              <div className="lg:hidden border-b border-gray-300">
+                <div className="flex items-center justify-between p-2 bg-gray-50">
+                  <h2 className="text-lg text-gray-600">Peers</h2>
+                  <button
+                    onClick={toggleMobilePeerList}
+                    className="text-gray-500 hover:text-gray-700"
+                    aria-label="Close peer list"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <ChatPeerList hideHeader={true} />
+              </div>
+            )}
+
+            <div className="relative w-full flex flex-col-reverse p-3 overflow-y-auto h-[calc(60vh-8rem)] sm:h-[40rem] bg-gray-100">
               <ul className="space-y-2">
                 {messages.map(({ msgId, msg, fileObjectUrl, peerId, read, receivedAt }: ChatMessage) => (
                   <Message
@@ -229,7 +280,7 @@ export default function ChatContainer() {
               </ul>
             </div>
 
-            <div className="flex items-center justify-between w-full p-3 border-t border-gray-300">
+            <div className="flex items-center justify-between w-full p-2 sm:p-3 border-t border-gray-300">
               <input
                 ref={fileRef}
                 className="hidden"
@@ -241,7 +292,7 @@ export default function ChatContainer() {
                 onClick={handleFileSend}
                 disabled={roomId !== PUBLIC_CHAT_ROOM_ID}
                 title={roomId === PUBLIC_CHAT_ROOM_ID ? 'Upload file' : "Unsupported in DM's"}
-                className={roomId === PUBLIC_CHAT_ROOM_ID ? '' : 'cursor-not-allowed'}
+                className={`${roomId === PUBLIC_CHAT_ROOM_ID ? '' : 'cursor-not-allowed'} p-1`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -265,7 +316,7 @@ export default function ChatContainer() {
                 onChange={handleInput}
                 type="text"
                 placeholder="Message"
-                className="block w-full py-2 pl-4 mx-3 bg-gray-100 rounded-full outline-none focus:text-gray-700"
+                className="block w-full py-2 pl-2 sm:pl-4 mx-2 sm:mx-3 bg-gray-100 rounded-full outline-none focus:text-gray-700 text-sm sm:text-base"
                 name="message"
                 required
               />
@@ -282,7 +333,9 @@ export default function ChatContainer() {
             </div>
           </div>
         </div>
-        <ChatPeerList />
+        <div className="hidden lg:block">
+          <ChatPeerList />
+        </div>
       </div>
     </div>
   )
