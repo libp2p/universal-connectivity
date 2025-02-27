@@ -31,7 +31,7 @@ export async function startLibp2p(): Promise<Libp2pType> {
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
 
-  const relayListenAddrs = await getBootstrapMultiaddrs(delegatedClient)
+  const relayListenAddrs = await getRelayListenAddrs(delegatedClient)
   log('starting libp2p with relayListenAddrs: %o', relayListenAddrs)
 
   let libp2p: Libp2pType
@@ -150,7 +150,7 @@ export const connectToMultiaddr = (libp2p: Libp2p) => async (multiaddr: Multiadd
 
 // Function which resolves PeerIDs of rust/go bootstrap nodes to multiaddrs dialable from the browser
 // Returns both the dialable multiaddrs in addition to the relay
-async function getBootstrapMultiaddrs(client: DelegatedRoutingV1HttpApiClient): Promise<string[]> {
+async function getRelayListenAddrs(client: DelegatedRoutingV1HttpApiClient): Promise<string[]> {
   const peers = await Promise.all(BOOTSTRAP_PEER_IDS.map((peerId) => first(client.getPeers(peerIdFromString(peerId)))))
 
   const relayListenAddrs = []
@@ -160,7 +160,7 @@ async function getBootstrapMultiaddrs(client: DelegatedRoutingV1HttpApiClient): 
         const protos = maddr.protoNames()
         // Note: narrowing to Secure WebSockets and IP4 addresses to avoid potential issues with ipv6
         // https://github.com/libp2p/js-libp2p/issues/2977
-        if (protos.includes('tls') && protos.includes('ws') && protos.includes('ip4')) {
+        if (protos.includes('tls') && protos.includes('ws')) {
           if (maddr.nodeAddress().address === '127.0.0.1') continue // skip loopback
           relayListenAddrs.push(getRelayListenAddr(maddr, p.ID))
         }
