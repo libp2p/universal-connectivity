@@ -1,1 +1,0 @@
-# Rust Universal Connectivity Workshop
