@@ -25,6 +25,7 @@ Some of the cool and cutting-edge [transport protocols](https://connectivity.lib
 | [`js-peer`](./js-peer/)     | Browser Chat Peer in TypeScript | ✅           | ✅     | ✅            | ❌   | ❌  |
 | [`go-peer`](./go-peer/)     | Chat peer implemented in Go     | ✅           | ❌     | ✅            | ✅   | ✅  |
 | [`rust-peer`](./rust-peer/) | Chat peer implemented in Rust   | ❌           | ❌     | ✅            | ✅   | ❌  |
+| [`py-peer`](./py-peer/)     | Chat peer implemented in Python | ❌           | ❌     | ❌            | ✅   | ✅  |
 
 ✅ - Protocol supported
 ❌ - Protocol not supported
@@ -81,4 +82,14 @@ cargo run -- --help
 ```
 cd go-peer
 go run .
+```
+
+## Getting started: Python
+
+Make sure you have the [uv package manager](https://github.com/astral-sh/uv)
+installed first. Follow the instructions on their Github to install it.
+
+```
+cd py-peer
+uv run hello.py
 ```
