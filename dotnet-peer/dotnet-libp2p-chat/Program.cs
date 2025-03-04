@@ -11,12 +11,18 @@ var services = new ServiceCollection()
     .AddSingleton<IChatService, ChatService>()
     .AddSingleton<IUserInterface, ConsoleUI>()
     .AddSingleton<ITheme, DefaultTheme>()
+    .AddSingleton<ILibp2pNode, Libp2pService>()
     .BuildServiceProvider();
 
 try
 {
+    var node = services.GetRequiredService<ILibp2pNode>();
+    await node.StartAsync(CancellationToken.None);
+
     var ui = services.GetRequiredService<IUserInterface>();
     await ui.RunAsync(CancellationToken.None);
+
+    await node.StopAsync(CancellationToken.None);
 }
 catch (Exception ex)
 {

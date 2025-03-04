@@ -9,12 +9,19 @@ namespace Chat.UI;
 public class ConsoleUI : IUserInterface
 {
     private readonly IChatService _chatService;
+    private readonly ILibp2pNode _node;
     private readonly ITheme _theme;
     private readonly ILogger<ConsoleUI> _logger;
+    private string _currentRoom = "default";
 
-    public ConsoleUI(IChatService chatService, ITheme theme, ILogger<ConsoleUI> logger)
+    public ConsoleUI(
+        IChatService chatService,
+        ILibp2pNode node,
+        ITheme theme,
+        ILogger<ConsoleUI> logger)
     {
         _chatService = chatService;
+        _node = node;
         _theme = theme;
         _logger = logger;
     }
@@ -23,8 +30,6 @@ public class ConsoleUI : IUserInterface
     {
         var formattedMessage = _theme.FormatMessage(message.Username, message.Content);
         Console.WriteLine(formattedMessage);
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.ResetColor();
         await Task.CompletedTask;
     }
 
@@ -33,15 +38,16 @@ public class ConsoleUI : IUserInterface
         var roomNames = rooms.Select(r => r.Name);
         var formattedRooms = _theme.FormatRoomList(roomNames);
         Console.WriteLine(formattedRooms);
-        Console.BackgroundColor = ConsoleColor.DarkGray;
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.WriteLine(formattedRooms);
-        Console.ResetColor();
         await Task.CompletedTask;
     }
 
     public async Task RunAsync(CancellationToken token)
     {
+        Console.Clear();
+        Console.WriteLine(_theme.FormatSystemMessage("Welcome to Libp2p Chat!"));
+        Console.WriteLine(_theme.FormatHelp());
+        Console.WriteLine();
+
         _chatService.MessageReceived += async (sender, message) =>
         {
             await ShowMessageAsync(message);
@@ -51,6 +57,7 @@ public class ConsoleUI : IUserInterface
         {
             try
             {
+                Console.Write($"{_currentRoom}> ");
                 var input = await Console.In.ReadLineAsync();
                 if (string.IsNullOrEmpty(input)) continue;
 
@@ -60,15 +67,15 @@ public class ConsoleUI : IUserInterface
                 }
                 else
                 {
-                    // Default to sending message in current room
                     var message = new ChatMessage("User", input, DateTimeOffset.UtcNow);
-                    await _chatService.SendMessageAsync("default", message);
+                    await _chatService.SendMessageAsync(_currentRoom, message);
+                    await _node.BroadcastMessageAsync(_currentRoom, input);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing user input");
-                Console.WriteLine(_theme.FormatSystemMessage($"Error: {ex.Message}"));
+                Console.WriteLine(_theme.FormatErrorMessage(ex.Message));
             }
         }
     }
@@ -76,15 +83,52 @@ public class ConsoleUI : IUserInterface
     private async Task HandleCommand(string command)
     {
         var parts = command.Split(' ', 2);
-        switch (parts[0].ToLower())
+        var cmd = parts[0].ToLower();
+        var arg = parts.Length > 1 ? parts[1] : string.Empty;
+
+        try
         {
-            case "/rooms":
-                var rooms = _chatService.GetAvailableRooms();
-                await UpdateRoomListAsync(rooms);
-                break;
-            default:
-                Console.WriteLine(_theme.FormatSystemMessage($"Unknown command: {parts[0]}"));
-                break;
+            switch (cmd)
+            {
+                case "/join":
+                    if (string.IsNullOrEmpty(arg))
+                    {
+                        Console.WriteLine(_theme.FormatErrorMessage("Room name required"));
+                        break;
+                    }
+                    await _node.JoinRoomAsync(arg);
+                    _currentRoom = arg;
+                    Console.WriteLine(_theme.FormatSystemMessage($"Joined room: {arg}"));
+                    break;
+
+                case "/leave":
+                    if (string.IsNullOrEmpty(arg))
+                    {
+                        Console.WriteLine(_theme.FormatErrorMessage("Room name required"));
+                        break;
+                    }
+                    await _node.LeaveRoomAsync(arg);
+                    if (_currentRoom == arg) _currentRoom = "default";
+                    Console.WriteLine(_theme.FormatSystemMessage($"Left room: {arg}"));
+                    break;
+
+                case "/rooms":
+                    var rooms = _chatService.GetAvailableRooms();
+                    await UpdateRoomListAsync(rooms);
+                    break;
+
+                case "/help":
+                    Console.WriteLine(_theme.FormatHelp());
+                    break;
+
+                default:
+                    Console.WriteLine(_theme.FormatErrorMessage($"Unknown command: {cmd}"));
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(_theme.FormatErrorMessage($"Error executing command: {ex.Message}"));
         }
     }
 }

@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.2" />
+    <PackageReference Include="Nethermind.Libp2p" Version="1.0.0-preview.2" />
   </ItemGroup>
 
 </Project>
