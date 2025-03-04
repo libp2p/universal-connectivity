@@ -8,4 +8,7 @@ public interface ITheme
     string FormatRoomList(IEnumerable<string> rooms);
     string FormatPeerStatus(string peerId, bool isConnected);
     string FormatHelp();
+    void WriteWelcomeMessage();
+    void WriteHelpMessage();
+    void WriteError(string message);
 }

@@ -29,3 +29,41 @@
 //         return result.Task;
 //     }
 // }
+
+public class ConsoleReader
+{
+    private readonly AutoResetEvent _inputReady = new(false);
+    private readonly Queue<string> _inputQueue = new();
+
+    public ConsoleReader()
+    {
+        Task.Run(() =>
+        {
+            while (true)
+            {
+                string input = Console.ReadLine() ?? string.Empty;
+                lock (_inputQueue)
+                {
+                    _inputQueue.Enqueue(input);
+                }
+                _inputReady.Set();
+            }
+        });
+    }
+
+    public async Task<string> ReadLineAsync()
+    {
+        while (true)
+        {
+            lock (_inputQueue)
+            {
+                if (_inputQueue.Count > 0)
+                {
+                    return _inputQueue.Dequeue();
+                }
+            }
+
+            await Task.Run(() => _inputReady.WaitOne());
+        }
+    }
+}

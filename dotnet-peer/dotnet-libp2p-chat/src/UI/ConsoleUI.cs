@@ -3,138 +3,130 @@ using Chat.Core.Interfaces;
 using Chat.Core.Models;
 using Chat.UI.Themes;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using Nethermind.Libp2p.Protocols.Pubsub;
 
 namespace Chat.UI;
 
-public class ConsoleUI : IUserInterface
+internal class ConsoleUI : IUserInterface
 {
-    private readonly IChatService _chatService;
-    private readonly ILibp2pNode _node;
-    private readonly ITheme _theme;
     private readonly ILogger<ConsoleUI> _logger;
-    private string _currentRoom = "default";
+    private readonly ITheme _theme;
+    private readonly IChatService _chatService;
+    private readonly PubsubRouter _router;
+    private readonly ITopic _topic;
+    private readonly string _peerId;
+    private readonly string _nickName;
 
     public ConsoleUI(
-        IChatService chatService,
-        ILibp2pNode node,
+        ILogger<ConsoleUI> logger,
         ITheme theme,
-        ILogger<ConsoleUI> logger)
+        IChatService chatService,
+        PubsubRouter router,
+        string peerId)
     {
-        _chatService = chatService;
-        _node = node;
-        _theme = theme;
         _logger = logger;
+        _theme = theme;
+        _chatService = chatService;
+        _router = router;
+        _topic = router.GetTopic("chat-room:awesome-chat-room");
+        _peerId = peerId;
+        _nickName = "libp2p-dotnet";
     }
 
-    public async Task ShowMessageAsync(ChatMessage message)
+    public async Task RunAsync(CancellationToken cancellationToken)
     {
-        var formattedMessage = _theme.FormatMessage(message.Username, message.Content);
-        Console.WriteLine(formattedMessage);
-        await Task.CompletedTask;
-    }
+        _theme.WriteWelcomeMessage();
+        _theme.WriteHelpMessage();
 
-    public async Task UpdateRoomListAsync(IEnumerable<Room> rooms)
-    {
-        var roomNames = rooms.Select(r => r.Name);
-        var formattedRooms = _theme.FormatRoomList(roomNames);
-        Console.WriteLine(formattedRooms);
-        await Task.CompletedTask;
-    }
-
-    public async Task RunAsync(CancellationToken token)
-    {
-        Console.Clear();
-        Console.WriteLine(_theme.FormatSystemMessage("Welcome to Libp2p Chat!"));
-        Console.WriteLine(_theme.FormatHelp());
-        Console.WriteLine();
-
-        _chatService.MessageReceived += async (sender, message) =>
+        while (!cancellationToken.IsCancellationRequested)
         {
-            await ShowMessageAsync(message);
-        };
+            Console.Write("default> ");
+            var input = await Console.In.ReadLineAsync(cancellationToken);
 
-        while (!token.IsCancellationRequested)
-        {
-            try
+            if (string.IsNullOrWhiteSpace(input))
             {
-                Console.Write($"{_currentRoom}> ");
-                var input = await Console.In.ReadLineAsync();
-                if (string.IsNullOrEmpty(input)) continue;
-
-                if (input.StartsWith("/"))
-                {
-                    await HandleCommand(input);
-                }
-                else
-                {
-                    var message = new ChatMessage("User", input, DateTimeOffset.UtcNow);
-                    await _chatService.SendMessageAsync(_currentRoom, message);
-                    await _node.BroadcastMessageAsync(_currentRoom, input);
-                }
+                continue;
             }
-            catch (Exception ex)
+
+            if (input == "exit")
             {
-                _logger.LogError(ex, "Error processing user input");
-                Console.WriteLine(_theme.FormatErrorMessage(ex.Message));
+                break;
+            }
+
+            if (input.StartsWith("/"))
+            {
+                await HandleCommand(input);
+            }
+            else
+            {
+                var message = new ChatMessage(input, _peerId, _nickName);
+                var json = JsonSerializer.Serialize(message);
+                _topic.Publish(Encoding.UTF8.GetBytes(json));
             }
         }
     }
 
     private async Task HandleCommand(string command)
     {
-        var parts = command.Split(' ', 2);
+        var parts = command.Split(' ');
         var cmd = parts[0].ToLower();
-        var arg = parts.Length > 1 ? parts[1] : string.Empty;
 
         try
         {
             switch (cmd)
             {
-                case "/join":
-                    if (string.IsNullOrEmpty(arg))
-                    {
-                        Console.WriteLine(_theme.FormatErrorMessage("Room name required"));
-                        break;
-                    }
-                    await _node.JoinRoomAsync(arg);
-                    _currentRoom = arg;
-                    Console.WriteLine(_theme.FormatSystemMessage($"Joined room: {arg}"));
-                    break;
-
-                case "/leave":
-                    if (string.IsNullOrEmpty(arg))
-                    {
-                        Console.WriteLine(_theme.FormatErrorMessage("Room name required"));
-                        break;
-                    }
-                    await _node.LeaveRoomAsync(arg);
-                    if (_currentRoom == arg) _currentRoom = "default";
-                    Console.WriteLine(_theme.FormatSystemMessage($"Left room: {arg}"));
-                    break;
-
-                case "/rooms":
-                    var rooms = _chatService.GetAvailableRooms();
-                    await UpdateRoomListAsync(rooms);
-                    break;
-
                 case "/help":
-                    Console.WriteLine(_theme.FormatHelp());
+                    _theme.WriteHelpMessage();
                     break;
-
+                case "/join":
+                    if (parts.Length < 2)
+                    {
+                        _theme.WriteError("Usage: /join <room>");
+                        break;
+                    }
+                    await _chatService.JoinRoomAsync(parts[1]);
+                    break;
+                case "/leave":
+                    if (parts.Length < 2)
+                    {
+                        _theme.WriteError("Usage: /leave <room>");
+                        break;
+                    }
+                    await _chatService.LeaveRoomAsync(parts[1]);
+                    break;
+                case "/connect":
+                    if (parts.Length < 2)
+                    {
+                        _theme.WriteError("Usage: /connect <peer-address>");
+                        break;
+                    }
+                    await _chatService.ConnectToPeerAsync(parts[1]);
+                    break;
                 default:
-                    Console.WriteLine(_theme.FormatErrorMessage($"Unknown command: {cmd}"));
+                    _theme.WriteError($"Unknown command: {cmd}");
                     break;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine(_theme.FormatErrorMessage($"Error executing command: {ex.Message}"));
+            _theme.WriteError($"Error executing command: {ex.Message}");
+            _logger.LogError(ex, "Error executing command {Command}", command);
         }
     }
+
+    public Task UpdateRoomListAsync(IEnumerable<Room> rooms)
+    {
+        Console.WriteLine(_theme.FormatRoomList(rooms.Select(r => r.Name)));
+        return Task.CompletedTask;
+    }
+
+    public Task ShowMessageAsync(ChatMessage message)
+    {
+        Console.WriteLine(_theme.FormatMessage(message.SenderNick, message.Message));
+        return Task.CompletedTask;
+    }
 }
-
-
-
 
 // using System;
 // using System.Threading;

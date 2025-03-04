@@ -1,3 +1,3 @@
 namespace Chat.Core.Models;
 
-public record ChatMessage(string Username, string Content, DateTimeOffset Timestamp);
+internal record ChatMessage(string Message, string SenderId, string SenderNick, string RoomName = "default");

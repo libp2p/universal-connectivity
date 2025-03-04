@@ -51,4 +51,23 @@ public class DefaultTheme : ITheme
   {Cyan}/connect <address>{Reset} - Connect to a peer
   {Cyan}/help{Reset} - Show this help message";
     }
+
+    public void WriteWelcomeMessage()
+    {
+        Console.WriteLine("[System] Welcome to Libp2p Chat!");
+    }
+
+    public void WriteHelpMessage()
+    {
+        Console.WriteLine("Available Commands:");
+        Console.WriteLine("  /join <room> - Join a chat room");
+        Console.WriteLine("  /leave <room> - Leave a chat room");
+        Console.WriteLine("  /connect <address> - Connect to a peer");
+        Console.WriteLine("  /help - Show this help message");
+    }
+
+    public void WriteError(string message)
+    {
+        Console.WriteLine($"[Error] {message}");
+    }
 }

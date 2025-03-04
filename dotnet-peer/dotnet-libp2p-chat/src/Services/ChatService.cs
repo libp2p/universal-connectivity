@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Chat.Services;
 
-public class ChatService : IChatService
+internal class ChatService : IChatService
 {
     private readonly IMessageStore _messageStore;
     private readonly ILogger<ChatService> _logger;
@@ -31,9 +31,27 @@ public class ChatService : IChatService
         await _messageStore.AddMessageAsync(roomName, message);
         MessageReceived?.Invoke(this, message);
         _logger.LogInformation("Message sent to {Room} by {User}: {Message}", 
-            roomName, message.Username, message.Content);
+            roomName, message.SenderId, message.Message);
     }
 
     public Task<IEnumerable<ChatMessage>> GetMessagesAsync(string roomName)
         => _messageStore.GetMessagesAsync(roomName);
+
+    public Task JoinRoomAsync(string room)
+    {
+        _logger.LogInformation("Joined room: {Room}", room);
+        return Task.CompletedTask;
+    }
+
+    public Task LeaveRoomAsync(string room)
+    {
+        _logger.LogInformation("Left room: {Room}", room);
+        return Task.CompletedTask;
+    }
+
+    public Task ConnectToPeerAsync(string peerAddress)
+    {
+        _logger.LogInformation("Connecting to peer: {PeerAddress}", peerAddress);
+        return Task.CompletedTask;
+    }
 }
