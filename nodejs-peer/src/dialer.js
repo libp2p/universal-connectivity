@@ -10,7 +10,7 @@ import { multiaddr } from "@multiformats/multiaddr";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { ping } from "@libp2p/ping";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
-import { PUBSUB_PEER_DISCOVERY } from "./constants";
+import { PUBSUB_PEER_DISCOVERY } from "./constants.js";
 
 const dialPeer = async (peerMultiaddr) => {
   const dialer = await createLibp2p({
@@ -30,7 +30,7 @@ const dialPeer = async (peerMultiaddr) => {
       circuitRelayTransport({ discoverRelays: 1 }),
     ],
     connectionEncrypters: [noise()],
-    streamMuxers: [yamux(), mplex()],
+    streamMuxers: [yamux()],
     services: {
       identify: identify(),
       ping: ping(),
