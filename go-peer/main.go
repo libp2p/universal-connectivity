@@ -39,7 +39,7 @@ const DiscoveryServiceTag = "universal-connectivity"
 
 // HardcodedDotnetPeer is the address of the .NET peer to connect to
 // Using the actual peer ID from the running .NET peer
-const HardcodedDotnetPeer = "/ip4/127.0.0.1/tcp/9096/p2p/12D3KooWQ1ktm5FHESRCNePAxrwKRGbykKjxoSHkhQT3HHPMZbSd"
+const HardcodedDotnetPeer = "/ip4/127.0.0.1/tcp/9096/p2p/12D3KooWHanYVFhG9W5YByvfbLiNrnsstDsnCJiwL5pcRzojJdwf"
 
 var SysMsgChan chan *ChatMessage
 

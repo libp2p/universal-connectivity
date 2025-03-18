@@ -9,3 +9,14 @@ yarn.lock
 .DS_Store
 go-peer/go-peer
 .qodo
+
+# .NET specific
+**/bin/
+**/obj/
+**/*.user
+**/.vs/
+**/*.suo
+**/*.userprefs
+*.dll
+*.exe
+*.pdb
