@@ -38,9 +38,8 @@ const DiscoveryInterval = time.Hour
 const DiscoveryServiceTag = "universal-connectivity"
 
 // HardcodedDotnetPeer is the address of the .NET peer to connect to
-// Update with the actual address from your .NET peer's output
-// The previous port 64738 resulted in "connection refused" error
-const HardcodedDotnetPeer = "/ip4/127.0.0.1/tcp/60327/p2p/12D3KooWLuUZfjVhfpxrHNNbV5YPGwbj2VNJj2uMwYf9zRzWNFUW"
+// Using the actual peer ID from the running .NET peer
+const HardcodedDotnetPeer = "/ip4/127.0.0.1/tcp/9096/p2p/12D3KooWQ1ktm5FHESRCNePAxrwKRGbykKjxoSHkhQT3HHPMZbSd"
 
 var SysMsgChan chan *ChatMessage
 

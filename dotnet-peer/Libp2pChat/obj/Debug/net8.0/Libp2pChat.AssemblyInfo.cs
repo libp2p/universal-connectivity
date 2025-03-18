@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Libp2pChat")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c03bc482d6444ab1b9632ea30487021da2677e41")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b2211a8b4b74ae5f3733423462f4e140684c2386")]
 [assembly: System.Reflection.AssemblyProductAttribute("Libp2pChat")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Libp2pChat")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

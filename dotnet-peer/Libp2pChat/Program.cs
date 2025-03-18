@@ -26,8 +26,11 @@ IPeerFactory peerFactory = serviceProvider.GetService<IPeerFactory>()!;
 ILogger logger = serviceProvider.GetService<ILoggerFactory>()!.CreateLogger("Pubsub Chat");
 CancellationTokenSource ts = new();
 
+// Create a new identity
 Identity localPeerIdentity = new();
-string addrString = $"/ip4/0.0.0.0/tcp/0/p2p/{localPeerIdentity.PeerId}";
+
+// Use a fixed port (9096) instead of random (0)
+string addrString = $"/ip4/0.0.0.0/tcp/9096/p2p/{localPeerIdentity.PeerId}";
 Multiaddress addr = Multiaddress.Decode(addrString);
 
 ILocalPeer peer = peerFactory.Create(localPeerIdentity);
@@ -42,13 +45,26 @@ topic.OnMessage += (byte[] msg) =>
         string rawMessage = Encoding.UTF8.GetString(msg);
         Console.WriteLine($"Raw message received: {rawMessage}");
         
-        // Try to deserialize
-        ChatMessage? chatMessage = JsonSerializer.Deserialize<ChatMessage>(rawMessage);
-
-        if (chatMessage is not null)
+        // Try to deserialize from JSON
+        try 
         {
-            Console.WriteLine("{0}: {1}", chatMessage.SenderNick, chatMessage.Message);
+            ChatMessage? chatMessage = JsonSerializer.Deserialize<ChatMessage>(rawMessage);
+            if (chatMessage is not null && !string.IsNullOrEmpty(chatMessage.Message))
+            {
+                Console.WriteLine("{0}: {1}", 
+                    string.IsNullOrEmpty(chatMessage.SenderNick) ? "unknown" : chatMessage.SenderNick, 
+                    chatMessage.Message);
+                return;
+            }
         }
+        catch (JsonException)
+        {
+            // Not a valid JSON, fall through to handle as plain text
+            Console.WriteLine("Message is not in JSON format, treating as plain text");
+        }
+        
+        // If not valid JSON or no Message field, treat as plain text
+        Console.WriteLine("Peer: {0}", rawMessage);
     }
     catch (Exception ex)
     {
