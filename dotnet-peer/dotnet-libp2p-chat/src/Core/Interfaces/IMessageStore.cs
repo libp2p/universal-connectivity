@@ -4,6 +4,8 @@ namespace Chat.Core.Interfaces;
 
 public interface IMessageStore
 {
-    Task<IEnumerable<ChatMessage>> GetMessagesAsync(string roomName);
-    Task AddMessageAsync(string roomName, ChatMessage message);
+    Task AddMessageAsync(string room, ChatMessage message);
+    Task<IEnumerable<ChatMessage>> GetMessagesAsync(string room);
+    Task<IEnumerable<string>> GetRoomsAsync();
+    Task ClearRoomAsync(string room);
 }

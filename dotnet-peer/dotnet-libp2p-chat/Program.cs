@@ -7,18 +7,21 @@ using Nethermind.Libp2p.Protocols.Pubsub;
 using Nethermind.Libp2p.Protocols;
 using System.Text.RegularExpressions;
 using Nethermind.Libp2p;
-using Chat.Core.Interfaces;
-using Chat.Services;
-using Chat.UI;
-using Chat.UI.Themes;
-using Nethermind.Libp2p.Core.Identity;
+using Chat.Protocols;
 using Multiformats.Address;
 using Multiformats.Address.Protocols;
+using Chat.Core.Models;
+using Chat.Core.Interfaces;
+using Chat.Services;
 
-var omittedLogs = new Regex(".*(MDnsDiscoveryProtocol|IpTcpProtocol).*");
+// Filter out noisy logs
+Regex omittedLogs = new(".*(MDnsDiscoveryProtocol|IpTcpProtocol).*");
 
+// Set up services
 var services = new ServiceCollection()
-    .AddLibp2p(builder => builder.WithPubsub().AddAppLayerProtocol<ChatProtocol>())
+    .AddLibp2p(builder => builder
+        .WithPubsub() // Enable PubSub for topic-based communication
+        .AddAppLayerProtocol<Chat.ChatProtocol>()) // Add our custom protocol
     .AddLogging(builder =>
         builder.SetMinimumLevel(args.Contains("--trace") ? LogLevel.Trace : LogLevel.Information)
             .AddSimpleConsole(l =>
@@ -27,8 +30,7 @@ var services = new ServiceCollection()
                 l.TimestampFormat = "[HH:mm:ss.fff]";
             }).AddFilter((_, type, lvl) => !omittedLogs.IsMatch(type!)))
     .AddSingleton<IMessageStore, InMemoryMessageStore>()
-    .AddSingleton<IChatService, ChatService>()
-    .AddSingleton<ITheme, DefaultTheme>()
+    .AddSingleton<ILibp2pNode, Libp2pService>()
     .BuildServiceProvider();
 
 try
@@ -36,102 +38,167 @@ try
     var peerFactory = services.GetRequiredService<IPeerFactory>();
     var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("Chat");
     var ts = new CancellationTokenSource();
+    var libp2pNode = services.GetRequiredService<ILibp2pNode>();
 
     // Handle Ctrl+C
     Console.CancelKeyPress += delegate { ts.Cancel(); };
 
-    if (args.Length > 0 && args[0] == "-d")
+    // Determine run mode based on arguments
+    if (args.Length > 0)
     {
-        // Client mode - dial a remote peer
-        Multiaddress remoteAddr = new(args[1]);
-
-        string addrTemplate = remoteAddr.Has<QUICv1>() ?
-           "/ip4/0.0.0.0/udp/0/quic-v1" :
-           "/ip4/0.0.0.0/tcp/0";
-
-        var localPeer = peerFactory.Create();
-
-        logger.LogInformation("Dialing {remote}", remoteAddr);
-        var remotePeer = await localPeer.DialAsync(remoteAddr, ts.Token);
-
-        await remotePeer.DialAsync<ChatProtocol>(ts.Token);
-        
-        // Keep the connection open until canceled
-        await Task.Delay(-1, ts.Token);
-        
-        await remotePeer.DisconnectAsync();
-    }
-    else
-    {
-        // Server mode - listen for connections
-        // Use fixed identity for testing (optional)
-        Identity optionalFixedIdentity = new(Enumerable.Repeat((byte)42, 32).ToArray());
-        var peer = peerFactory.Create(optionalFixedIdentity);
-
-        // Choose transport based on arguments
-        string addrTemplate = args.Contains("-quic") ?
-            "/ip4/0.0.0.0/udp/{0}/quic-v1" :
-            "/ip4/0.0.0.0/tcp/{0}";
-
-        // Set port if specified
-        string port = args.Length > 0 && args[0] == "-sp" ? args[1] : "0";
-        
-        // Log when peers connect
-        peer.OnConnected += async newSession => 
-            logger.LogInformation("A peer connected {remote}", newSession.RemoteAddress);
-
-        // Start listening
-        await peer.StartListenAsync(
-            [string.Format(addrTemplate, port)],
-            ts.Token);
-        
-        logger.LogInformation("Listener started at {address}", string.Join(", ", peer.ListenAddresses));
-
-        // Set up PubSub if needed
-        var router = services.GetRequiredService<PubsubRouter>();
-        var topic = router.GetTopic("chat-room:awesome-chat-room");
-        topic.OnMessage += (byte[] msg) =>
+        // Dialing mode - connect to a specific peer
+        if (args[0] == "-d" && args.Length > 1)
         {
+            string peerAddress = args[1];
+            await libp2pNode.StartAsync(ts.Token);
+            await libp2pNode.ConnectToPeerAsync(peerAddress);
+
+            // Chat loop
+            Console.WriteLine("\n=== Connected to peer ===");
+            Console.WriteLine("Type a message and press Enter to send");
+            Console.WriteLine("Press Ctrl+C to exit");
+            
             try
             {
-                var chatMessage = JsonSerializer.Deserialize<ChatMessage>(Encoding.UTF8.GetString(msg));
-
-                if (chatMessage is not null)
+                while (!ts.IsCancellationRequested)
                 {
-                    Console.WriteLine("{0}: {1}", chatMessage.SenderNick, chatMessage.Message);
+                    string? input = Console.ReadLine();
+                    if (string.IsNullOrEmpty(input)) continue;
+                    
+                    await libp2pNode.BroadcastMessageAsync("public", input);
                 }
             }
-            catch
+            catch (OperationCanceledException)
             {
-                Console.Error.WriteLine("Unable to decode chat message");
+                // Normal exit
             }
-        };
-
-        // Start mDNS discovery
-        _ = services.GetRequiredService<MDnsDiscoveryProtocol>()
-            .StartDiscoveryAsync(peer.ListenAddresses, token: ts.Token);
-
-        await router.StartAsync(peer, token: ts.Token);
-
-        // If UI is needed, use it
-        if (!args.Contains("--no-ui"))
+            
+            await libp2pNode.StopAsync(ts.Token);
+        }
+        // Connect to the Go peer
+        else if (args[0] == "-go")
         {
-            var ui = new ConsoleUI(
-                services.GetRequiredService<ILogger<ConsoleUI>>(),
-                services.GetRequiredService<ITheme>(),
-                services.GetRequiredService<IChatService>(),
-                router,
-                peer.Identity.PeerId.ToString());
+            string goAddr = args.Length > 1 
+                ? args[1] 
+                : "/ip4/127.0.0.1/tcp/5001"; // Default local go-peer address
+            
+            await libp2pNode.StartAsync(ts.Token);
+            await libp2pNode.ConnectToPeerAsync(goAddr);
 
-            await ui.RunAsync(ts.Token);
+            // Chat loop
+            Console.WriteLine("\n=== Connected to Go peer ===");
+            Console.WriteLine("Type a message and press Enter to send");
+            Console.WriteLine("Press Ctrl+C to exit");
+            
+            try
+            {
+                while (!ts.IsCancellationRequested)
+                {
+                    string? input = Console.ReadLine();
+                    if (string.IsNullOrEmpty(input)) continue;
+                    
+                    await libp2pNode.BroadcastMessageAsync("public", input);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Normal exit
+            }
+            
+            await libp2pNode.StopAsync(ts.Token);
+        }
+        // Connect to the Rust peer
+        else if (args[0] == "-rust")
+        {
+            string rustAddr = args.Length > 1 
+                ? args[1] 
+                : "/ip4/127.0.0.1/tcp/9090/p2p/QmYourRustPeerId"; // Default local rust-peer address
+            
+            await libp2pNode.StartAsync(ts.Token);
+            await libp2pNode.ConnectToPeerAsync(rustAddr);
+
+            // Chat loop
+            Console.WriteLine("\n=== Connected to Rust peer ===");
+            Console.WriteLine("Type a message and press Enter to send");
+            Console.WriteLine("Press Ctrl+C to exit");
+            
+            try
+            {
+                while (!ts.IsCancellationRequested)
+                {
+                    string? input = Console.ReadLine();
+                    if (string.IsNullOrEmpty(input)) continue;
+                    
+                    await libp2pNode.BroadcastMessageAsync("public", input);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Normal exit
+            }
+            
+            await libp2pNode.StopAsync(ts.Token);
         }
         else
         {
-            // Otherwise just wait until canceled
-            await Task.Delay(-1, ts.Token);
+            // Server mode with specific options
+            await libp2pNode.StartAsync(ts.Token);
+            
+            // Initialize and join the default room
+            await libp2pNode.JoinRoomAsync("public");
+            
+            // Chat loop
+            Console.WriteLine("\n=== Server started ===");
+            Console.WriteLine("Type a message and press Enter to broadcast");
+            Console.WriteLine("Press Ctrl+C to exit");
+            
+            try
+            {
+                while (!ts.IsCancellationRequested)
+                {
+                    string? input = Console.ReadLine();
+                    if (string.IsNullOrEmpty(input)) continue;
+                    
+                    await libp2pNode.BroadcastMessageAsync("public", input);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Normal exit
+            }
+            
+            await libp2pNode.StopAsync(ts.Token);
         }
-
-        await peer.DisconnectAsync();
+    }
+    else
+    {
+        // Default server mode
+        await libp2pNode.StartAsync(ts.Token);
+        
+        // Initialize and join the default room
+        await libp2pNode.JoinRoomAsync("public");
+        
+        // Chat loop
+        Console.WriteLine("\n=== Server started ===");
+        Console.WriteLine("Type a message and press Enter to broadcast");
+        Console.WriteLine("Press Ctrl+C to exit");
+        
+        try
+        {
+            while (!ts.IsCancellationRequested)
+            {
+                string? input = Console.ReadLine();
+                if (string.IsNullOrEmpty(input)) continue;
+                
+                await libp2pNode.BroadcastMessageAsync("public", input);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal exit
+        }
+        
+        await libp2pNode.StopAsync(ts.Token);
     }
 }
 catch (Exception ex)
@@ -139,5 +206,3 @@ catch (Exception ex)
     var logger = services.GetRequiredService<ILogger<Program>>();
     logger.LogError(ex, "An error occurred while running the application.");
 }
-
-record ChatMessage(string Message, string SenderId, string SenderNick);

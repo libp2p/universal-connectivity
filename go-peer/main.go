@@ -37,6 +37,11 @@ const DiscoveryInterval = time.Hour
 // DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
 const DiscoveryServiceTag = "universal-connectivity"
 
+// HardcodedDotnetPeer is the address of the .NET peer to connect to
+// Update with the actual address from your .NET peer's output
+// The previous port 64738 resulted in "connection refused" error
+const HardcodedDotnetPeer = "/ip4/127.0.0.1/tcp/60327/p2p/12D3KooWLuUZfjVhfpxrHNNbV5YPGwbj2VNJj2uMwYf9zRzWNFUW"
+
 var SysMsgChan chan *ChatMessage
 
 var logger = log.Logger("app")
@@ -231,6 +236,19 @@ func main() {
 	// setup local mDNS discovery
 	if err := setupDiscovery(h); err != nil {
 		panic(err)
+	}
+
+	// Add the .NET peer to the list of addresses to connect to
+	dotnetPeerInfo, err := peer.AddrInfoFromString(HardcodedDotnetPeer)
+	if err != nil {
+		LogMsgf("Failed to parse .NET peer address: %s", err.Error())
+	} else {
+		LogMsgf("Attempting to connect to hardcoded .NET peer: %s", HardcodedDotnetPeer)
+		if err := h.Connect(ctx, *dotnetPeerInfo); err != nil {
+			LogMsgf("Failed to connect to .NET peer: %s", err.Error())
+		} else {
+			LogMsgf("Successfully connected to .NET peer!")
+		}
 	}
 
 	if len(addrsToConnectTo) > 0 {

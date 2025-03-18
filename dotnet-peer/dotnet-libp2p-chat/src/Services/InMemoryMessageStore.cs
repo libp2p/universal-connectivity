@@ -1,38 +1,79 @@
+using Microsoft.Extensions.Logging;
 using Chat.Core.Interfaces;
 using Chat.Core.Models;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Chat.Services;
 
+/// <summary>
+/// An in-memory implementation of the message store
+/// </summary>
 public class InMemoryMessageStore : IMessageStore
 {
-    private readonly Dictionary<string, List<ChatMessage>> _messages = new();
-    private const int MaxMessages = 50;
+    private readonly ILogger<InMemoryMessageStore> _logger;
+    private readonly ConcurrentDictionary<string, List<ChatMessage>> _messages;
 
-    public Task AddMessageAsync(string roomName, ChatMessage message)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InMemoryMessageStore"/> class
+    /// </summary>
+    /// <param name="logger">The logger instance</param>
+    public InMemoryMessageStore(ILogger<InMemoryMessageStore> logger)
     {
-        if (!_messages.ContainsKey(roomName))
-            _messages[roomName] = new List<ChatMessage>();
+        _logger = logger;
+        _messages = new ConcurrentDictionary<string, List<ChatMessage>>();
+    }
 
-        _messages[roomName].Add(message);
-        if (_messages[roomName].Count > MaxMessages)
-            _messages[roomName].RemoveAt(0);
-
+    /// <inheritdoc />
+    public Task AddMessageAsync(string room, ChatMessage message)
+    {
+        _logger.LogInformation("Adding message to room {Room}", room);
+        
+        _messages.AddOrUpdate(
+            room,
+            new List<ChatMessage> { message },
+            (_, existingMessages) =>
+            {
+                existingMessages.Add(message);
+                return existingMessages;
+            });
+        
         return Task.CompletedTask;
     }
 
-    public Task<IEnumerable<ChatMessage>> GetMessagesAsync(string roomName)
+    /// <inheritdoc />
+    public Task<IEnumerable<ChatMessage>> GetMessagesAsync(string room)
     {
-        if (!_messages.ContainsKey(roomName))
-            return Task.FromResult(Enumerable.Empty<ChatMessage>());
-
-        return Task.FromResult(_messages[roomName].AsEnumerable());
+        _logger.LogInformation("Getting messages for room {Room}", room);
+        
+        if (_messages.TryGetValue(room, out var messages))
+        {
+            return Task.FromResult<IEnumerable<ChatMessage>>(messages);
+        }
+        
+        return Task.FromResult(Enumerable.Empty<ChatMessage>());
     }
 
-    public Task ClearRoomAsync(string roomName)
+    /// <inheritdoc />
+    public Task<IEnumerable<string>> GetRoomsAsync()
     {
-        if (_messages.ContainsKey(roomName))
-            _messages[roomName].Clear();
+        _logger.LogInformation("Getting all rooms");
+        
+        var rooms = _messages.Keys.ToList();
+        return Task.FromResult<IEnumerable<string>>(rooms);
+    }
 
+    public Task ClearRoomAsync(string room)
+    {
+        if (_messages.TryGetValue(room, out var messages))
+        {
+            lock (messages)
+            {
+                messages.Clear();
+            }
+        }
         return Task.CompletedTask;
     }
 }

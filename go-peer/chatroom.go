@@ -18,6 +18,7 @@ const ChatRoomBufSize = 128
 // Topic used to broadcast browser WebRTC addresses
 const PubSubDiscoveryTopic string = "universal-connectivity-browser-peer-discovery"
 
+// Match the topic with the .NET peer
 const ChatTopic string = "universal-connectivity"
 const ChatFileTopic string = "universal-connectivity-file"
 

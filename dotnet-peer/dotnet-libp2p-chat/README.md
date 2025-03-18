@@ -1,154 +1,67 @@
-# Universal Connectivity - .NET libp2p Chat
+# .NET libp2p Chat Application
 
-A cross-platform, peer-to-peer chat application built with .NET 8 and libp2p, demonstrating interoperability with other libp2p implementations.
-
-## Overview
-
-This project is part of the Universal Connectivity initiative, which aims to demonstrate interoperability between different libp2p implementations across various programming languages and platforms. This .NET implementation provides a console-based chat application that can communicate with other libp2p peers, including those written in JavaScript, Rust, Go, and other languages.
+A simple chat application built with .NET 8 and Nethermind.Libp2p that demonstrates peer-to-peer communication using libp2p protocols.
 
 ## Features
 
-- **Peer-to-Peer Communication**: Direct messaging between peers without a central server
-- **Multiple Transport Protocols**: Support for TCP and QUIC transports
-- **PubSub Messaging**: Group chat functionality using libp2p's publish-subscribe system
-- **Peer Discovery**: Automatic peer discovery using mDNS
-- **Interactive Console UI**: User-friendly console interface for sending and receiving messages
-- **Cross-Language Compatibility**: Interoperates with libp2p implementations in other languages
+- Real-time peer-to-peer messaging
+- Automatic peer discovery using mDNS
+- JSON message format
+- Console-based UI
 
 ## Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
-- Basic understanding of peer-to-peer networking concepts
+- .NET 8 SDK
+- Windows, macOS, or Linux operating system
 
-## Installation
+## Getting Started
 
-Clone the repository and build the project:
+1. Clone this repository
+2. Navigate to the project directory
+3. Build and run the application:
 
 ```bash
-git clone https://github.com/yourusername/universal-connectivity.git
-cd universal-connectivity/dotnet-peer/dotnet-libp2p-chat
 dotnet build
+dotnet run
 ```
 
-## Usage
-
-### Running as a Server (Listener)
-
-To start the application in listening mode:
+For detailed debug logging, use the `--trace` flag:
 
 ```bash
 dotnet run -- --trace
 ```
 
-This will start a libp2p node that listens for incoming connections. The application will display your peer's multiaddress, which other peers can use to connect to you.
+## How to Use
 
-### Running as a Client (Dialer)
+1. The application will start and automatically connect to other peers on the local network.
+2. Type your message and press Enter to send it to all connected peers.
+3. Type `exit` to quit the application.
 
-To connect to another peer:
+## Technical Details
 
-```bash
-dotnet run -- -d /ip4/127.0.0.1/tcp/PORT/p2p/PEER_ID --trace
-```
-
-Replace `PORT` with the port number and `PEER_ID` with the peer ID from the peer you want to connect to.
-
-### Additional Command-Line Options
-
-- `-sp PORT`: Specify a port to listen on (e.g., `-sp 5001`)
-- `-quic`: Use QUIC transport instead of TCP
-- `--trace`: Enable detailed logging
-
-### Chat Commands
-
-Once connected, you can:
-- Type a message and press Enter to send it
-- Type `exit` to close the connection
-
-## Architecture
-
-The application is built using the following components:
-
-- **Nethermind.Libp2p**: Core libp2p implementation for .NET
-- **ChatProtocol**: Custom protocol implementation for handling chat messages
-- **ConsoleReader**: Non-blocking console input handler
-- **Libp2pService**: Service for managing libp2p node lifecycle and connections
-- **PubSub**: Publish-subscribe system for group messaging
+- Uses Nethermind.Libp2p for libp2p protocol implementation
+- PubSub for message broadcasting
+- mDNS for peer discovery
+- Messages are serialized using JSON
 
 ## Project Structure
 
-```
-dotnet-libp2p-chat/
-├── Program.cs                 # Main entry point
-├── Chat.csproj                # Project file with dependencies
-├── src/
-│   ├── Core/                  # Core interfaces and models
-│   │   ├── Interfaces/        # Interface definitions
-│   │   └── Models/            # Data models
-│   ├── Services/              # Service implementations
-│   │   ├── Libp2pService.cs   # libp2p node management
-│   │   ├── ChatService.cs     # Chat functionality
-│   │   └── MessageStore.cs    # Message storage
-│   └── UI/                    # User interface components
-│       ├── ConsoleUI.cs       # Console UI implementation
-│       └── Themes/            # UI themes
-└── Properties/                # Project properties
-```
+- `Program.cs` - Main application code
+- `dotnet-libp2p-chat.csproj` - Project file with dependencies
 
-## Interoperability
+## Dependencies
 
-This application is designed to work with other libp2p implementations, including:
-
-- JavaScript (browser and Node.js)
-- Rust
-- Go
-- Python
-
-To test interoperability, you can run peers implemented in different languages and connect them to each other.
-
-## Development
-
-### Adding New Features
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Running Tests
-
-```bash
-dotnet test
-```
+- Microsoft.Extensions.DependencyInjection
+- Microsoft.Extensions.Logging
+- Nethermind.Libp2p
+- Nethermind.Libp2p.Protocols.Pubsub
 
 ## Troubleshooting
 
-### Common Issues
-
-1. **Connection Refused Error**:
-   - Ensure the server is running
-   - Check if the port is correct
-   - Verify there are no firewall issues
-
-2. **Multiaddress Parsing Error**:
-   - Ensure the multiaddress format is correct
-   - Check for typos in the peer ID or port
-
-3. **Protocol Negotiation Failure**:
-   - Verify both peers are using compatible protocol versions
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- If no peers are found, ensure you are on the same local network.
+- Check that UDP multicast is enabled on your network.
+- Verify that your firewall allows the application to communicate.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-*This project is part of the Universal Connectivity initiative, demonstrating interoperability between different libp2p implementations.*
+MIT

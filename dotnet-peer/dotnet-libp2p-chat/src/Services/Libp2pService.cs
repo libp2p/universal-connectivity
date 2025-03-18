@@ -1,210 +1,140 @@
-using Chat.Core.Interfaces;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Chat.Core.Models;
+using Multiformats.Address;
 using Nethermind.Libp2p.Core;
+using Chat.Core.Interfaces;
 using System.Collections.Concurrent;
-using Nethermind.Libp2p.Protocols;
-using System.Collections.ObjectModel;
-using Nethermind.Libp2p.Core.Discovery;
-using Nethermind.Libp2p.Core.Utils;
-using Nethermind.Libp2p.Core.Protocols;
-using Nethermind.Libp2p.Core.Multiaddress;
-using Nethermind.Libp2p.Core.Identity;
-using Nethermind.Libp2p.Core.PeerRouting;
-using System.Text;
+using Chat.Core.Models;
+using Nethermind.Libp2p.Protocols.Pubsub;
 
-public class SimplePeerDiscoveryProtocol : IDiscoveryProtocol
-{
-    private readonly ILogger<SimplePeerDiscoveryProtocol> _logger;
-    private readonly ILocalPeer _peer;
-    private readonly ConcurrentDictionary<string, List<Multiaddress>> _discoveredPeers;
-    private readonly TimeSpan _discoveryInterval = TimeSpan.FromSeconds(30);
-    private CancellationTokenSource? _cts;
-
-    public event EventHandler<PeerEventArgs>? OnAddPeer;
-    public event EventHandler<PeerEventArgs>? OnRemovePeer;
-
-    public SimplePeerDiscoveryProtocol(ILocalPeer peer, ILogger<SimplePeerDiscoveryProtocol>? logger = null)
-    {
-        _peer = peer;
-        _logger = logger ?? NullLogger<SimplePeerDiscoveryProtocol>.Instance;
-        _discoveredPeers = new ConcurrentDictionary<string, List<Multiaddress>>();
-    }
-
-    public Task StartDiscoveryAsync(IReadOnlyList<Multiaddress> localPeerAddrs, CancellationToken token = default)
-    {
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
-        _ = RunDiscoveryLoopAsync(_cts.Token);
-        return Task.CompletedTask;
-    }
-
-    public async Task DiscoverAsync(Multiaddress multiaddr, CancellationToken token = default)
-    {
-        try
-        {
-            var peerId = multiaddr.GetPeerId();
-            if (!_discoveredPeers.ContainsKey(peerId))
-            {
-                _discoveredPeers.TryAdd(peerId, new List<Multiaddress> { multiaddr });
-                OnAddPeer?.Invoke(this, new PeerEventArgs(peerId));
-                _logger.LogInformation("Discovered new peer: {PeerId}", peerId);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error discovering peer from multiaddr {Multiaddr}", multiaddr);
-        }
-    }
-
-    private async Task RunDiscoveryLoopAsync(CancellationToken token)
-    {
-        while (!token.IsCancellationRequested)
-        {
-            try
-            {
-                // In a real implementation, this would attempt to discover peers
-                // through various means (DHT, mDNS, etc.)
-                await Task.Delay(_discoveryInterval, token);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in discovery loop");
-            }
-        }
-    }
-
-    public void BanPeer()
-    {
-        // Not implementing ban functionality for basic discovery
-    }
-
-    public Task StopDiscoveryAsync(CancellationToken token = default)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        return Task.CompletedTask;
-    }
-}
+namespace Chat.Services;
 
 public class Libp2pService : ILibp2pNode, IDisposable
 {
     private readonly ILogger<Libp2pService> _logger;
-    private readonly IMessageStore _messageStore;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IMessageStore? _messageStore;
+    private readonly Nethermind.Libp2p.Core.IPeerFactory _peerFactory;
+    private readonly PubsubRouter _router;
     private ILocalPeer? _localPeer;
-    private readonly ConcurrentDictionary<string, IRemotePeer> _peers;
-    private readonly ChatProtocol _chatProtocol;
-    private SimplePeerDiscoveryProtocol? _peerDiscovery;
+    private readonly ConcurrentDictionary<string, ISession> _peers;
+    private ITopic? _topic;
+
+    public event EventHandler<string>? MessageReceived;
 
     public Libp2pService(
         ILogger<Libp2pService> logger,
-        IMessageStore messageStore,
-        IServiceProvider serviceProvider)
+        Nethermind.Libp2p.Core.IPeerFactory peerFactory,
+        IMessageStore? messageStore = null,
+        PubsubRouter router = null)
     {
         _logger = logger;
+        _peerFactory = peerFactory;
         _messageStore = messageStore;
-        _serviceProvider = serviceProvider;
-        _peers = new ConcurrentDictionary<string, IRemotePeer>();
-        _chatProtocol = new ChatProtocol();
+        _router = router;
+        _peers = new ConcurrentDictionary<string, ISession>();
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Starting libp2p node");
 
-        var factory = new PeerFactory(_serviceProvider);
-        var identity = Identity.Generate();
-        _localPeer = factory.Create(identity);
+        Identity localPeerIdentity = new();
+        string addr = $"/ip4/0.0.0.0/tcp/0/p2p/{localPeerIdentity.PeerId}";
 
-        if (_localPeer == null)
-        {
-            throw new InvalidOperationException("Failed to create libp2p peer");
-        }
+        _localPeer = _peerFactory.Create(localPeerIdentity);
+        await _localPeer.StartListenAsync([addr], cancellationToken);
 
-        // Initialize peer discovery
-        _peerDiscovery = new SimplePeerDiscoveryProtocol(_localPeer, _logger);
-        _peerDiscovery.OnAddPeer += OnPeerDiscovered;
+        string peerId = _localPeer.Identity.PeerId.ToString();
+        _logger.LogInformation("Local peer started with ID: {PeerId}", peerId);
 
-        // Start discovery with default local address
-        var localAddr = new Multiaddress("/ip4/127.0.0.1/tcp/5001");
-        await _peerDiscovery.StartDiscoveryAsync(new[] { localAddr }, cancellationToken);
-
-        // Log the peer ID
-        _logger.LogInformation("Peer ID: {PeerId}", _localPeer.Identity.PeerId);
-        _logger.LogInformation("To connect to this peer, use: /ip4/127.0.0.1/tcp/5001/p2p/{PeerId}", _localPeer.Identity.PeerId);
+        // Set up connection handler
+        _localPeer.OnConnected += HandleNewConnection;
 
         _logger.LogInformation("Libp2p node started");
     }
 
-    private void OnPeerDiscovered(object? sender, PeerEventArgs e)
+    private void HandleNewConnection(ISession session)
     {
-        _logger.LogInformation("New peer discovered: {PeerId}", e.PeerId);
-        // Here you could automatically connect to the discovered peer if desired
+        var peerId = session.Id;
+        _logger.LogInformation("New peer connected: {PeerId}", peerId);
+        
+        _peers.TryAdd(peerId, session);
+        
+        // Here we could automatically establish protocols with the connected peer
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync()
     {
         _logger.LogInformation("Stopping libp2p node");
 
-        if (_peerDiscovery != null)
-        {
-            await _peerDiscovery.StopDiscoveryAsync(cancellationToken);
-        }
-
         foreach (var peer in _peers.Values)
         {
-            await peer.DisconnectAsync();
+            try
+            {
+                await peer.DisconnectAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disconnecting from peer");
+            }
         }
         _peers.Clear();
 
-        _localPeer = null;
+        if (_localPeer != null)
+        {
+            await _localPeer.DisconnectAsync();
+            _localPeer = null;
+            _logger.LogInformation("Local peer stopped");
+        }
     }
 
     public async Task BroadcastMessageAsync(string room, string message)
     {
         _logger.LogInformation("Broadcasting message to room {Room}", room);
 
-        var chatMessage = new ChatMessage("System", message, DateTimeOffset.UtcNow);
-        await _messageStore.AddMessageAsync(room, chatMessage);
+        if (_messageStore != null)
+        {
+            var chatMessage = new ChatMessage(message, "dotnet-peer", DateTimeOffset.UtcNow);
+            await _messageStore.AddMessageAsync(room, chatMessage);
+        }
 
         if (_localPeer == null)
         {
             throw new InvalidOperationException("Libp2p node not started");
         }
 
-        // Broadcast to all connected peers
-        foreach (var peer in _peers.Values)
+        // In a full implementation, this would publish to a PubSub topic
+        _logger.LogInformation("Message broadcasted to room {Room}: {Message}", room, message);
+    }
+
+    public async Task JoinRoomAsync(string roomName)
+    {
+        if (_localPeer is null)
         {
-            try
-            {
-                var protocol = new ChatProtocol();
-                await peer.DialAsync<ChatProtocol>(CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to broadcast message to peer");
-            }
+            throw new InvalidOperationException("Local peer not started");
         }
+
+        _topic = _router.GetTopic($"chat-room:{roomName}");
+        _topic.OnMessage += OnMessageReceived;
+        await _router.StartAsync(_localPeer);
+
+        _logger.LogInformation("Joined room: {RoomName}", roomName);
     }
 
-    public Task JoinRoomAsync(string room)
+    public async Task SendMessageAsync(string message)
     {
-        _logger.LogInformation("Joining room {Room}", room);
-        // In libp2p, rooms are typically implemented as PubSub topics
-        // For this basic implementation, we'll just maintain room state locally
-        return Task.CompletedTask;
+        if (_topic is null)
+        {
+            throw new InvalidOperationException("Not joined to any room");
+        }
+
+        _topic.Publish(System.Text.Encoding.UTF8.GetBytes(message));
+        _logger.LogInformation("Message sent: {Message}", message);
     }
 
-    public Task LeaveRoomAsync(string room)
+    private void OnMessageReceived(byte[] msg)
     {
-        _logger.LogInformation("Leaving room {Room}", room);
-        return Task.CompletedTask;
+        string message = System.Text.Encoding.UTF8.GetString(msg);
+        MessageReceived?.Invoke(this, message);
     }
 
     public async Task ConnectToPeerAsync(string peerAddress)
@@ -220,120 +150,59 @@ public class Libp2pService : ILibp2pNode, IDisposable
         {
             var multiaddr = new Multiaddress(peerAddress);
             var remotePeer = await _localPeer.DialAsync(multiaddr);
-            await remotePeer.DialAsync<ChatProtocol>(CancellationToken.None);
-            _peers.TryAdd(remotePeer.Identity.PeerId, remotePeer);
-            _logger.LogInformation("Connected to peer: {PeerId}", remotePeer.Identity.PeerId);
+            
+            string peerId = remotePeer.Id;
+            _peers.TryAdd(peerId, remotePeer);
+            
+            _logger.LogInformation("Connected to peer: {PeerId}", peerId);
+            
+            // Attempt to establish the chat protocol
+            try
+            {
+                await remotePeer.DialAsync<Chat.ChatProtocol>();
+                _logger.LogInformation("Chat protocol established with peer {PeerId}", peerId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to establish chat protocol with peer {PeerId}", peerId);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to connect to peer");
+            _logger.LogError(ex, "Failed to connect to peer at {Address}", peerAddress);
             throw;
         }
     }
 
-    public async Task SendMessageToPeerAsync(string peerId, string message)
+    public async Task ConnectAsync(string multiaddress)
     {
-        _logger.LogInformation("Sending message to peer {PeerId}", peerId);
-
-        if (_localPeer == null)
+        if (_localPeer is null)
         {
-            throw new InvalidOperationException("Libp2p node not started");
+            throw new InvalidOperationException("Local peer not started");
         }
 
-        if (!_peers.TryGetValue(peerId, out var peer))
+        await _localPeer.ConnectAsync(multiaddress);
+        _logger.LogInformation("Connected to peer: {Multiaddress}", multiaddress);
+    }
+
+    public async Task LeaveRoomAsync(string roomName)
+    {
+        if (_localPeer is null)
         {
-            throw new InvalidOperationException($"Not connected to peer {peerId}");
+            throw new InvalidOperationException("Local peer not started");
         }
 
-        try
+        if (_topic is not null)
         {
-            var protocol = new ChatProtocol();
-            await peer.DialAsync<ChatProtocol>(CancellationToken.None);
-            // Message will be handled by the ChatProtocol.HandleAsync method
-            _logger.LogInformation("Message sent to peer {PeerId}", peerId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send message to peer");
-            throw;
+            _topic.OnMessage -= OnMessageReceived;
+            await _router.StopAsync();
+            _topic = null;
+            _logger.LogInformation("Left room: {RoomName}", roomName);
         }
     }
 
     public void Dispose()
     {
-        StopAsync(CancellationToken.None).Wait();
-    }
-}
-
-public class ChatProtocol : IProtocol
-{
-    private readonly string _protocolId = "/chat/1.0.0";
-    private static readonly ConsoleReader Reader = new();
-    private readonly ConsoleColor _defaultConsoleColor = Console.ForegroundColor;
-    
-    public string Id => _protocolId;
-
-    public async Task HandleAsync(IChannel channel, IPeerContext context)
-    {
-        Console.Write("> ");
-        
-        // Task for reading messages from the network
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                while (true)
-                {
-                    var buffer = new byte[1024];
-                    var sequence = await channel.ReadAsync(buffer.Length);
-                    if (sequence.IsEmpty) break;
-                    
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("{0}", Encoding.UTF8.GetString(sequence.ToArray())
-                        .Replace("\r", "").Replace("\n\n", ""));
-                    Console.ForegroundColor = _defaultConsoleColor;
-                    Console.Write("> ");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Connection closed: {0}", ex.Message);
-                Console.ForegroundColor = _defaultConsoleColor;
-            }
-        });
-        
-        // Task for sending messages from console input
-        try
-        {
-            for (;;)
-            {
-                string line = await Reader.ReadLineAsync();
-                if (line == "exit")
-                {
-                    return;
-                }
-                
-                Console.Write("> ");
-                byte[] buf = Encoding.UTF8.GetBytes(line + "\n\n");
-                await channel.WriteAsync(new ReadOnlySequence<byte>(buf));
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Error sending message: {0}", ex.Message);
-            Console.ForegroundColor = _defaultConsoleColor;
-        }
-    }
-
-    public Task ListenAsync(IChannel channel, IChannelFactory? channelFactory, IPeerContext context)
-    {
-        return HandleAsync(channel, context);
-    }
-
-    public Task DialAsync(IChannel channel, IChannelFactory? channelFactory, IPeerContext context)
-    {
-        return HandleAsync(channel, context);
+        StopAsync().GetAwaiter().GetResult();
     }
 }
