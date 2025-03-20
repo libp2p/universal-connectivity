@@ -95,6 +95,15 @@ impl Ui {
                             String::from_utf8(data).unwrap_or("invalid UTF-8".to_string());
                         chat_widget.add_chat(source, message);
                     }
+                    Message::AllPeers { peers } => {
+                        for (peer, topics) in peers {
+                            let mut peer_str = format!("{peer}: ");
+                            for topic in topics {
+                                peer_str.push_str(&format!("{}, ", topic));
+                            }
+                            chat_widget.add_event(peer_str);
+                        }
+                    }
                     Message::AddPeer(peer) => {
                         if chat_widget.peers.insert(peer) {
                             chat_widget
@@ -126,7 +135,7 @@ impl Ui {
             if event::poll(Duration::from_millis(18))? {
                 if let Event::Key(key) = event::read()? {
                     match key {
-                        // Handle Ctrl+C
+                        // Handle ctrl-c
                         KeyEvent {
                             code: KeyCode::Char('c'),
                             modifiers: KeyModifiers::CONTROL,
@@ -135,6 +144,17 @@ impl Ui {
                             info!("Received Ctrl+C, shutting down...");
                             self.shutdown.cancel();
                             break;
+                        }
+
+                        // Handle ctrl-p
+                        KeyEvent {
+                            code: KeyCode::Char('p'),
+                            modifiers: KeyModifiers::CONTROL,
+                            ..
+                        } => {
+                            self.to_peer
+                                .send(Message::AllPeers { peers: vec![] })
+                                .await?;
                         }
 
                         // Handle all other key events

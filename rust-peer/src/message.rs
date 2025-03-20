@@ -10,6 +10,11 @@ pub enum Message {
         /// The data sent
         data: Vec<u8>,
     },
+    /// All gossipsub peers and their topics
+    AllPeers {
+        /// The peers and their topics
+        peers: Vec<(PeerId, Vec<String>)>,
+    },
     /// Add a peer
     AddPeer(PeerId),
     /// Remove a peer

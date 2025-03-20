@@ -14,13 +14,14 @@ use libp2p::{
     kad::{Behaviour as Kademlia, Config as KademliaConfig},
     memory_connection_limits::Behaviour as MemoryConnectionLimits,
     multiaddr::{Multiaddr, Protocol},
+    noise,
     relay::{Behaviour as Relay, Config as RelayConfig},
     request_response::{
         Behaviour as RequestResponse, Config as RequestResponseConfig,
         Event as RequestResponseEvent, Message as RequestResponseMessage, ProtocolSupport,
     },
     swarm::{NetworkBehaviour, Swarm, SwarmEvent},
-    PeerId, StreamProtocol, SwarmBuilder, Transport,
+    tcp, yamux, PeerId, StreamProtocol, SwarmBuilder, Transport,
 };
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
@@ -47,6 +48,7 @@ const GOSSIPSUB_PEER_DISCOVERY: &str = "universal-connectivity-browser-peer-disc
 // Listen Ports
 const PORT_WEBRTC: u16 = 9090;
 const PORT_QUIC: u16 = 9091;
+const PORT_TCP: u16 = 9092;
 
 // Bootstrap Nodes
 const BOOTSTRAP_NODES: [&str; 4] = [
@@ -73,6 +75,8 @@ pub struct Peer {
     address_webrtc: Multiaddr,
     /// The quic address we listen on
     address_quic: Multiaddr,
+    /// The tcp address we listen on
+    address_tcp: Multiaddr,
     /// The external addresses that others see, given on command line
     external_address: Option<Multiaddr>,
     /// The multiaddrs to dial, given on command line
@@ -106,6 +110,8 @@ impl Peer {
         let address_quic = Multiaddr::from(opt.listen_address)
             .with(Protocol::Udp(PORT_QUIC))
             .with(Protocol::QuicV1);
+
+        let address_tcp = Multiaddr::from(opt.listen_address).with(Protocol::Tcp(PORT_TCP));
 
         let external_address = opt.external_address.map(Multiaddr::from);
 
@@ -198,6 +204,11 @@ impl Peer {
             // Build the swarm
             SwarmBuilder::with_existing_identity(local_key.clone())
                 .with_tokio()
+                .with_tcp(
+                    tcp::Config::default(),
+                    noise::Config::new,
+                    yamux::Config::default,
+                )?
                 .with_quic()
                 .with_other_transport(|id_keys| {
                     Ok(
@@ -213,6 +224,7 @@ impl Peer {
         Ok(Self {
             address_webrtc,
             address_quic,
+            address_tcp,
             external_address,
             to_dial,
             to_ui,
@@ -225,12 +237,21 @@ impl Peer {
     /// Run the Peer
     pub async fn run(&mut self) -> Result<()> {
         // Listen on the given addresses
-        self.swarm
-            .listen_on(self.address_webrtc.clone())
-            .expect("listen on webrtc");
-        self.swarm
-            .listen_on(self.address_quic.clone())
-            .expect("listen on quic");
+        if let Err(e) = self.swarm.listen_on(self.address_webrtc.clone()) {
+            self.to_ui
+                .send(Message::Event(format!("Failed to listen on webrtc: {e}")))
+                .await?;
+        }
+        if let Err(e) = self.swarm.listen_on(self.address_quic.clone()) {
+            self.to_ui
+                .send(Message::Event(format!("Failed to listen on quic: {e}")))
+                .await?;
+        }
+        if let Err(e) = self.swarm.listen_on(self.address_tcp.clone()) {
+            self.to_ui
+                .send(Message::Event(format!("Failed to listen on tcp: {e}")))
+                .await?;
+        }
 
         // Dial the given addresses
         for addr in &self.to_dial {
@@ -276,6 +297,12 @@ impl Peer {
                             if let Err(e) = self.swarm.behaviour_mut().gossipsub.publish(chat_topic_hash.clone(), data) {
                                 debug!("Failed to publish chat message: {e}");
                             }
+                        }
+                        Message::AllPeers { .. } => {
+                            let peers = self.swarm.behaviour().gossipsub.all_peers().map(|(peer_id, topics)| {
+                                (peer_id.clone(), topics.iter().map(|t| t.to_string()).collect())
+                            }).collect();
+                            self.to_ui.send(Message::AllPeers { peers }).await?;
                         }
                         _ => {
                             debug!("Unhandled message: {:?}", message);
@@ -329,6 +356,7 @@ impl Peer {
                     SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(event)) => match event {
                         GossipsubEvent::Message { message, .. } => match message {
                             GossipsubMessage { source, data, .. } if message.topic == chat_topic_hash => {
+                                self.to_ui.send(Message::Event(format!("Received chat message from {:?}", source))).await?;
                                 self.to_ui.send(Message::Chat {
                                     source,
                                     data,
@@ -356,16 +384,21 @@ impl Peer {
                                 self.to_ui.send(Message::Event(format!("Received peer discovery: {:?}", message))).await?;
                             }
                             GossipsubMessage { topic, .. } => {
+                                self.to_ui.send(Message::Event(format!("Unknown topic {:?}", topic))).await?;
                                 warn!("Received message from an unknown topic: {:?}", topic);
                             }
                         }
                         GossipsubEvent::Subscribed { peer_id, topic } => {
                             debug!("{peer_id} subscribed to {topic}");
-                            self.to_ui.send(Message::AddPeer(peer_id)).await?;
+                            if topic == chat_topic_hash {
+                                self.to_ui.send(Message::AddPeer(peer_id)).await?;
+                            }
                         }
                         GossipsubEvent::Unsubscribed { peer_id, topic } => {
                             debug!("{peer_id} unsubscribed from {topic}");
-                            self.to_ui.send(Message::RemovePeer(peer_id)).await?;
+                            if topic == chat_topic_hash {
+                                self.to_ui.send(Message::RemovePeer(peer_id)).await?;
+                            }
                         }
                         GossipsubEvent::GossipsubNotSupported { peer_id } => {
                             warn!("{peer_id} does not support gossipsub");
