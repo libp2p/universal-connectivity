@@ -362,12 +362,10 @@ impl Peer {
                         GossipsubEvent::Subscribed { peer_id, topic } => {
                             debug!("{peer_id} subscribed to {topic}");
                             self.to_ui.send(Message::AddPeer(peer_id)).await?;
-                            self.to_ui.send(Message::Event(format!("Connected to {peer_id}"))).await?;
                         }
                         GossipsubEvent::Unsubscribed { peer_id, topic } => {
                             debug!("{peer_id} unsubscribed from {topic}");
                             self.to_ui.send(Message::RemovePeer(peer_id)).await?;
-                            self.to_ui.send(Message::Event(format!("Peer {peer_id} disconnected"))).await?;
                         }
                         GossipsubEvent::GossipsubNotSupported { peer_id } => {
                             warn!("{peer_id} does not support gossipsub");

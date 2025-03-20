@@ -96,10 +96,18 @@ impl Ui {
                         chat_widget.add_chat(source, message);
                     }
                     Message::AddPeer(peer) => {
-                        chat_widget.peers.insert(peer);
+                        if chat_widget.peers.insert(peer) {
+                            chat_widget
+                                .add_event(format!("Connected to {peer} ({})", short_id(&peer)));
+                        }
                     }
                     Message::RemovePeer(peer) => {
-                        chat_widget.peers.remove(&peer);
+                        if chat_widget.peers.remove(&peer) {
+                            chat_widget.add_event(format!(
+                                "Disconnected from {peer} ({})",
+                                short_id(&peer)
+                            ));
+                        }
                     }
                     Message::Event(event) => {
                         chat_widget.add_event(event);
