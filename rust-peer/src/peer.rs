@@ -41,15 +41,26 @@ const BOOTSTRAP_NODES: [&str; 4] = [
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
 ];
 
-/// The Peer
+/// The Peer Behaviour
+#[derive(NetworkBehaviour)]
+struct Behaviour {
+    gossipsub: gossipsub::Behaviour,
+    identify: identify::Behaviour,
+    kademlia: Kademlia<MemoryStore>,
+    relay: relay::Behaviour,
+    request_response: request_response::Behaviour<FileExchangeCodec>,
+    connection_limits: memory_connection_limits::Behaviour,
+}
+
+/// The Peer state
 pub struct Peer {
-    /// The webrtc address
+    /// The webrtc address we listen on
     address_webrtc: Multiaddr,
-    /// The quic address
+    /// The quic address we listen on
     address_quic: Multiaddr,
-    /// The given external addresses
+    /// The external addresses that others see, given on command line
     external_address: Option<IpAddr>,
-    /// The multiaddr to dial
+    /// The multiaddrs to dial, given on command line
     to_dial: Vec<Multiaddr>,
     /// The sender to the ui
     to_ui: Sender<Message>,
@@ -62,7 +73,7 @@ pub struct Peer {
 }
 
 impl Peer {
-    /// Create a new Peer instance
+    /// Create a new Peer instance by initializing the swarm and peer state
     pub async fn new(
         local_key: identity::Keypair,
         webrtc_cert: Certificate,
@@ -85,6 +96,7 @@ impl Peer {
 
         let to_dial = opt.connect;
 
+        // initialize the swarm
         let swarm = {
             let local_peer_id = PeerId::from(local_key.public());
             debug!("Local peer id: {local_peer_id}");
@@ -180,6 +192,7 @@ impl Peer {
 
     /// Run the Peer
     pub async fn run(&mut self) -> Result<()> {
+        // Listen on the given addresses
         self.swarm
             .listen_on(self.address_webrtc.clone())
             .expect("listen on webrtc");
@@ -187,12 +200,14 @@ impl Peer {
             .listen_on(self.address_quic.clone())
             .expect("listen on quic");
 
+        // Dial the given addresses
         for addr in &self.to_dial {
             if let Err(e) = self.swarm.dial(addr.clone()) {
                 debug!("Failed to dial {addr}: {e}");
             }
         }
 
+        // Dial the bootstrap nodes
         for peer in &BOOTSTRAP_NODES {
             let multiaddr: Multiaddr = peer.parse().expect("Failed to parse Multiaddr");
             if let Err(e) = self.swarm.dial(multiaddr) {
@@ -200,10 +215,12 @@ impl Peer {
             }
         }
 
+        // Initialize the gossipsub topics
         let chat_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_TOPIC).hash();
         let file_topic_hash = gossipsub::IdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC).hash();
         let peer_discovery_hash = gossipsub::IdentTopic::new(GOSSIPSUB_PEER_DISCOVERY).hash();
 
+        // Run the main loop
         loop {
             tokio::select! {
                 _ = self.shutdown.cancelled() => {
@@ -356,14 +373,4 @@ impl Peer {
 
         Ok(())
     }
-}
-
-#[derive(NetworkBehaviour)]
-struct Behaviour {
-    gossipsub: gossipsub::Behaviour,
-    identify: identify::Behaviour,
-    kademlia: Kademlia<MemoryStore>,
-    relay: relay::Behaviour,
-    request_response: request_response::Behaviour<FileExchangeCodec>,
-    connection_limits: memory_connection_limits::Behaviour,
 }
