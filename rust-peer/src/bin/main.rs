@@ -4,7 +4,7 @@ use anyhow::Result;
 use libp2p::identity;
 use libp2p_webrtc::tokio::Certificate;
 use std::path::Path;
-use tokio::{fs, signal, task::JoinHandle};
+use tokio::{fs, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use tracing::info;
 
@@ -32,12 +32,6 @@ async fn main() -> Result<()> {
     // spawn tasks for both the swarm and the ui
     let peer_task: JoinHandle<Result<()>> = tokio::spawn(async move { peer.run().await });
     let ui_task: JoinHandle<Result<()>> = tokio::spawn(async move { ui.run().await });
-
-    // wait for ctrl-c to quit
-    signal::ctrl_c().await?;
-
-    // cancel the shutdown token
-    shutdown.cancel();
 
     // wait for the tasks to finish
     let (ui_result, peer_result) = tokio::try_join!(peer_task, ui_task)?;

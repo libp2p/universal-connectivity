@@ -1,7 +1,7 @@
 use crate::{log::Message as LogMessage, Message};
 use anyhow::Result;
 use crossterm::{
-    event::{self, Event as CEvent, KeyCode},
+    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -18,11 +18,13 @@ use ratatui::{
 use std::{
     collections::{HashSet, VecDeque},
     io,
+    time::Duration,
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_util::sync::CancellationToken;
+use tracing::info;
 
-/// A simple TUI based UI for the peer
+/// A simple UI for the peer
 pub struct Ui {
     // my peer id
     me: PeerId,
@@ -80,11 +82,6 @@ impl Ui {
 
         // Main loop
         loop {
-            // Check for shutdown
-            if self.shutdown.is_cancelled() {
-                break;
-            }
-
             // Process log messages
             while let Ok(log) = self.from_log.try_recv() {
                 log_widget.add_line(log.message);
@@ -116,27 +113,40 @@ impl Ui {
             })?;
 
             // Handle input events
-            if let CEvent::Key(key) = event::read()? {
-                match key.code {
-                    KeyCode::Tab => {
-                        selected_tab = (selected_tab + 1) % 2;
+            if event::poll(Duration::from_millis(18))? {
+                if let Event::Key(key) = event::read()? {
+                    match key {
+                        KeyEvent {
+                            code: KeyCode::Char('c'),
+                            modifiers: KeyModifiers::CONTROL,
+                            ..
+                        } => {
+                            info!("Received Ctrl+C, shutting down...");
+                            self.shutdown.cancel();
+                            break;
+                        }
+                        _ => match key.code {
+                            KeyCode::Tab => {
+                                selected_tab = (selected_tab + 1) % 2;
+                            }
+                            KeyCode::Char(c) if selected_tab == 0 => {
+                                chat_widget.input.push(c);
+                            }
+                            KeyCode::Backspace if selected_tab == 0 => {
+                                chat_widget.input.pop();
+                            }
+                            KeyCode::Enter if selected_tab == 0 => {
+                                self.to_peer
+                                    .send(Message::Chat {
+                                        peer: self.me,
+                                        message: chat_widget.input.clone(),
+                                    })
+                                    .await?;
+                                chat_widget.input.clear();
+                            }
+                            _ => {}
+                        },
                     }
-                    KeyCode::Char(c) if selected_tab == 0 => {
-                        chat_widget.input.push(c);
-                    }
-                    KeyCode::Backspace if selected_tab == 0 => {
-                        chat_widget.input.pop();
-                    }
-                    KeyCode::Enter if selected_tab == 0 => {
-                        self.to_peer
-                            .send(Message::Chat {
-                                peer: self.me,
-                                message: chat_widget.input.clone(),
-                            })
-                            .await?;
-                        chat_widget.input.clear();
-                    }
-                    _ => {}
                 }
             }
         }
@@ -252,7 +262,7 @@ impl Widget for &ChatWidget<'_> {
         // calculate the layout for the top row
         let top_layout = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(100), Constraint::Length(18)].as_ref())
+            .constraints([Constraint::Percentage(100), Constraint::Length(24)].as_ref())
             .split(layout[0]);
 
         // render the chat messages

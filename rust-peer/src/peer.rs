@@ -207,6 +207,7 @@ impl Peer {
         loop {
             tokio::select! {
                 _ = self.shutdown.cancelled() => {
+                    info!("Shutting down the peer");
                     break;
                 }
                 Some(_message) = self.from_ui.recv() => {
