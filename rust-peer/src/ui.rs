@@ -90,8 +90,10 @@ impl Ui {
             // Process UI messages
             while let Ok(ui_message) = self.from_peer.try_recv() {
                 match ui_message {
-                    Message::Chat { peer, message } => {
-                        chat_widget.add_chat(peer, message);
+                    Message::Chat { source, data } => {
+                        let message =
+                            String::from_utf8(data).unwrap_or("invalid UTF-8".to_string());
+                        chat_widget.add_chat(source, message);
                     }
                     Message::AddPeer(peer) => {
                         chat_widget.peers.insert(peer);
@@ -116,6 +118,7 @@ impl Ui {
             if event::poll(Duration::from_millis(18))? {
                 if let Event::Key(key) = event::read()? {
                     match key {
+                        // Handle Ctrl+C
                         KeyEvent {
                             code: KeyCode::Char('c'),
                             modifiers: KeyModifiers::CONTROL,
@@ -125,6 +128,8 @@ impl Ui {
                             self.shutdown.cancel();
                             break;
                         }
+
+                        // Handle all other key events
                         _ => match key.code {
                             KeyCode::Tab => {
                                 selected_tab = (selected_tab + 1) % 2;
@@ -136,12 +141,18 @@ impl Ui {
                                 chat_widget.input.pop();
                             }
                             KeyCode::Enter if selected_tab == 0 => {
+                                // send the chat message to the swarm to be gossiped
                                 self.to_peer
                                     .send(Message::Chat {
-                                        peer: self.me,
-                                        message: chat_widget.input.clone(),
+                                        source: Some(self.me),
+                                        data: chat_widget.input.clone().into_bytes(),
                                     })
                                     .await?;
+
+                                // add our chat to the local chat widget
+                                chat_widget.add_chat(Some(self.me), chat_widget.input.clone());
+
+                                // clear the input
                                 chat_widget.input.clear();
                             }
                             _ => {}
@@ -168,17 +179,17 @@ struct LinesWidget {
 
 impl LinesWidget {
     // Create a new LogWidget instance
-    fn new<T: AsRef<str> + ToString>(title: T, max: usize) -> Self {
+    fn new(title: impl Into<String>, max: usize) -> Self {
         Self {
-            title: title.to_string(),
+            title: title.into(),
             max,
             lines: VecDeque::new(),
         }
     }
 
     // Add a line to the widget
-    fn add_line<T: AsRef<str> + ToString>(&mut self, line: T) {
-        self.lines.push_back(line.to_string());
+    fn add_line(&mut self, line: impl Into<String>) {
+        self.lines.push_back(line.into());
         if self.lines.len() > self.max {
             self.lines.drain(0..(self.lines.len() - self.max));
         }
@@ -229,13 +240,17 @@ impl<'a> ChatWidget<'a> {
     }
 
     // Add a chat message to the widget
-    fn add_chat<T: AsRef<str> + ToString>(&mut self, peer: PeerId, message: T) {
-        self.chat
-            .add_line(format!("{}: {}", peer, message.to_string()));
+    fn add_chat(&mut self, peer: Option<PeerId>, message: impl Into<String>) {
+        let peer = match peer {
+            Some(peer) => short_id(&peer),
+            None => "Unknown".to_string(),
+        };
+
+        self.chat.add_line(format!("{}: {}", peer, message.into()));
     }
 
     // Add an event message to the widget
-    fn add_event<T: AsRef<str> + ToString>(&mut self, event: T) {
+    fn add_event(&mut self, event: impl Into<String>) {
         self.events.add_line(event);
     }
 }
@@ -276,7 +291,7 @@ impl Widget for &ChatWidget<'_> {
         let peers: Vec<ListItem> = self
             .peers
             .iter()
-            .map(|p| ListItem::new(Span::raw(p.to_string())))
+            .map(|p| ListItem::new(Span::raw(short_id(p))))
             .collect();
         List::new(peers)
             .block(peers_block)
@@ -286,6 +301,15 @@ impl Widget for &ChatWidget<'_> {
         self.events.render(layout[1], buf);
 
         // render the chat input
-        Paragraph::new(format!("{} > {}", self.me, self.input.clone())).render(layout[2], buf);
+        Paragraph::new(format!("{} > {}", short_id(self.me), self.input.clone()))
+            .render(layout[2], buf);
     }
+}
+
+// Get the last 8 characters of a PeerId
+fn short_id(peer: &PeerId) -> String {
+    let s = peer.to_string();
+    s.chars()
+        .skip(s.chars().count().saturating_sub(8))
+        .collect()
 }
