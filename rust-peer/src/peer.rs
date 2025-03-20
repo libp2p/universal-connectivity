@@ -300,7 +300,6 @@ impl Peer {
                     // When we successfully connect to a peer
                     SwarmEvent::ConnectionEstablished { peer_id, .. } => {
                         info!("Connected to {peer_id}");
-                        //self.to_ui.send(Message::Event(format!("Connected to {peer_id}"))).await?;
                     }
 
                     // When we fail to connect to a peer
@@ -363,10 +362,12 @@ impl Peer {
                         GossipsubEvent::Subscribed { peer_id, topic } => {
                             debug!("{peer_id} subscribed to {topic}");
                             self.to_ui.send(Message::AddPeer(peer_id)).await?;
+                            self.to_ui.send(Message::Event(format!("Connected to {peer_id}"))).await?;
                         }
                         GossipsubEvent::Unsubscribed { peer_id, topic } => {
                             debug!("{peer_id} unsubscribed from {topic}");
                             self.to_ui.send(Message::RemovePeer(peer_id)).await?;
+                            self.to_ui.send(Message::Event(format!("Peer {peer_id} disconnected"))).await?;
                         }
                         GossipsubEvent::GossipsubNotSupported { peer_id } => {
                             warn!("{peer_id} does not support gossipsub");
