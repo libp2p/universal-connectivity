@@ -1,0 +1,8 @@
+# Build outputs
+bin/
+obj/
+
+# Editor backup files
+*~
+*.swp
+*.swo
