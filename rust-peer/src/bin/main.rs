@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
     let local_key = read_or_create_identity(Path::new(LOCAL_KEY_PATH)).await?;
     let webrtc_cert = read_or_create_certificate(Path::new(LOCAL_CERT_PATH)).await?;
 
-    // create the ui
+    // create the ui and the channels to communicate with it
     let (mut ui, to_ui, from_ui) = Ui::new(local_key.public().into(), from_log, shutdown.clone());
 
     // create the peer, connecting it to the ui

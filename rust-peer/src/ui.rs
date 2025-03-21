@@ -22,7 +22,7 @@ use std::{
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_util::sync::CancellationToken;
-use tracing::info;
+use tracing::{error, info};
 
 /// A simple UI for the peer
 pub struct Ui {
@@ -46,8 +46,8 @@ impl Ui {
         shutdown: CancellationToken,
     ) -> (Self, Sender<Message>, Receiver<Message>) {
         // create a new channels for sending/receiving messages
-        let (to_peer, from_ui) = mpsc::channel::<Message>(100);
-        let (to_ui, from_peer) = mpsc::channel::<Message>(100);
+        let (to_peer, from_ui) = mpsc::channel::<Message>(64);
+        let (to_ui, from_peer) = mpsc::channel::<Message>(64);
 
         // create a new TUI instance
         let ui = Self {
@@ -58,7 +58,6 @@ impl Ui {
             shutdown,
         };
 
-        // return the UI instance and the channels
         (ui, to_ui, from_ui)
     }
 
@@ -83,12 +82,12 @@ impl Ui {
         // Main loop
         loop {
             // Process log messages
-            while let Ok(log) = self.from_log.try_recv() {
+            if let Ok(log) = self.from_log.try_recv() {
                 log_widget.add_line(log.message);
             }
 
             // Process UI messages
-            while let Ok(ui_message) = self.from_peer.try_recv() {
+            if let Ok(ui_message) = self.from_peer.try_recv() {
                 match ui_message {
                     Message::Chat { source, data } => {
                         let message =
@@ -152,6 +151,7 @@ impl Ui {
                             modifiers: KeyModifiers::CONTROL,
                             ..
                         } => {
+                            error!("all peers sent");
                             self.to_peer
                                 .send(Message::AllPeers { peers: vec![] })
                                 .await?;
@@ -169,6 +169,7 @@ impl Ui {
                                 chat_widget.input.pop();
                             }
                             KeyCode::Enter if selected_tab == 0 => {
+                                error!("chat sent");
                                 // send the chat message to the swarm to be gossiped
                                 self.to_peer
                                     .send(Message::Chat {
