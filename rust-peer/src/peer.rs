@@ -364,6 +364,7 @@ impl Peer {
                         warn!("Connection to {peer_id} closed: {cause:?}");
                         self.swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
                         info!("Removed {peer_id} from the routing table (if it was in there).");
+                        self.to_ui.send(Message::RemovePeer(peer_id)).await?;
                     }
 
                     // When we receive a relay event
@@ -447,6 +448,7 @@ impl Peer {
                                     // but for now remove the peer from routing table if there's an Identify timeout
                                     self.swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
                                     info!("Removed {peer_id} from the routing table (if it was in there).");
+                                    self.to_ui.send(Message::RemovePeer(peer_id)).await?;
                                 }
                                 _ => {
                                     debug!("{error}");
