@@ -1,0 +1,26 @@
+┌────────────────────Room: universal-connectivity────────────────────┐┌──────────────Peers──────────────┐
+│                                                                  ││12D3KooW9z...                     │
+│14:33:29 libp2p-dotnet: Hello from .NET peer!                     ││QmW1bVU7...                       │
+│14:34:05 go-peer: Hi there, .NET peer!                            ││                                  │
+│14:34:12 libp2p-dotnet: This UI looks great                       ││                                  │
+│14:34:30 js-peer: Nice to see .NET in the libp2p network          ││                                  │
+│                                                                  ││                                  │
+│                                                                  ││                                  │
+│                                                                  ││                                  │
+│                                                                  ││                                  │
+│                                                                  ││                                  │
+│                                                                  ││                                  │
+│                                                                  ││                                  │
+└──────────────────────────────────────────────────────────────────┘└──────────────────────────────────┘
+┌───────────────────────────────────────System────────────────────────────────────────────────────────┐
+│14:30:05 Initializing libp2p chat application...                                                      │
+│14:30:06 Creating peer identity...                                                                    │
+│14:30:06 Peer ID created: 12D3KooW9zAGanopseR2SpnY2WjJBKRxtkfHpLw2p9F3PYKuCFVSieF                    │
+│14:30:07 Binding to address: /ip4/0.0.0.0/tcp/9096/p2p/12D3KooW9zAGanopseR2SpnY2WjJBKRxtkfHpLw2p...  │
+│14:30:08 Starting peer and PubSub...                                                                  │
+│14:30:09 Peer started successfully                                                                    │
+│14:30:09 Listening Addresses:                                                                         │
+│14:30:09   /ip4/127.0.0.1/tcp/9096/p2p/12D3KooW9zAGanopseR2SpnY2WjJBKRxtkfHpLw2p9F3PYKuCFVSieF        │
+│14:30:09   /ip4/192.168.1.5/tcp/9096/p2p/12D3KooW9zAGanopseR2SpnY2WjJBKRxtkfHpLw2p9F3PYKuCFVSieF      │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+libp2p-dotnet > _ 
