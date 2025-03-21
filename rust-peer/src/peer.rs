@@ -283,32 +283,52 @@ impl Peer {
             }
         }
 
+        // Create our loop ticker
+        let mut tick = tokio::time::interval(Duration::from_millis(18));
+
         // Run the main loop
         loop {
+            // process messages from the UI
+            if let Ok(message) = self.from_ui.try_recv() {
+                match message {
+                    Message::Chat { data, .. } => {
+                        error!("chat received");
+                        if let Err(e) = self
+                            .swarm
+                            .behaviour_mut()
+                            .gossipsub
+                            .publish(chat_topic_hash.clone(), data)
+                        {
+                            debug!("Failed to publish chat message: {e}");
+                        }
+                    }
+                    Message::AllPeers { .. } => {
+                        error!("all peers received");
+                        let peers = self
+                            .swarm
+                            .behaviour()
+                            .gossipsub
+                            .all_peers()
+                            .filter(|(_, topics)| !topics.is_empty())
+                            .map(|(peer_id, topics)| {
+                                (*peer_id, topics.iter().map(|t| t.to_string()).collect())
+                            })
+                            .collect();
+                        self.to_ui.send(Message::AllPeers { peers }).await?;
+                    }
+                    _ => {
+                        debug!("Unhandled message: {:?}", message);
+                    }
+                }
+            }
+
             tokio::select! {
                 _ = self.shutdown.cancelled() => {
                     info!("Shutting down the peer");
                     break;
                 }
 
-                Some(message) = self.from_ui.recv() => {
-                    match message {
-                        Message::Chat { data, .. } => {
-                            if let Err(e) = self.swarm.behaviour_mut().gossipsub.publish(chat_topic_hash.clone(), data) {
-                                debug!("Failed to publish chat message: {e}");
-                            }
-                        }
-                        Message::AllPeers { .. } => {
-                            let peers = self.swarm.behaviour().gossipsub.all_peers().map(|(peer_id, topics)| {
-                                (peer_id.clone(), topics.iter().map(|t| t.to_string()).collect())
-                            }).collect();
-                            self.to_ui.send(Message::AllPeers { peers }).await?;
-                        }
-                        _ => {
-                            debug!("Unhandled message: {:?}", message);
-                        }
-                    }
-                }
+                _ = tick.tick() => {}
 
                 Some(event) = self.swarm.next() => match event {
 

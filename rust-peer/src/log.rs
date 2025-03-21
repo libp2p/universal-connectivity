@@ -59,7 +59,7 @@ pub struct Log;
 impl Log {
     /// Starts the logger and returns the task handle and receiver for the log messages.
     pub fn init() -> Receiver<Message> {
-        let (sender, receiver) = mpsc::channel(100);
+        let (sender, receiver) = mpsc::channel(16);
 
         let filter = EnvFilter::from_default_env();
         let layer = MpscLayer { sender }.with_filter(filter);
