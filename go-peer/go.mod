@@ -1,14 +1,13 @@
 module github.com/libp2p/universal-connectivity/go-peer
 
 go 1.22.0
-
-toolchain go1.22.8
+toolchain go1.24.1
 
 require (
 	github.com/caddyserver/certmagic v0.21.7
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/ipfs/go-log/v2 v2.5.1
-	github.com/ipshipyard/p2p-forge v0.3.1
+	github.com/ipshipyard/p2p-forge v0.4.1
 	github.com/libp2p/go-libp2p v0.39.1
 	github.com/libp2p/go-libp2p-kad-dht v0.29.0
 	github.com/libp2p/go-libp2p-pubsub v0.13.0
