@@ -334,14 +334,12 @@ impl Peer {
 
                     // When we figure out what our external address is
                     SwarmEvent::NewListenAddr { address, .. } => {
-                        if self.update_external_address(&address).await? {
-                            let p2p_address = address
-                                .clone()
-                                .with(Protocol::P2p(*self.swarm.local_peer_id()));
-                            self.to_ui
-                                .send(Message::Event(format!("Listening on {p2p_address}")))
-                                .await?;
-                        }
+                        let p2p_address = address
+                            .clone()
+                            .with(Protocol::P2p(*self.swarm.local_peer_id()));
+                        self.to_ui
+                            .send(Message::Event(format!("Listening on {p2p_address}")))
+                            .await?;
                     }
 
                     // When we successfully connect to a peer
