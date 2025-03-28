@@ -143,7 +143,7 @@ async function main() {
   // When a peer is discovered, attempt to dial using the universal protocol.
   node2.addEventListener('peer:discovery', async (evt) => {
     console.info('Node1 discovered peer:', evt.detail);
-    const discoveredMultiaddrs = evt.detail.id;
+    const discoveredMultiaddrs = evt.detail.multiaddrs;
     if (discoveredMultiaddrs && discoveredMultiaddrs.length > 0) {
       try {
         await robustDial(node1, discoveredMultiaddrs, UNIVERSAL_PROTOCOL);
@@ -156,12 +156,21 @@ async function main() {
   // Setup pubsub subscriptions and logging.
   node1.services.pubsub.subscribe(CHAT_TOPIC);
   node1.services.pubsub.addEventListener('message', (evt) => {
+    try{
     console.log(`Node1 received on topic ${evt.detail.topic}: ${uint8ArrayToString(evt.detail.data)}`);
+  } catch (err) {
+    console.error('Error decoding received message on Node1:', err.message);
+  }
   });
 
   node2.services.pubsub.subscribe(CHAT_TOPIC);
   node2.services.pubsub.addEventListener('message', (evt) => {
+    try{
+      // console.log('Raw message bytes:', evt.detail.data);
     console.log(`Node2 received on topic ${evt.detail.topic}: ${uint8ArrayToString(evt.detail.data)}`);
+  } catch (err) {
+    console.error('Error decoding received message on Node2:', err.message);
+  }
   });
 
   // For testing: Node2 periodically publishes messages on several topics.
