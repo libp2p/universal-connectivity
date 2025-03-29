@@ -4,7 +4,7 @@ Realtime highly decentralised chat app.
 
 ![libp2p topology](libp2p-hero.svg)
 
-Showcasing [libp2p](https://libp2p.io/)'s superpowers in establishing ubiquitous peer-to-peer [connectivity](https://connectivity.libp2p.io/) in modern programming languages (Go, Rust, TypeScript) and runtimes (Web, native binary).
+Showcasing [libp2p](https://libp2p.io/)'s superpowers in establishing ubiquitous peer-to-peer [connectivity](https://connectivity.libp2p.io/) in modern programming languages (Go, Rust, TypeScript, Python) and runtimes (Web, native binary).
 
 On top of this strong foundation, it layers a GossipSub: A Secure PubSub Protocol for Unstructured Decentralised P2P Overlays. By analogy, an event broker with distributed brokering, or a distributed PubSub protocol.
 
@@ -20,11 +20,12 @@ Some of the cool and cutting-edge [transport protocols](https://connectivity.lib
 
 ## Packages
 
-| Package                     | Description                     | WebTransport | WebRTC | WebRTC-direct | QUIC | TCP |
-| :-------------------------- | :------------------------------ | ------------ | ------ | ------------- | ---- | --- |
-| [`js-peer`](./js-peer/)     | Browser Chat Peer in TypeScript | ✅           | ✅     | ✅            | ❌   | ❌  |
-| [`go-peer`](./go-peer/)     | Chat peer implemented in Go     | ✅           | ❌     | ✅            | ✅   | ✅  |
-| [`rust-peer`](./rust-peer/) | Chat peer implemented in Rust   | ❌           | ❌     | ✅            | ✅   | ❌  |
+| Package                         | Description                      | WebTransport | WebRTC | WebRTC-direct | QUIC | TCP |
+| :------------------------------ | :------------------------------- | ------------ | ------ | ------------- | ---- | --- |
+| [`js-peer`](./js-peer/)         | Browser Chat Peer in TypeScript  | ✅           | ✅     | ✅            | ❌   | ❌  |
+| [`go-peer`](./go-peer/)         | Chat peer implemented in Go      | ✅           | ❌     | ✅            | ✅   | ✅  |
+| [`rust-peer`](./rust-peer/)     | Chat peer implemented in Rust    | ❌           | ❌     | ✅            | ✅   | ❌  |
+| [`python-peer`](./python-peer/) | Chat peer implemented in Python  | ❌           | ❌     | ❌            | ❌   | ✅  |
 
 ✅ - Protocol supported
 ❌ - Protocol not supported
@@ -81,4 +82,27 @@ cargo run -- --help
 ```
 cd go-peer
 go run .
+```
+
+## Getting started: Python
+
+### 1. Install dependencies
+
+```
+cd python-peer
+pip install -r requirements.txt
+```
+
+### 2. Start the Python peer
+
+```
+python main.py
+```
+
+This will start the Python peer with an interactive UI. You can connect to other peers using the `/connect` command.
+
+For more options, try:
+
+```
+python main.py --help
 ```
