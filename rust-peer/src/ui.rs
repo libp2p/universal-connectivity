@@ -10,24 +10,71 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     prelude::{Buffer, Rect, Widget},
-    style::Style,
-    text::Span,
+    style::{Modifier, Style},
+    text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Terminal,
 };
 use std::{
     collections::{HashSet, VecDeque},
-    io,
+    fmt, io,
     time::Duration,
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
+/// A wrapper for PeerId for chat peers
+/// TODO: expand this to include a user-set name, and possibly a user-set avatar
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ChatPeer(PeerId);
+
+impl ChatPeer {
+    /// Get the peer id
+    pub fn id(&self) -> PeerId {
+        self.0
+    }
+
+    /// Get the peer name
+    pub fn name(&self) -> String {
+        short_id(&self.0)
+    }
+}
+
+impl From<ChatPeer> for PeerId {
+    fn from(peer: ChatPeer) -> PeerId {
+        peer.0
+    }
+}
+
+impl From<&PeerId> for ChatPeer {
+    fn from(peer: &PeerId) -> Self {
+        ChatPeer(peer.to_owned())
+    }
+}
+
+impl From<PeerId> for ChatPeer {
+    fn from(peer: PeerId) -> Self {
+        ChatPeer(peer)
+    }
+}
+
+impl fmt::Debug for ChatPeer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} ({})", &self.0, short_id(&self.0))
+    }
+}
+
+impl fmt::Display for ChatPeer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", short_id(&self.0))
+    }
+}
+
 /// A simple UI for the peer
 pub struct Ui {
     // my peer id
-    me: PeerId,
+    me: ChatPeer,
     // we receive log messages from the log thread
     from_log: Receiver<LogMessage>,
     // we send UI messages to the peer thread
@@ -51,7 +98,7 @@ impl Ui {
 
         // create a new TUI instance
         let ui = Self {
-            me,
+            me: me.into(),
             from_log,
             to_peer,
             from_peer,
@@ -105,16 +152,16 @@ impl Ui {
                     }
                     Message::AddPeer(peer) => {
                         if chat_widget.peers.insert(peer) {
-                            chat_widget
-                                .add_event(format!("Connected to {peer} ({})", short_id(&peer)));
+                            chat_widget.add_event(format!(
+                                "Adding peer:\n\tpeer id: {}\n\tname: {}",
+                                peer.id(),
+                                peer.name()
+                            ));
                         }
                     }
                     Message::RemovePeer(peer) => {
                         if chat_widget.peers.remove(&peer) {
-                            chat_widget.add_event(format!(
-                                "Disconnected from {peer} ({})",
-                                short_id(&peer)
-                            ));
+                            chat_widget.add_event(format!("Removing peer: {peer:?}"));
                         }
                     }
                     Message::Event(event) => {
@@ -173,7 +220,7 @@ impl Ui {
                                 // send the chat message to the swarm to be gossiped
                                 self.to_peer
                                     .send(Message::Chat {
-                                        source: Some(self.me),
+                                        source: Some(self.me.into()),
                                         data: chat_widget.input.clone().into_bytes(),
                                     })
                                     .await?;
@@ -197,6 +244,72 @@ impl Ui {
 
         Ok(())
     }
+}
+
+// Function to wrap text into multiple lines based on a max width
+fn wrap_text(text: &str, max_width: usize) -> Vec<Line> {
+    let mut lines = Vec::new();
+
+    // split the message into lines to preserve any newlines in the message
+    for line in text.lines() {
+        // Convert tabs to 2 spaces
+        let processed_line = line.replace('\t', "  ");
+
+        // find any leading whitespace
+        let leading_whitespace = processed_line
+            .chars()
+            .take_while(|c| c.is_whitespace())
+            .collect::<String>();
+
+        // split into words for wrapping
+        let words = processed_line.split_whitespace().collect::<Vec<&str>>();
+        let mut current_line = String::new();
+
+        for word in words {
+            // Check if adding the word to the current line will exceed the max width
+            if current_line.len() + word.len() + (if current_line.is_empty() { 0 } else { 1 })
+                > max_width
+            {
+                if !current_line.is_empty() {
+                    // add the current line to the lines
+                    lines.push(Line::from(Span::raw(current_line)));
+                    current_line = String::new();
+                }
+
+                // handle words that are longer than the max width
+                if word.len() > max_width {
+                    let mut remaining = word;
+                    while !remaining.is_empty() {
+                        let split_point = if remaining.len() > max_width {
+                            max_width
+                        } else {
+                            remaining.len()
+                        };
+                        let (chunk, rest) = remaining.split_at(split_point);
+                        let l = format!("{}{}", leading_whitespace, chunk);
+                        lines.push(Line::from(Span::raw(l)));
+                        remaining = rest;
+                    }
+                } else {
+                    current_line = format!("{}{}", leading_whitespace, word);
+                }
+            } else {
+                // add the word to the current line
+                if current_line.is_empty() {
+                    current_line.push_str(&leading_whitespace);
+                } else {
+                    current_line.push(' ');
+                }
+                current_line.push_str(word);
+            }
+        }
+
+        if !current_line.is_empty() {
+            lines.push(Line::from(Span::raw(current_line)));
+        }
+    }
+
+    lines
 }
 
 // Lines Widget
@@ -241,7 +354,13 @@ impl Widget for &LinesWidget {
             .rev()
             .take(max_lines)
             .rev()
-            .map(|l| ListItem::new(Span::raw(l)))
+            .flat_map(|l| {
+                let wrapped_lines = wrap_text(l, inner_area.width as usize - 2);
+                wrapped_lines
+                    .into_iter()
+                    .map(ListItem::new)
+                    .collect::<Vec<_>>()
+            })
             .collect();
         List::new(logs).block(block).render(area, buf);
     }
@@ -249,8 +368,8 @@ impl Widget for &LinesWidget {
 
 // Chat Widget
 struct ChatWidget<'a> {
-    me: &'a PeerId,
-    peers: HashSet<PeerId>,
+    me: &'a ChatPeer,
+    peers: HashSet<ChatPeer>,
     chat: LinesWidget,
     events: LinesWidget,
     input: String,
@@ -258,10 +377,13 @@ struct ChatWidget<'a> {
 
 impl<'a> ChatWidget<'a> {
     // Create a new ChatWidget instance
-    fn new(me: &'a PeerId) -> Self {
+    fn new(me: &'a ChatPeer) -> Self {
+        let mut peers = HashSet::new();
+        peers.insert(*me);
+
         ChatWidget {
             me,
-            peers: HashSet::new(),
+            peers,
             chat: LinesWidget::new("Chat", 100),
             events: LinesWidget::new("System", 100),
             input: String::new(),
@@ -269,12 +391,8 @@ impl<'a> ChatWidget<'a> {
     }
 
     // Add a chat message to the widget
-    fn add_chat(&mut self, peer: Option<PeerId>, message: impl Into<String>) {
-        let peer = match peer {
-            Some(peer) => short_id(&peer),
-            None => "Unknown".to_string(),
-        };
-
+    fn add_chat(&mut self, peer: Option<ChatPeer>, message: impl Into<String>) {
+        let peer = peer.map_or("Unknown".to_string(), |p| p.to_string());
         self.chat.add_line(format!("{}: {}", peer, message.into()));
     }
 
@@ -320,7 +438,16 @@ impl Widget for &ChatWidget<'_> {
         let peers: Vec<ListItem> = self
             .peers
             .iter()
-            .map(|p| ListItem::new(Span::raw(short_id(p))))
+            .map(|p| {
+                if p == self.me {
+                    ListItem::new(Span::styled(
+                        format!("{} (You)", p),
+                        Style::default().add_modifier(Modifier::ITALIC),
+                    ))
+                } else {
+                    ListItem::new(Span::raw(p.to_string()))
+                }
+            })
             .collect();
         List::new(peers)
             .block(peers_block)
@@ -330,8 +457,7 @@ impl Widget for &ChatWidget<'_> {
         self.events.render(layout[1], buf);
 
         // render the chat input
-        Paragraph::new(format!("{} > {}", short_id(self.me), self.input.clone()))
-            .render(layout[2], buf);
+        Paragraph::new(format!("{} > {}", self.me, self.input.clone())).render(layout[2], buf);
     }
 }
 
@@ -339,6 +465,6 @@ impl Widget for &ChatWidget<'_> {
 fn short_id(peer: &PeerId) -> String {
     let s = peer.to_string();
     s.chars()
-        .skip(s.chars().count().saturating_sub(8))
+        .skip(s.chars().count().saturating_sub(7))
         .collect()
 }
