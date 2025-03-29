@@ -1,4 +1,4 @@
-use crate::{Codec as FileExchangeCodec, Message, Options, Request as FileRequest};
+use crate::{ChatPeer, Codec as FileExchangeCodec, Message, Options, Request as FileRequest};
 use anyhow::Result;
 use clap::Parser;
 use futures::StreamExt;
@@ -25,6 +25,7 @@ use libp2p::{
 };
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
+use serde_json;
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
@@ -262,6 +263,7 @@ impl Peer {
 
         // Dial the bootstrap nodes
         for peer in &BOOTSTRAP_NODES {
+            debug!("Dialing bootstrap node {peer}");
             let multiaddr: Multiaddr = peer.parse().expect("Failed to parse Multiaddr");
             if let Err(e) = self.swarm.dial(multiaddr) {
                 debug!("Failed to dial {peer}: {e}");
@@ -277,8 +279,13 @@ impl Peer {
         let peer_discovery_hash = peer_discovery.hash();
 
         // Subscribe to the gossipsub topics
-        for topic in &[chat_topic, file_topic, peer_discovery] {
-            if let Err(e) = self.swarm.behaviour_mut().gossipsub.subscribe(topic) {
+        info!("Subscribing to topics");
+        for topic in [
+            chat_topic.clone(),
+            file_topic.clone(),
+            peer_discovery.clone(),
+        ] {
+            if let Err(e) = self.swarm.behaviour_mut().gossipsub.subscribe(&topic) {
                 debug!("Failed to subscribe to topic {topic}: {e}");
             }
         }
@@ -293,13 +300,18 @@ impl Peer {
                 match message {
                     Message::Chat { data, .. } => {
                         error!("chat received");
-                        if let Err(e) = self
+                        match self
                             .swarm
                             .behaviour_mut()
                             .gossipsub
                             .publish(chat_topic_hash.clone(), data)
                         {
-                            debug!("Failed to publish chat message: {e}");
+                            Err(e) => debug!("Failed to publish chat message: {e}"),
+                            _ => {
+                                self.to_ui
+                                    .send(Message::Event("Sent chat message from you".to_string()))
+                                    .await?
+                            }
                         }
                     }
                     Message::AllPeers { .. } => {
@@ -324,6 +336,14 @@ impl Peer {
 
             tokio::select! {
                 _ = self.shutdown.cancelled() => {
+                    info!("Unsubscribing from topics");
+                    // Subscribe to the gossipsub topics
+                    for topic in &[chat_topic, file_topic, peer_discovery] {
+                        if !self.swarm.behaviour_mut().gossipsub.unsubscribe(topic) {
+                            debug!("Failed to unsubscribe from topic {topic}");
+                        }
+                    }
+
                     info!("Shutting down the peer");
                     break;
                 }
@@ -362,7 +382,7 @@ impl Peer {
                         warn!("Connection to {peer_id} closed: {cause:?}");
                         self.swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
                         info!("Removed {peer_id} from the routing table (if it was in there).");
-                        self.to_ui.send(Message::RemovePeer(peer_id)).await?;
+                        self.to_ui.send(Message::RemovePeer(peer_id.into())).await?;
                     }
 
                     // When we receive a relay event
@@ -375,9 +395,11 @@ impl Peer {
                     SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(event)) => match event {
                         GossipsubEvent::Message { message, .. } => match message {
                             GossipsubMessage { source, data, .. } if message.topic == chat_topic_hash => {
-                                self.to_ui.send(Message::Event(format!("Received chat message from {:?}", source))).await?;
+                                let chat_peer = source.map(Into::into)
+                                    .as_ref().map_or("Unknown".to_string(), |peer: &ChatPeer| peer.to_string());
+                                self.to_ui.send(Message::Event(format!("Received chat message from {chat_peer}"))).await?;
                                 self.to_ui.send(Message::Chat {
-                                    source,
+                                    source: source.map(Into::into),
                                     data,
                                 }).await?;
                             }
@@ -400,7 +422,25 @@ impl Peer {
                                 }
                             }
                             message if message.topic == peer_discovery_hash => {
-                                self.to_ui.send(Message::Event(format!("Received peer discovery: {:?}", message))).await?;
+                                let topic_hash = message.topic.to_string();
+                                let seq_no = message.sequence_number.map_or("Unknown".to_string(), |seq_no| seq_no.to_string());
+                                let source = match message.source {
+                                    Some(peer_id) => {
+                                        self.to_ui.send(Message::AddPeer(peer_id.into())).await?;
+                                        peer_id.to_string()
+                                    }
+                                    None => "Unknown".to_string(),
+                                };
+                                let data = {
+                                    let data = String::from_utf8(message.data).unwrap_or("Not a string".to_string());
+                                    match serde_json::from_str(&data).and_then(|v: serde_json::Value| serde_json::to_string_pretty(&v)) {
+                                        Ok(data) => data,
+                                        Err(_) => data
+                                    }
+                                };
+
+                                let event = format!("Received peer discovery:\n\tsource: {source}\n\tdata: {data}\n\tseq_no: {seq_no}\n\ttopic_hash: {topic_hash}");
+                                self.to_ui.send(Message::Event(event)).await?;
                             }
                             GossipsubMessage { topic, .. } => {
                                 self.to_ui.send(Message::Event(format!("Unknown topic {:?}", topic))).await?;
@@ -410,13 +450,13 @@ impl Peer {
                         GossipsubEvent::Subscribed { peer_id, topic } => {
                             debug!("{peer_id} subscribed to {topic}");
                             if topic == chat_topic_hash {
-                                self.to_ui.send(Message::AddPeer(peer_id)).await?;
+                                self.to_ui.send(Message::AddPeer(peer_id.into())).await?;
                             }
                         }
                         GossipsubEvent::Unsubscribed { peer_id, topic } => {
                             debug!("{peer_id} unsubscribed from {topic}");
                             if topic == chat_topic_hash {
-                                self.to_ui.send(Message::RemovePeer(peer_id)).await?;
+                                self.to_ui.send(Message::RemovePeer(peer_id.into())).await?;
                             }
                         }
                         GossipsubEvent::GossipsubNotSupported { peer_id } => {
@@ -446,7 +486,7 @@ impl Peer {
                                     // but for now remove the peer from routing table if there's an Identify timeout
                                     self.swarm.behaviour_mut().kademlia.remove_peer(&peer_id);
                                     info!("Removed {peer_id} from the routing table (if it was in there).");
-                                    self.to_ui.send(Message::RemovePeer(peer_id)).await?;
+                                    self.to_ui.send(Message::RemovePeer(peer_id.into())).await?;
                                 }
                                 _ => {
                                     debug!("{error}");

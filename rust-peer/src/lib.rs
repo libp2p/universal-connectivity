@@ -29,7 +29,7 @@ pub use peer::Peer;
 
 /// The peer ui module
 pub mod ui;
-pub use ui::Ui;
+pub use ui::{ChatPeer, Ui};
 
 /// Prelude module
 pub mod prelude {
