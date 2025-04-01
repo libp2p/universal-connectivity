@@ -7,8 +7,8 @@ pub enum Message {
     /// Send chat message
     Chat {
         /// The peer sending the message
-        source: Option<ChatPeer>,
-        /// The data sent
+        from: Option<ChatPeer>,
+        /// The message sent
         data: Vec<u8>,
     },
     /// All gossipsub peers and their topics
