@@ -24,7 +24,7 @@ Some of the cool and cutting-edge [transport protocols](https://connectivity.lib
 | :-------------------------- | :------------------------------ | ------------ | ------ | ------------- | ---- | --- |
 | [`js-peer`](./js-peer/)     | Browser Chat Peer in TypeScript | ✅           | ✅     | ✅            | ❌   | ❌  |
 | [`go-peer`](./go-peer/)     | Chat peer implemented in Go     | ✅           | ❌     | ✅            | ✅   | ✅  |
-| [`rust-peer`](./rust-peer/) | Chat peer implemented in Rust   | ❌           | ❌     | ✅            | ✅   | ❌  |
+| [`rust-peer`](./rust-peer/) | Chat peer implemented in Rust   | ❌           | ❌     | ✅            | ✅   | ✅  |
 
 ✅ - Protocol supported
 ❌ - Protocol not supported
@@ -40,7 +40,6 @@ There are two ways to connect to a peer:
 ### Using a multiaddr
 
 Load the UI, and enter the multiaddr into the UI. Ensure that it includes the peerID, e.g.`/ip4/192.168.178.21/udp/61838/quic-v1/webtransport/certhash/uEiCQCALYac4V3LJ2ourLdauXOswIXpIuJ_JNT-8Wavmxyw/certhash/uEiCdYghq5FlXGkVONQXT07CteA16BDyMPI23-0GjA9Ej_w/p2p/12D3KooWF7ovRNBKPxERf6GtUbFdiqJsQviKUb7Z8a2Uuuo6MrDX`
-
 
 ## Getting started: JS
 
@@ -68,7 +67,7 @@ cd rust-peer
 cargo run
 ```
 
-This will automatically connect you to the bootstrap node running on [fly.io](https://fly.io).
+This will automatically connect you to the bootstrap nodes running on bootstrap.libp2p.io.
 
 To explore more advanced configurations if you e.g. want to set up our own network, try:
 

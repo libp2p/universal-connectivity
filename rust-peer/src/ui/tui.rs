@@ -1,9 +1,12 @@
-use crate::{log::Message as LogMessage, Message};
-use anyhow::Result;
+use crate::{log::Message as LogMessage, ChatPeer, Message, Ui};
+use async_trait::async_trait;
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
+        MouseEvent, MouseEventKind,
+    },
+    execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
 };
 use libp2p::core::PeerId;
 use ratatui::{
@@ -17,62 +20,16 @@ use ratatui::{
 };
 use std::{
     collections::{HashSet, VecDeque},
-    fmt, io,
+    io,
+    option::Option,
     time::Duration,
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
-/// A wrapper for PeerId for chat peers
-/// TODO: expand this to include a user-set name, and possibly a user-set avatar
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ChatPeer(PeerId);
-
-impl ChatPeer {
-    /// Get the peer id
-    pub fn id(&self) -> PeerId {
-        self.0
-    }
-
-    /// Get the peer name
-    pub fn name(&self) -> String {
-        short_id(&self.0)
-    }
-}
-
-impl From<ChatPeer> for PeerId {
-    fn from(peer: ChatPeer) -> PeerId {
-        peer.0
-    }
-}
-
-impl From<&PeerId> for ChatPeer {
-    fn from(peer: &PeerId) -> Self {
-        ChatPeer(peer.to_owned())
-    }
-}
-
-impl From<PeerId> for ChatPeer {
-    fn from(peer: PeerId) -> Self {
-        ChatPeer(peer)
-    }
-}
-
-impl fmt::Debug for ChatPeer {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ({})", &self.0, short_id(&self.0))
-    }
-}
-
-impl fmt::Display for ChatPeer {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", short_id(&self.0))
-    }
-}
-
 /// A simple UI for the peer
-pub struct Ui {
+pub struct Tui {
     // my peer id
     me: ChatPeer,
     // we receive log messages from the log thread
@@ -85,38 +42,41 @@ pub struct Ui {
     shutdown: CancellationToken,
 }
 
-impl Ui {
+impl Tui {
     /// Create a new UI instance
-    pub fn new(
+    pub fn build(
         me: PeerId,
         from_log: Receiver<LogMessage>,
         shutdown: CancellationToken,
-    ) -> (Self, Sender<Message>, Receiver<Message>) {
+    ) -> (Box<dyn Ui + Send>, Sender<Message>, Receiver<Message>) {
         // create a new channels for sending/receiving messages
         let (to_peer, from_ui) = mpsc::channel::<Message>(64);
         let (to_ui, from_peer) = mpsc::channel::<Message>(64);
 
         // create a new TUI instance
-        let ui = Self {
+        let ui: Box<dyn Ui> = Box::new(Self {
             me: me.into(),
             from_log,
             to_peer,
             from_peer,
             shutdown,
-        };
+        });
 
         (ui, to_ui, from_ui)
     }
+}
 
+#[async_trait]
+impl Ui for Tui {
     /// Run the UI
-    pub async fn run(&mut self) -> Result<()> {
+    async fn run(&mut self) -> anyhow::Result<()> {
         // the currently selected tab
         let mut selected_tab = 0;
 
         // TUI setup
         enable_raw_mode()?;
         let mut stdout = io::stdout();
-        stdout.execute(EnterAlternateScreen)?;
+        execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
         let backend = CrosstermBackend::new(stdout);
         let mut terminal = Terminal::new(backend)?;
 
@@ -130,24 +90,27 @@ impl Ui {
         loop {
             // Process log messages
             if let Ok(log) = self.from_log.try_recv() {
-                log_widget.add_line(log.message);
+                //TODO: remove this after [PR 5966](https://github.com/libp2p/rust-libp2p/pull/5966)
+                if !log.message.starts_with("Can't send data channel") {
+                    log_widget.add_line(log.message);
+                }
             }
 
-            // Process UI messages
+            // Process peer messages
             if let Ok(ui_message) = self.from_peer.try_recv() {
                 match ui_message {
-                    Message::Chat { source, data } => {
+                    Message::Chat { from, data } => {
                         let message =
-                            String::from_utf8(data).unwrap_or("invalid UTF-8".to_string());
-                        chat_widget.add_chat(source, message);
+                            String::from_utf8(data).unwrap_or("Invalid UTF-8".to_string());
+                        chat_widget.add_chat(from, message);
                     }
                     Message::AllPeers { peers } => {
                         for (peer, topics) in peers {
                             let mut peer_str = format!("{peer}: ");
                             for topic in topics {
-                                peer_str.push_str(&format!("{}, ", topic));
+                                peer_str.push_str(&format!("\n\t{}, ", topic));
                             }
-                            chat_widget.add_event(peer_str);
+                            info!("{peer_str}");
                         }
                     }
                     Message::AddPeer(peer) => {
@@ -172,16 +135,16 @@ impl Ui {
 
             // Draw the UI
             terminal.draw(|f| match selected_tab {
-                0 => f.render_widget(&chat_widget, f.area()),
-                1 => f.render_widget(&log_widget, f.area()),
+                0 => f.render_widget(&mut chat_widget, f.area()),
+                1 => f.render_widget(&mut log_widget, f.area()),
                 _ => {}
             })?;
 
             // Handle input events
             if event::poll(Duration::from_millis(18))? {
-                if let Event::Key(key) = event::read()? {
-                    match key {
-                        // Handle ctrl-c
+                match event::read()? {
+                    Event::Key(key) => match key {
+                        // Handle ctrl+c
                         KeyEvent {
                             code: KeyCode::Char('c'),
                             modifiers: KeyModifiers::CONTROL,
@@ -192,10 +155,10 @@ impl Ui {
                             break;
                         }
 
-                        // Handle ctrl-p
+                        // Handle ctrl+shift+p
                         KeyEvent {
                             code: KeyCode::Char('p'),
-                            modifiers: KeyModifiers::CONTROL,
+                            modifiers: KeyModifiers::CONTROL | KeyModifiers::SHIFT,
                             ..
                         } => {
                             error!("all peers sent");
@@ -220,7 +183,7 @@ impl Ui {
                                 // send the chat message to the swarm to be gossiped
                                 self.to_peer
                                     .send(Message::Chat {
-                                        source: Some(self.me.into()),
+                                        from: Some(self.me),
                                         data: chat_widget.input.clone().into_bytes(),
                                     })
                                     .await?;
@@ -233,14 +196,24 @@ impl Ui {
                             }
                             _ => {}
                         },
-                    }
+                    },
+                    Event::Mouse(event) => match selected_tab {
+                        0 => {
+                            let _ = chat_widget.mouse_event(event);
+                        }
+                        1 => {
+                            let _ = log_widget.mouse_event(event);
+                        }
+                        _ => {}
+                    },
+                    _ => {}
                 }
             }
         }
 
         // Cleanup
         disable_raw_mode()?;
-        io::stdout().execute(LeaveAlternateScreen)?;
+        execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
 
         Ok(())
     }
@@ -317,6 +290,8 @@ struct LinesWidget {
     title: String,
     max: usize,
     lines: VecDeque<String>,
+    scroll: usize,
+    area: Rect,
 }
 
 impl LinesWidget {
@@ -326,6 +301,36 @@ impl LinesWidget {
             title: title.into(),
             max,
             lines: VecDeque::new(),
+            scroll: 0,
+            area: Rect::default(),
+        }
+    }
+
+    // Handle a mouse event
+    fn mouse_event(&mut self, event: MouseEvent) -> bool {
+        // check if the event happened in our area
+        let x = event.column;
+        let y = event.row;
+
+        if x >= self.area.x
+            && x < self.area.x + self.area.width
+            && y >= self.area.y
+            && y < self.area.y + self.area.height
+        {
+            match event.kind {
+                MouseEventKind::ScrollUp => {
+                    self.scroll += 1;
+                }
+                MouseEventKind::ScrollDown => {
+                    if self.scroll > 0 {
+                        self.scroll -= 1;
+                    }
+                }
+                _ => {}
+            }
+            true
+        } else {
+            false
         }
     }
 
@@ -338,22 +343,20 @@ impl LinesWidget {
     }
 }
 
-impl Widget for &LinesWidget {
+impl Widget for &mut LinesWidget {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let block = Block::default()
             .title(self.title.as_str())
             .borders(Borders::ALL)
             .style(Style::default());
 
-        let inner_area = block.inner(area);
+        self.area = block.inner(area);
+        let inner_area = self.area;
         let max_lines = inner_area.height as usize;
 
-        let logs: Vec<ListItem> = self
+        let mut logs: Vec<ListItem> = self
             .lines
             .iter()
-            .rev()
-            .take(max_lines)
-            .rev()
             .flat_map(|l| {
                 let wrapped_lines = wrap_text(l, inner_area.width as usize - 2);
                 wrapped_lines
@@ -362,6 +365,13 @@ impl Widget for &LinesWidget {
                     .collect::<Vec<_>>()
             })
             .collect();
+        if logs.len() > max_lines {
+            if logs.len() > (max_lines + self.scroll) {
+                logs.drain(0..(logs.len() - max_lines - self.scroll));
+            } else {
+                self.scroll = max_lines;
+            }
+        }
         List::new(logs).block(block).render(area, buf);
     }
 }
@@ -390,6 +400,11 @@ impl<'a> ChatWidget<'a> {
         }
     }
 
+    // Handle a mouse event
+    fn mouse_event(&mut self, event: MouseEvent) -> bool {
+        self.chat.mouse_event(event) || self.events.mouse_event(event)
+    }
+
     // Add a chat message to the widget
     fn add_chat(&mut self, peer: Option<ChatPeer>, message: impl Into<String>) {
         let peer = peer.map_or("Unknown".to_string(), |p| p.to_string());
@@ -402,7 +417,7 @@ impl<'a> ChatWidget<'a> {
     }
 }
 
-impl Widget for &ChatWidget<'_> {
+impl Widget for &mut ChatWidget<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Renders a layout with three rows, the top row is 50% of the height, the middle row is
         // 50% of the height and the bottom row is 1 line hight. The top row contains two columns,
@@ -459,12 +474,4 @@ impl Widget for &ChatWidget<'_> {
         // render the chat input
         Paragraph::new(format!("{} > {}", self.me, self.input.clone())).render(layout[2], buf);
     }
-}
-
-// Get the last 8 characters of a PeerId
-fn short_id(peer: &PeerId) -> String {
-    let s = peer.to_string();
-    s.chars()
-        .skip(s.chars().count().saturating_sub(7))
-        .collect()
 }
