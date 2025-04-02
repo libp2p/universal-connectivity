@@ -1,26 +1,11 @@
-# .NET build output directories
+# .NET Core
 bin/
 obj/
-
-# User-specific files
-*.user
-*.userosscache
-*.suo
-*.userprefs
-
-# Visual Studio files
 .vs/
-.vscode/
-*.vspscc
-*.vssscc
-*_i.c
-*_p.c
-*.ncb
-*.sdf
-*.opensdf
-*.cachefile
-*.VC.db
-*.VC.VC.opendb
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
 
 # Build results
 [Dd]ebug/
@@ -29,45 +14,27 @@ obj/
 [Rr]eleases/
 x64/
 x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
 bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+.vscode/
+*.nupkg
+*.pfx
+*.snk
+*.[Pp]ublish.xml
+*.azurePubxml
+*.pubxml
+*.publishproj
 
 # NuGet Packages
 *.nupkg
-# The packages folder can be ignored because of Package Restore
+*.snupkg
 **/packages/*
-# except build/, which is used as an MSBuild target.
 !**/packages/build/
-# Uncomment if necessary however generally it will be regenerated when needed
-#!**/packages/repositories.config
-# NuGet v3's project.json files produces more ignorable files
-*.nuget.props
-*.nuget.targets
-
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-
-# NUNIT
-*.VisualState.xml
-TestResult.xml
-
-# JetBrains Rider
-.idea/
-*.sln.iml
-
-# ReSharper
-_ReSharper*/
-*.[Rr]e[Ss]harper
-*.DotSettings.user
-
-# Misc
-*~
-.DS_Store
-Thumbs.db
-*.bak
-*.cache
-*.log
-*.tmp 
