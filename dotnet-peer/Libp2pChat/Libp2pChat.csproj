@@ -11,7 +11,7 @@
     <PackageReference Include="Nethermind.Libp2p" Version="1.0.0-preview.37" />
     <PackageReference Include="Nethermind.Libp2p.Protocols.MDns" Version="1.0.0-preview.37" />
     <PackageReference Include="Spectre.Console" Version="0.49.1" />
-    <PackageReference Include="Terminal.Gui" Version="1.18.0" />
+    <PackageReference Include="Terminal.Gui" Version="1.15.1" />
   </ItemGroup>
 
 </Project>

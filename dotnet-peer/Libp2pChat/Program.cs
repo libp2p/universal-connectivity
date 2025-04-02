@@ -12,283 +12,124 @@ using Nethermind.Libp2p.Protocols.Pubsub;
 using Multiformats.Address;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Collections.Concurrent;
+using Libp2pChat.Application.Interfaces;
+using Libp2pChat.Application.Services;
+using Libp2pChat.Infrastructure.Libp2p;
+using Libp2pChat.Infrastructure.Logging;
+using Libp2pChat.Presentation.UI;
 
-public class ChatMessage
-{
-    [JsonPropertyName("Message")]
-    public string Message { get; set; } = string.Empty;
+namespace Libp2pChat;
 
-    [JsonPropertyName("SenderID")]
-    public string SenderID { get; set; } = string.Empty;
-
-    [JsonPropertyName("SenderNick")]
-    public string SenderNick { get; set; } = string.Empty;
-}
-
-public class ChatApp
-{
-    private TextView chatTextView;
-    private TextView logsTextView;
-    private ListView peersListView;
-    private readonly object uiLock = new();
-
-    private List<string> chatHistory = new();
-    private List<string> logHistory = new();
-    private List<string> peersHistory = new();
-
-    public ChatApp(TextView chat, TextView logs, ListView peers)
-    {
-        chatTextView = chat;
-        logsTextView = logs;
-        peersListView = peers;
-    }
-
-    public void AddChatMessage(string message)
-    {
-        lock (uiLock)
-        {
-            chatHistory.Add(message);
-            Application.MainLoop.Invoke(() =>
-            {
-                chatTextView.Text = string.Join("\n", chatHistory);
-            });
-        }
-    }
-
-    public void AddLog(string message)
-    {
-        lock (uiLock)
-        {
-            logHistory.Add(message);
-            Application.MainLoop.Invoke(() =>
-            {
-                logsTextView.Text = string.Join("\n", logHistory);
-            });
-        }
-    }
-
-    public void AddPeer(string peer)
-    {
-        lock (uiLock)
-        {
-            if (!peersHistory.Contains(peer))
-            {
-                peersHistory.Add(peer);
-                Application.MainLoop.Invoke(() =>
-                {
-                    peersListView.SetSource(new List<string>(peersHistory));
-                });
-            }
-        }
-    }
-}
-
+/// <summary>
+/// Entry point for the Libp2p Chat application.
+/// </summary>
 public class Program
 {
+    /// <summary>
+    /// Main entry point.
+    /// </summary>
+    /// <param name="args">Command-line arguments.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task Main(string[] args)
     {
-        var serviceProvider = new ServiceCollection()
-            .AddLibp2p(builder => builder.WithPubsub())
-            .AddLogging(builder =>
+        try
+        {
+            // Check console environment
+            Console.WriteLine("Starting Libp2p Chat Application...");
+            Console.WriteLine($"Console window size: {Console.WindowWidth}x{Console.WindowHeight}");
+            Console.WriteLine($"OS: {Environment.OSVersion}");
+            Console.WriteLine($".NET Version: {Environment.Version}");
+            
+            // Set up dependency injection
+            var serviceProvider = ConfigureServices();
+            
+            // Get the application service
+            var appService = serviceProvider.GetRequiredService<ChatApplicationService>();
+            
+            // Handle application domain unhandled exceptions
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
             {
-                builder.SetMinimumLevel(LogLevel.Information)
-                    .AddSimpleConsole(options =>
-                    {
-                        options.SingleLine = true;
-                        options.TimestampFormat = "[HH:mm:ss.fff] ";
-                    });
-            })
-            .BuildServiceProvider();
-
-        IPeerFactory peerFactory = serviceProvider.GetService<IPeerFactory>()!;
-        ILogger logger = serviceProvider.GetService<ILoggerFactory>()!.CreateLogger("Pubsub Chat");
-        CancellationTokenSource ts = new CancellationTokenSource();
-
-        Identity localPeerIdentity = new Identity();
-        string peerIdStr = localPeerIdentity.PeerId.ToString();
-
-        string addrString = $"/ip4/0.0.0.0/tcp/9096/p2p/{peerIdStr}";
-        Multiaddress addr = Multiaddress.Decode(addrString);
-
-        ILocalPeer peer = peerFactory.Create(localPeerIdentity);
-
-        PubsubRouter router = serviceProvider.GetService<PubsubRouter>()!;
-        string roomName = "universal-connectivity";
-        ITopic topic = router.GetTopic(roomName);
-
-        Application.Init();
-        var top = Application.Top;
-
-        var win = new Window("Libp2p Chat")
+                var logger = serviceProvider.GetRequiredService<IAppLogger>();
+                logger.LogError($"Unhandled exception: {e.ExceptionObject}");
+                
+                // Also log to console in case the UI is not available
+                Console.WriteLine($"Unhandled exception: {e.ExceptionObject}");
+            };
+            
+            // Run the application
+            await appService.RunAsync();
+        }
+        catch (Exception ex)
         {
-            X = 0,
-            Y = 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-
-        var infoFrame = new FrameView("Peer Info")
+            Console.WriteLine($"Fatal error: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+        }
+    }
+    
+    /// <summary>
+    /// Configures the dependency injection container.
+    /// </summary>
+    /// <returns>The configured service provider.</returns>
+    private static IServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
+        
+        // Register libp2p services
+        services.AddLibp2p(builder => builder.WithPubsub());
+        
+        // Register logging
+        services.AddLogging(builder =>
         {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = 3
-        };
-        var peerIdLabel = new Label($"Peer ID: {peerIdStr}")
-        {
-            X = 1,
-            Y = 0
-        };
-        var multiAddrLabel = new Label($"Multiaddr: {addrString}")
-        {
-            X = 1,
-            Y = 1
-        };
-        infoFrame.Add(peerIdLabel, multiAddrLabel);
-        win.Add(infoFrame);
-
-        // --- TabView for Chat, Peers, and Logs ---
-        var tabView = new TabView()
-        {
-            X = 0,
-            Y = Pos.Bottom(infoFrame),
-            Width = Dim.Fill(),
-            Height = Dim.Fill(3)
-        };
-
-        var chatTextView = new TextView()
-        {
-            ReadOnly = true,
-            WordWrap = true,
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        var chatTab = new TabView.Tab("Chat", chatTextView);
-
-        var peersListView = new ListView(new List<string>())
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        var peersTab = new TabView.Tab("Peers", peersListView);
-
-        var logsTextView = new TextView()
-        {
-            ReadOnly = true,
-            WordWrap = true,
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        var logsTab = new TabView.Tab("Logs", logsTextView);
-
-        tabView.AddTab(chatTab, true);
-        tabView.AddTab(peersTab, false);
-        tabView.AddTab(logsTab, false);
-        win.Add(tabView);
-
-        var inputField = new TextField("")
-        {
-            X = 0,
-            Y = Pos.Bottom(tabView),
-            Width = Dim.Fill(12)
-        };
-        var sendButton = new Button("Send")
-        {
-            X = Pos.Right(inputField) + 1,
-            Y = Pos.Top(inputField)
-        };
-
-        win.Add(inputField, sendButton);
-        top.Add(win);
-
-        var chatApp = new ChatApp(chatTextView, logsTextView, peersListView);
-
-        topic.OnMessage += (byte[] msg) =>
-        {
-            try
-            {
-                string raw = Encoding.UTF8.GetString(msg).Trim();
-
-                ChatMessage? chatMsg = null;
-                try
+            builder.SetMinimumLevel(LogLevel.Debug)
+                .AddFilter("Nethermind.Libp2p", LogLevel.Debug)
+                .AddSimpleConsole(options =>
                 {
-                    chatMsg = JsonSerializer.Deserialize<ChatMessage>(raw);
-                }
-                catch (JsonException)
-                {
-                }
-
-                if (chatMsg != null && !string.IsNullOrEmpty(chatMsg.Message))
-                {
-                    string display = $"{chatMsg.SenderNick}: {chatMsg.Message}";
-                    chatApp.AddChatMessage(display);
-                    chatApp.AddLog($"Received JSON message: {raw}");
-                    if (chatMsg.SenderID != peerIdStr)
-                    {
-                        string displayId = chatMsg.SenderID.Length > 10
-                            ? chatMsg.SenderID.Substring(0, 10) + "..."
-                            : chatMsg.SenderID;
-                        chatApp.AddPeer(displayId);
-                    }
-                }
-                else
-                {
-                    chatApp.AddChatMessage(raw);
-                    chatApp.AddLog($"Received plain text message: {raw}");
-                }
-            }
-            catch (Exception ex)
-            {
-                chatApp.AddLog($"[Error] {ex.Message}");
-            }
-        };
-
-        chatApp.AddLog($"[Info] Generated Peer ID: {peerIdStr}");
-        chatApp.AddLog($"[Info] Multiaddress: {addrString}");
-
-        sendButton.Clicked += () =>
-        {
-            string message = inputField.Text.ToString();
-            if (!string.IsNullOrWhiteSpace(message))
-            {
-                var chatMessage = new ChatMessage
-                {
-                    Message = message,
-                    SenderID = peerIdStr,
-                    SenderNick = "libp2p-dotnet"
-                };
-                string jsonMessage = JsonSerializer.Serialize(chatMessage);
-                topic.Publish(Encoding.UTF8.GetBytes(jsonMessage));
-
-                chatApp.AddChatMessage($"[You]: {message}");
-                chatApp.AddLog($"Sent JSON message: {jsonMessage}");
-                inputField.Text = "";
-            }
-        };
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await peer.StartListenAsync(new[] { addr }, ts.Token);
-                await router.StartAsync(peer, ts.Token);
-                chatApp.AddLog("[Info] Peer started successfully");
-            }
-            catch (Exception ex)
-            {
-                chatApp.AddLog($"[Error] {ex.Message}");
-            }
+                    options.SingleLine = true;
+                    options.TimestampFormat = "[HH:mm:ss.fff] ";
+                });
         });
-
-        Application.Run();
-        ts.Cancel();
-        Application.Shutdown();
-        await Task.CompletedTask;
+        
+        // Register UI
+        services.AddSingleton<IChatUI, TerminalUI>();
+        
+        // Register application services
+        services.AddSingleton<ChatApplicationService>();
+        
+        // Create service provider to resolve services used during registration
+        var tempProvider = services.BuildServiceProvider();
+        
+        // Register infrastructure services that require resolved dependencies
+        services.AddSingleton<IChatService>(sp =>
+        {
+            var logger = sp.GetRequiredService<IAppLogger>();
+            var peerFactory = sp.GetRequiredService<IPeerFactory>();
+            var router = sp.GetRequiredService<PubsubRouter>();
+            
+            return new Libp2pChatService(logger, peerFactory, router);
+        });
+        
+        // Register logger that requires UI
+        services.AddSingleton<IAppLogger>(sp =>
+        {
+            var chatUI = sp.GetRequiredService<IChatUI>();
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            
+            var terminalLoggerFactory = new TerminalLoggerFactory(chatUI, loggerFactory);
+            return terminalLoggerFactory.CreateLogger("Libp2pChat");
+        });
+        
+        // Configure logging provider to forward libp2p logs to our UI
+        services.Configure<LoggerFilterOptions>(options =>
+        {
+            options.MinLevel = LogLevel.Debug;
+            options.AddFilter("Nethermind.Libp2p", LogLevel.Debug);
+        });
+        
+        // Dispose the temporary provider
+        tempProvider.Dispose();
+        
+        // Build the final service provider
+        return services.BuildServiceProvider();
     }
 }
