@@ -1,3 +1,4 @@
 target/
 *.pem
-local_key
+local.key
+local.peerid

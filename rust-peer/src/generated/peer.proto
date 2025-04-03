@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package peer;
+
+message Peer {
+  // public key of the peer
+  bytes publicKey = 1;
+  // array of multiaddrs for the peer
+  repeated bytes multiAddrs = 2;
+}
