@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package dm;
+
+service DirectMessage {
+  rpc DirectMessage (DirectMessageRequest) returns (DirectMessageResponse) {}
+}
+
+message Metadata {
+  string clientVersion = 1; // client version
+  int64 timestamp = 2;      // unix time
+}
+
+enum Status {
+  UNKNOWN = 0;
+  OK = 200;
+  ERROR = 500;
+}
+
+message DirectMessageRequest {
+  Metadata metadata = 1;
+  string content = 2;
+  string type = 3;
+}
+
+message DirectMessageResponse{
+  Metadata metadata = 1;
+  Status status = 2;
+  optional string statusText = 3;
+}
