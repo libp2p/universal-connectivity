@@ -27,6 +27,7 @@ export function PeerList(props: PositionProps) {
     <>
       <Frame absolute={true} {...props}>
         <View>
+          {/* Have to specify empty children prop - https://github.com/infely/react-curse/pull/9 */}
           <Peer key={libp2p?.peerId?.toString()} peer={libp2p?.peerId} self={true} children={[]} />
           {subscribers.map((p) => (
             <Peer key={p.toString()} peer={p} self={false} children={[]} />
