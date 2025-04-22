@@ -8,7 +8,7 @@ import { PositionProps } from '../index.js'
 
 export function PeerList(props: PositionProps) {
   const { libp2p } = useLibp2pContext()
-  const [ subscribers, setSubscribers ] = useState<PeerId[]>([])
+  const [subscribers, setSubscribers] = useState<PeerId[]>([])
 
   useEffect(() => {
     const onSubscriptionChange = () => {
@@ -26,20 +26,16 @@ export function PeerList(props: PositionProps) {
   return (
     <>
       <Frame absolute={true} {...props}>
-        <View>{
-          subscribers.map((p) => (
-            <Peer
-              key={p.toString()}
-              peer={p}
-              self={false}
-              withName={true}
-              withUnread={true}
-              children={[]}
-            />
-          ))
-        }</View>
+        <View>
+          <Peer key={libp2p?.peerId?.toString()} peer={libp2p?.peerId} self={true} children={[]} />
+          {subscribers.map((p) => (
+            <Peer key={p.toString()} peer={p} self={false} children={[]} />
+          ))}
+        </View>
       </Frame>
-      <Text absolute={true} x={props.x + 2} y={props.y}>Topic Peers ({subscribers.length})</Text>
+      <Text absolute={true} x={props.x + 2} y={props.y}>
+        Topic Peers ({subscribers.length})
+      </Text>
     </>
   )
 }

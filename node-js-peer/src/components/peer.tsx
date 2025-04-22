@@ -8,19 +8,17 @@ import { peerColor } from '../lib/peer-color.js'
 export interface PeerProps {
   peer: PeerId
   self: boolean
-  withName: boolean
-  withUnread: boolean
   children: any
 }
 
-export function Peer({ peer, self, withName, withUnread }: PeerProps) {
+export function Peer({ peer, self }: PeerProps) {
   const { directMessages } = useChatContext()
+  const dmCount = directMessages[peer.toString()]?.length
 
   const color = peerColor(peer)
-
   return (
-    <>
-      <Text color={`#${color}`} block={true}>{shortPeerId(peer)}</Text>
-    </>
+    <Text color={`#${color}`} block={true}>
+      {shortPeerId(peer)} {self ? '(You)' : ''} {dmCount ? `(${dmCount})` : ''}
+    </Text>
   )
 }
