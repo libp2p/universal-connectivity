@@ -5,7 +5,7 @@ import { PUBLIC_CHAT_ROOM_ID } from '../constants.js'
 import { ChatMessage, useChatContext } from '../context/chat.js'
 import { Message } from './message.js'
 import { Logger } from '@libp2p/interface'
-import { layout, PositionProps } from '../index.js'
+import { layout, PositionProps } from '../lib/position.js'
 import { shortPeerId } from '../lib/short-peer-id.js'
 
 let log: Logger

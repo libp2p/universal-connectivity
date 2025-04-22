@@ -2,7 +2,7 @@ import React from 'react'
 import ReactCurse, { Banner, useSize } from 'react-curse'
 import { AppWrapper } from './context/index.js'
 import { PeerList } from './components/peer-list.js'
-import { layout } from './index.js'
+import { layout } from './lib/position.js'
 import { SendMessage } from './components/send-message.js'
 import Messages from './components/messages.js'
 
