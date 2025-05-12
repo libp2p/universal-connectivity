@@ -20,7 +20,7 @@ rand = "0.8.5"
 ratatui = "0.29.0"
 serde_json = "1.0.140"
 signal-hook = "0.3.17"
-tokio = { version = "1.44.1", features = ["full"] }
+tokio = { version = "1.45.0", features = ["full"] }
 tokio-util = { version = "0.7.14", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
