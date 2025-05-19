@@ -10,62 +10,54 @@ namespace Libp2pChat.Infrastructure.Logging;
 public class TerminalLogger : IAppLogger
 {
     private readonly IChatUI _chatUI;
-    private readonly ILogger _logger;
     private readonly string _category;
     
     /// <summary>
     /// Creates a new instance of the <see cref="TerminalLogger"/> class.
     /// </summary>
     /// <param name="chatUI">The chat UI.</param>
-    /// <param name="logger">The underlying logger.</param>
     /// <param name="category">The category name for the logger.</param>
-    public TerminalLogger(IChatUI chatUI, ILogger logger, string category)
+    public TerminalLogger(IChatUI chatUI, string category)
     {
         _chatUI = chatUI;
-        _logger = logger;
         _category = category;
+    }
+    
+    private void LogWithLevel(string level, string message)
+    {
+        string formattedMessage = $"[{DateTime.Now:HH:mm:ss.fff}] [{level}] {message}";
+        _chatUI.AddLog(formattedMessage);
     }
     
     /// <inheritdoc />
     public void LogInformation(string message)
     {
-        string formattedMessage = $"[{DateTime.Now:HH:mm:ss.fff}] [Info] {message}";
-        _chatUI.AddLog(formattedMessage);
-        // _logger.LogInformation(message);
+        LogWithLevel("Info", message);
     }
     
     /// <inheritdoc />
     public void LogWarning(string message)
     {
-        string formattedMessage = $"[{DateTime.Now:HH:mm:ss.fff}] [Warning] {message}";
-        _chatUI.AddLog(formattedMessage);
-        // _logger.LogWarning(message);
+        LogWithLevel("Warning", message);
     }
     
     /// <inheritdoc />
     public void LogError(string message)
     {
-        string formattedMessage = $"[{DateTime.Now:HH:mm:ss.fff}] [Error] {message}";
-        _chatUI.AddLog(formattedMessage);
+        LogWithLevel("Error", message);
     }
     
     /// <inheritdoc />
     public void LogError(string message, Exception exception)
     {
-        string formattedMessage = $"[{DateTime.Now:HH:mm:ss.fff}] [Error] {message}";
-        string exceptionDetails = $"[{DateTime.Now:HH:mm:ss.fff}] [Error] Exception: {exception.Message}\nStack trace: {exception.StackTrace}";
-        
-        _chatUI.AddLog(formattedMessage);
-        _chatUI.AddLog(exceptionDetails);
-        // _logger.LogError(exception, message);
+        LogWithLevel("Error", message);
+        LogWithLevel("Error", $"Exception: {exception.Message}\nStack trace: {exception.StackTrace}");
     }
     
     /// <inheritdoc />
     public void LogDebug(string message)
     {
-        string formattedMessage = $"[{DateTime.Now:HH:mm:ss.fff}] [Debug] {message}";
-        _chatUI.AddLog(formattedMessage);
-        // _logger.LogDebug(message);
+        LogWithLevel("Debug", message);
     }
 }
 
@@ -95,6 +87,6 @@ public class TerminalLoggerFactory
     /// <returns>A new terminal logger.</returns>
     public IAppLogger CreateLogger(string category)
     {
-        return new TerminalLogger(_chatUI, _loggerFactory.CreateLogger(category), category);
+        return new TerminalLogger(_chatUI, category);
     }
 } 

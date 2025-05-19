@@ -72,10 +72,11 @@ public class ChatApplicationService : IDisposable
                     _chatUI.AddChatMessage("Press Ctrl+Q to exit.");
                     
                     // Add help information
-                    _logger.LogInformation("\n[Help] GO PEER CONNECTION INSTRUCTIONS:");
-                    _logger.LogInformation($"[Help] Connect using the following command:");
-                    _logger.LogInformation($"[Help] ./go-peer --connect /ip4/127.0.0.1/tcp/9096/p2p/{peerId}");
-                    _logger.LogInformation("[Help] Ensure ports and peer IDs match as configured.");
+                    _logger.LogInformation("\n[Help] CONNECTION INSTRUCTIONS:");
+                    _logger.LogInformation($"[Help] Connect to this peer using your libp2p client:");
+                    _logger.LogInformation($"[Help] Multiaddress: {multiaddress}");
+                    _logger.LogInformation($"[Help] For localhost connections: /ip4/127.0.0.1/tcp/{multiaddress.Split('/')[4]}/p2p/{peerId}");
+                    _logger.LogInformation("[Help] Use the above multiaddress with your libp2p client's connect command.");
                 }
                 catch (Exception ex)
                 {

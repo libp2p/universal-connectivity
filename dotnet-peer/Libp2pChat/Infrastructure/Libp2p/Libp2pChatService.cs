@@ -7,6 +7,8 @@ using Multiformats.Address;
 using Nethermind.Libp2p;
 using Nethermind.Libp2p.Core;
 using Nethermind.Libp2p.Protocols.Pubsub;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Libp2pChat.Infrastructure.Libp2p;
 
@@ -27,6 +29,8 @@ public class Libp2pChatService : IChatService, IDisposable
     private bool _isStarted;
     private bool _isDisposed;
     private readonly string _listenAddress;
+    private readonly int _port;
+    private int _actualPort;
     
     /// <inheritdoc />
     public string PeerId => _identity.PeerId.ToString();
@@ -45,12 +49,15 @@ public class Libp2pChatService : IChatService, IDisposable
     /// <param name="router">The pubsub router.</param>
     /// <param name="topicName">The topic name to use for chat messages.</param>
     /// <param name="identity">The identity to use. If null, a new identity will be generated.</param>
+    /// <param name="port">The port to listen on. Use 0 for a random port.</param>
     public Libp2pChatService(
         IAppLogger logger,
         IPeerFactory peerFactory,
         PubsubRouter router,
         string topicName = "universal-connectivity",
-        Identity? identity = null)
+        Identity? identity = null,
+        int port = 0
+    )
     {
         _logger = logger;
         _peerFactory = peerFactory;
@@ -58,12 +65,14 @@ public class Libp2pChatService : IChatService, IDisposable
         _topicName = topicName;
         _identity = identity ?? new Identity();
         _listenAddress = "0.0.0.0";
+        _port = port;
+        _actualPort = port;
     }
     
     /// <inheritdoc />
     public string GetMultiaddress()
     {
-        return $"/ip4/{_listenAddress}/tcp/9096/p2p/{PeerId}";
+        return $"/ip4/{_listenAddress}/tcp/{_actualPort}/p2p/{PeerId}";
     }
     
     /// <inheritdoc />
@@ -107,18 +116,25 @@ public class Libp2pChatService : IChatService, IDisposable
         
         try
         {
-            // Create local peer
             _localPeer = _peerFactory.Create(_identity);
             
+            if (_port == 0)
+            {
+                _actualPort = GetRandomAvailablePort();
+                _logger.LogInformation($"Using random port: {_actualPort}");
+            }
+            else
+            {
+                _actualPort = _port;
+            }
+            
             // Create multiaddresses to listen on
-            var localAddress = Multiaddress.Decode($"/ip4/127.0.0.1/tcp/9096/p2p/{PeerId}");
-            var allIfacesAddress = Multiaddress.Decode($"/ip4/{_listenAddress}/tcp/9096/p2p/{PeerId}");
+            var allIfacesAddress = Multiaddress.Decode($"/ip4/{_listenAddress}/tcp/{_actualPort}/p2p/{PeerId}");
             
             // Start listening for peer connections
             _logger.LogInformation("Starting peer listener...");
-            await _localPeer.StartListenAsync(new[] { localAddress, allIfacesAddress }, _cancellationTokenSource.Token);
+            await _localPeer.StartListenAsync(new[] { allIfacesAddress }, _cancellationTokenSource.Token);
             _logger.LogInformation("Peer listener started successfully");
-            _logger.LogInformation($"Listening on: {localAddress}");
             _logger.LogInformation($"Listening on: {allIfacesAddress}");
             
             // Get topic and subscribe to messages
@@ -137,8 +153,6 @@ public class Libp2pChatService : IChatService, IDisposable
             
             _logger.LogInformation("Chat service started successfully");
             _logger.LogInformation($"Peer ID: {PeerId}");
-            _logger.LogInformation($"GO PEER CONNECTION COMMAND:");
-            _logger.LogInformation($"./go-peer --connect /ip4/127.0.0.1/tcp/9096/p2p/{PeerId}");
         }
         catch (Exception ex)
         {
@@ -146,6 +160,18 @@ public class Libp2pChatService : IChatService, IDisposable
             await StopAsync();
             throw;
         }
+    }
+    
+    /// <summary>
+    /// Gets a random available port.
+    /// </summary>
+    /// <returns>A random available port.</returns>
+    private int GetRandomAvailablePort()
+    {
+        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.Bind(new IPEndPoint(IPAddress.Any, 0));
+        var endPoint = (IPEndPoint)socket.LocalEndPoint!;
+        return endPoint.Port;
     }
     
     /// <inheritdoc />
@@ -248,23 +274,15 @@ public class Libp2pChatService : IChatService, IDisposable
                 {
                     _logger.LogError($"JSON parsing error: {ex.Message}");
                     
-                    // Treat as plain text
                     var plainTextMessage = new ChatMessage(raw, "unknown", "peer");
                     MessageReceived?.Invoke(this, plainTextMessage);
                 }
             }
             else
             {
-                // Plain text message (likely from Go peer)
                 var plainTextMessage = new ChatMessage(raw, "unknown", "peer");
-                
-                // Add Go peer to known peers
-                var goPeer = Peer.CreateGoPeer();
-                _knownPeers.TryAdd(goPeer.Id, goPeer);
-                PeerDiscovered?.Invoke(this, goPeer);
-                
                 MessageReceived?.Invoke(this, plainTextMessage);
-                _logger.LogInformation("Detected Go peer from message");
+                _logger.LogInformation("Received plain text message from peer");
             }
         }
         catch (Exception ex)
