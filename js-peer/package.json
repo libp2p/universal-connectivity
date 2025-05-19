@@ -28,7 +28,7 @@
     "@libp2p/webtransport": "^5.0.33",
     "@multiformats/multiaddr": "^12.4.0",
     "clsx": "^2.1.1",
-    "debug": "^4.3.7",
+    "debug": "^4.4.1",
     "it-length-prefixed": "^10.0.1",
     "it-map": "^3.1.1",
     "it-pipe": "^3.0.1",
