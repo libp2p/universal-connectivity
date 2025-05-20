@@ -32,7 +32,7 @@ dotnet-libp2p Chat aims to provide a performant, well-tested implementation of a
 Clone the repository and navigate to the dotnet-peer directory:
 
 ```bash
-git clone https://github.com/leny62/universal-connectivity
+git clone https://github.com/libp2p/universal-connectivity
 cd universal-connectivity/dotnet-peer/Libp2pChat
 ```
 
