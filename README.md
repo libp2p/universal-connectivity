@@ -20,11 +20,12 @@ Some of the cool and cutting-edge [transport protocols](https://connectivity.lib
 
 ## Packages
 
-| Package                     | Description                     | WebTransport | WebRTC | WebRTC-direct | QUIC | TCP |
-| :-------------------------- | :------------------------------ | ------------ | ------ | ------------- | ---- | --- |
-| [`js-peer`](./js-peer/)     | Browser Chat Peer in TypeScript | ✅           | ✅     | ✅            | ❌   | ❌  |
-| [`go-peer`](./go-peer/)     | Chat peer implemented in Go     | ✅           | ❌     | ✅            | ✅   | ✅  |
-| [`rust-peer`](./rust-peer/) | Chat peer implemented in Rust   | ❌           | ❌     | ✅            | ✅   | ❌  |
+| Package                           | Description                     | WebTransport | WebRTC | WebRTC-direct | QUIC | TCP |
+| :-------------------------------- | :------------------------------ | ------------ | ------ | ------------- | ---- | --- |
+| [`js-peer`](./js-peer/)           | Browser Chat Peer in TypeScript | ✅           | ✅     | ✅            | ❌   | ❌  |
+| [`node-js-peer`](./node-js-peer/) | Node.js Chat Peer in TypeScript | ✅           | ✅     | ✅            | ✅   | ✅  |
+| [`go-peer`](./go-peer/)           | Chat peer implemented in Go     | ✅           | ❌     | ✅            | ✅   | ✅  |
+| [`rust-peer`](./rust-peer/)       | Chat peer implemented in Rust   | ❌           | ❌     | ✅            | ✅   | ✅  |
 
 ✅ - Protocol supported
 ❌ - Protocol not supported
@@ -41,8 +42,7 @@ There are two ways to connect to a peer:
 
 Load the UI, and enter the multiaddr into the UI. Ensure that it includes the peerID, e.g.`/ip4/192.168.178.21/udp/61838/quic-v1/webtransport/certhash/uEiCQCALYac4V3LJ2ourLdauXOswIXpIuJ_JNT-8Wavmxyw/certhash/uEiCdYghq5FlXGkVONQXT07CteA16BDyMPI23-0GjA9Ej_w/p2p/12D3KooWF7ovRNBKPxERf6GtUbFdiqJsQviKUb7Z8a2Uuuo6MrDX`
 
-
-## Getting started: JS
+## Getting started: Browser JS
 
 ### 1. Install dependencies
 
@@ -61,6 +61,21 @@ Start the dev server:
 npm run dev
 ```
 
+## Getting started: Node.js
+
+### 1. Install dependencies
+
+```
+cd node-js-peer
+npm i
+```
+
+### 2. Start the app
+
+```
+npm start
+```
+
 ## Getting started: Rust
 
 ```
@@ -68,7 +83,7 @@ cd rust-peer
 cargo run
 ```
 
-This will automatically connect you to the bootstrap node running on [fly.io](https://fly.io).
+This will automatically connect you to the bootstrap nodes running on bootstrap.libp2p.io.
 
 To explore more advanced configurations if you e.g. want to set up our own network, try:
 
