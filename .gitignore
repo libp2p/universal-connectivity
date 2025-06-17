@@ -8,4 +8,5 @@ yarn.lock
 .vscode/
 .DS_Store
 go-peer/go-peer
-**/.idea
+.cursor/
+.qodo
