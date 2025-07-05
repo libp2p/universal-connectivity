@@ -4,7 +4,20 @@ version = "0.1.0"
 description = "Python implementation of the Universal Connectivity peer and p2p chat experience."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "textual>=0.47.0",
+    "libp2p>=0.2.0",
+    "trio>=0.22.0",
+    "base58>=2.1.0",
+    "protobuf>=4.25.0",
+]
+
+[project.scripts]
+py-peer = "main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.uv]
 dev-dependencies = [

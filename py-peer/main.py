@@ -22,14 +22,27 @@ from libp2p.tools.async_service.trio_service import background_trio_service
 from libp2p.peer.peerinfo import info_from_p2p_addr
 from libp2p.custom_types import TProtocol
 
-from chatroom import ChatRoom
+from chatroom import ChatRoom, ChatMessage
+from ui import NewChatUI
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),  # Console output
+        logging.FileHandler("py-peer.log", mode='a')  # File output
+    ]
 )
 logger = logging.getLogger("universal-connectivity-py-peer")
+
+# Create a separate logger for system events
+system_logger = logging.getLogger("system_events")
+system_handler = logging.FileHandler("system_events.txt", mode='a')
+system_handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+system_logger.addHandler(system_handler)
+system_logger.setLevel(logging.INFO)
+system_logger.propagate = False  # Don't send to parent loggers
 
 # Constants
 DISCOVERY_SERVICE_TAG = "universal-connectivity"
@@ -60,11 +73,18 @@ async def main_async(args):
         key_pair=key_pair,
     )
     
+    full_multiaddr = f"{listen_addr}/p2p/{host.get_id()}"
     logger.info(f"Host created with PeerID: {host.get_id()}")
     logger.info(f"Listening on: {listen_addr}")
-    logger.info(f"Full multiaddr: {listen_addr}/p2p/{host.get_id()}")
+    logger.info(f"Full multiaddr: {full_multiaddr}")
+    
+    # Log system event
+    system_logger.info(f"Peer started - ID: {host.get_id()}, Multiaddr: {full_multiaddr}")
+    
     print(f"\n🔗 To connect to this peer, use:")
-    print(f'  --connect {listen_addr}/p2p/{host.get_id()}')
+    print(f'  --connect {full_multiaddr}')
+    print(f"\n📋 Multiaddress (copy this):")
+    print(f"{full_multiaddr}")
     print()
     
     # Create GossipSub with optimized parameters
@@ -97,6 +117,7 @@ async def main_async(args):
                             logger.info(f"Connecting to peer: {info.peer_id}")
                             await host.connect(info)
                             logger.info(f"✅ Successfully connected to peer: {info.peer_id}")
+                            system_logger.info(f"Connected to peer: {info.peer_id} at {addr_str}")
                             
                             # Wait a bit for the connection to stabilize and gossipsub to sync
                             await trio.sleep(2)
@@ -107,6 +128,7 @@ async def main_async(args):
                             
                         except Exception as e:
                             logger.error(f"❌ Failed to connect to {addr_str}: {e}")
+                            system_logger.info(f"Failed to connect to {addr_str}: {e}")
                             logger.error(f"Make sure the target peer is running and reachable")
                 
                 # Create and join chat room
@@ -114,14 +136,16 @@ async def main_async(args):
                 chat_room = await ChatRoom.join_chat_room(
                     host=host,
                     pubsub=pubsub,
-                    nickname=nickname
+                    nickname=nickname,
+                    multiaddr=full_multiaddr
                 )
                 
                 logger.info(f"Joined chat room as '{nickname}'")
                 
                 if not args.headless:
-                    # Start interactive mode
-                    await chat_room.run_interactive()
+                    # Start UI mode (matches go-peer logic)  
+                    ui = NewChatUI(chat_room)
+                    ui.Run()
                 else:
                     # Run in headless mode
                     logger.info("Running in headless mode. Press Ctrl+C to exit.")
@@ -133,22 +157,12 @@ async def main_async(args):
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Universal Connectivity Python Peer - A libp2p chat application"
-    )
+    parser = argparse.ArgumentParser(description="Universal Connectivity Python Peer")
     
     parser.add_argument(
-        "-n", "--nick",
+        "--nick",
         type=str,
-        help="Nickname to use in chat. Will be generated if empty",
-        default=""
-    )
-    
-    parser.add_argument(
-        "-i", "--identity",
-        type=str,
-        help="Path to the private key (PeerID) file",
-        default="identity.key"
+        help="Nickname to use for the chat"
     )
     
     parser.add_argument(

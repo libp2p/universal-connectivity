@@ -19,6 +19,14 @@ from libp2p.host.basic_host import BasicHost
 
 logger = logging.getLogger("chatroom")
 
+# Create a separate logger for system messages
+system_logger = logging.getLogger("system_messages")
+system_handler = logging.FileHandler("system_messages.txt", mode='a')
+system_handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+system_logger.addHandler(system_handler)
+system_logger.setLevel(logging.INFO)
+system_logger.propagate = False  # Don't send to parent loggers
+
 # Chat room buffer size for incoming messages
 CHAT_ROOM_BUF_SIZE = 128
 
@@ -67,11 +75,12 @@ class ChatRoom:
     through callback functions.
     """
     
-    def __init__(self, host: BasicHost, pubsub: Pubsub, nickname: str):
+    def __init__(self, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None):
         self.host = host
         self.pubsub = pubsub
         self.nickname = nickname
         self.peer_id = str(host.get_id())
+        self.multiaddr = multiaddr or f"unknown/{self.peer_id}"
         
         # Subscriptions
         self.chat_subscription = None
@@ -85,11 +94,16 @@ class ChatRoom:
         self.running = False
         
         logger.info(f"ChatRoom initialized for peer {self.peer_id[:8]}... with nickname '{nickname}'")
+        self._log_system_message(f"ChatRoom initialized - Peer: {self.peer_id[:8]}, Nickname: {nickname}, Multiaddr: {self.multiaddr}")
+    
+    def _log_system_message(self, message: str):
+        """Log system message to file."""
+        system_logger.info(message)
     
     @classmethod
-    async def join_chat_room(cls, host: BasicHost, pubsub: Pubsub, nickname: str) -> "ChatRoom":
+    async def join_chat_room(cls, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None) -> "ChatRoom":
         """Create and join a chat room."""
-        chat_room = cls(host, pubsub, nickname)
+        chat_room = cls(host, pubsub, nickname, multiaddr)
         await chat_room._subscribe_to_topics()
         return chat_room
     
@@ -99,13 +113,16 @@ class ChatRoom:
             # Subscribe to chat topic
             self.chat_subscription = await self.pubsub.subscribe(CHAT_TOPIC)
             logger.info(f"Subscribed to chat topic: {CHAT_TOPIC}")
+            self._log_system_message(f"Subscribed to chat topic: {CHAT_TOPIC}")
             
             # Subscribe to discovery topic
             self.discovery_subscription = await self.pubsub.subscribe(PUBSUB_DISCOVERY_TOPIC)
             logger.info(f"Subscribed to discovery topic: {PUBSUB_DISCOVERY_TOPIC}")
+            self._log_system_message(f"Subscribed to discovery topic: {PUBSUB_DISCOVERY_TOPIC}")
             
         except Exception as e:
             logger.error(f"Failed to subscribe to topics: {e}")
+            self._log_system_message(f"ERROR: Failed to subscribe to topics: {e}")
             raise
     
     async def publish_message(self, message: str):
@@ -123,6 +140,8 @@ class ChatRoom:
             
             await self.pubsub.publish(CHAT_TOPIC, chat_msg.to_json().encode())
             
+            self._log_system_message(f"Message sent by {self.nickname} to {peer_count} peers: {message}")
+            
             if peer_count == 0:
                 print(f"⚠️  No peers connected - message sent to topic but no one will receive it")
             else:
@@ -130,6 +149,7 @@ class ChatRoom:
                 
         except Exception as e:
             logger.error(f"Failed to publish message: {e}")
+            self._log_system_message(f"ERROR: Failed to publish message: {e}")
     
     async def _handle_chat_messages(self):
         """Handle incoming chat messages."""
@@ -143,6 +163,9 @@ class ChatRoom:
                         continue
                     
                     chat_msg = ChatMessage.from_json(message.data.decode())
+                    
+                    # Log incoming message
+                    self._log_system_message(f"Message received from {chat_msg.sender_nick} ({chat_msg.sender_id[:8]}): {chat_msg.message}")
                     
                     # Call message handlers
                     for handler in self.message_handlers:
@@ -215,6 +238,7 @@ class ChatRoom:
         print(f"Nickname: {self.nickname}")
         print(f"Peer ID: {self.peer_id}")
         print(f"Type messages and press Enter to send. Type 'quit' to exit.")
+        print(f"Commands: /peers, /status, /multiaddr")
         print()
         
         async with trio.open_nursery() as nursery:
@@ -248,10 +272,16 @@ class ChatRoom:
                             print("📡 No peers connected")
                         continue
                     
+                    elif message.strip() == "/multiaddr":
+                        print(f"\n📋 Copy this multiaddress:")
+                        print(f"{self.multiaddr}")
+                        print()
+                        continue
+                    
                     elif message.strip() == "/status":
                         peer_count = self.get_peer_count()
                         print(f"📊 Status:")
-                        print(f"  - Peer ID: {self.peer_id}")
+                        print(f"  - Multiaddr: {self.multiaddr}")
                         print(f"  - Nickname: {self.nickname}")
                         print(f"  - Connected peers: {peer_count}")
                         print(f"  - Subscribed topics: chat, discovery")
