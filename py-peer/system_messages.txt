@@ -1,0 +1,12 @@
+2025-07-06 01:29:03,550 - ChatRoom initialized - Peer: QmPuw5nd, Nickname: TestPeer, Multiaddr: /ip4/0.0.0.0/tcp/58179/p2p/QmPuw5ndMQYhK3vqCu5bCZq67z28vhuwM5aRZyb8Jhf9PA
+2025-07-06 01:29:03,550 - Subscribed to chat topic: universal-connectivity
+2025-07-06 01:29:03,551 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-06 01:29:56,119 - ChatRoom initialized - Peer: Qmd89rxZ, Nickname: s2, Multiaddr: /ip4/0.0.0.0/tcp/33943/p2p/Qmd89rxZm8kTLMqNsr3yEPdG8d5EuiDQRTJfyNXnWU6bpi
+2025-07-06 01:29:56,120 - Subscribed to chat topic: universal-connectivity
+2025-07-06 01:29:56,120 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-06 01:32:02,971 - ChatRoom initialized - Peer: QmY7C3m2, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/9002/p2p/QmY7C3m2dqSTmtoQ69DeSfmzz8nYdRos1JDMgxE8PXLm71
+2025-07-06 01:32:02,971 - Subscribed to chat topic: universal-connectivity
+2025-07-06 01:32:02,971 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-06 01:32:28,888 - ChatRoom initialized - Peer: QmTby8q2, Nickname: S1, Multiaddr: /ip4/0.0.0.0/tcp/53151/p2p/QmTby8q2wLrLvw1KomX1fsC3Cu881pLkauPxr38MSPBv4i
+2025-07-06 01:32:28,889 - Subscribed to chat topic: universal-connectivity
+2025-07-06 01:32:28,890 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
