@@ -65,3 +65,97 @@
 2025-07-06 01:33:40,919 - universal-connectivity-py-peer - INFO - Pubsub ready.
 2025-07-06 01:33:40,919 - universal-connectivity-py-peer - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/53151/p2p/QmTby8q2wLrLvw1KomX1fsC3Cu881pLkauPxr38MSPBv4i
 2025-07-06 01:33:40,920 - universal-connectivity-py-peer - INFO - Connecting to peer: QmTby8q2wLrLvw1KomX1fsC3Cu881pLkauPxr38MSPBv4i
+2025-07-06 22:58:38,474 - universal-connectivity-py-peer - INFO - Starting Universal Connectivity Python Peer...
+2025-07-06 22:58:38,891 - universal-connectivity-py-peer - INFO - Using port: 53583
+2025-07-06 22:58:38,911 - universal-connectivity-py-peer - INFO - Host created with PeerID: QmZcaLaX3TTegy8DuGUimA2jctxQ3mnHKrzC5aEzYLxQeK
+2025-07-06 22:58:38,911 - universal-connectivity-py-peer - INFO - Listening on: /ip4/0.0.0.0/tcp/53583
+2025-07-06 22:58:38,911 - universal-connectivity-py-peer - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/53583/p2p/QmZcaLaX3TTegy8DuGUimA2jctxQ3mnHKrzC5aEzYLxQeK
+2025-07-06 22:58:38,914 - universal-connectivity-py-peer - INFO - Initializing PubSub and GossipSub...
+2025-07-06 22:58:38,914 - universal-connectivity-py-peer - INFO - Pubsub and GossipSub services started.
+2025-07-06 22:58:38,914 - universal-connectivity-py-peer - INFO - Pubsub ready.
+2025-07-06 22:58:38,914 - chatroom - INFO - ChatRoom initialized for peer QmZcaLaX... with nickname 'peer-QmZcaLaX'
+2025-07-06 22:58:38,915 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-06 22:58:38,915 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-06 22:58:38,915 - universal-connectivity-py-peer - INFO - Joined chat room as 'peer-QmZcaLaX'
+2025-07-06 22:58:38,915 - universal-connectivity-py-peer - INFO - Running in headless mode. Press Ctrl+C to exit.
+2025-07-06 22:59:05,879 - universal-connectivity-py-peer - INFO - Starting Universal Connectivity Python Peer...
+2025-07-06 22:59:06,150 - universal-connectivity-py-peer - INFO - Using port: 44811
+2025-07-06 22:59:06,167 - universal-connectivity-py-peer - INFO - Host created with PeerID: QmPN85AqEMgGpq1ZHuMpkoqo9sjwv7bsmfn3pwx2EqDjfr
+2025-07-06 22:59:06,167 - universal-connectivity-py-peer - INFO - Listening on: /ip4/0.0.0.0/tcp/44811
+2025-07-06 22:59:06,167 - universal-connectivity-py-peer - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/44811/p2p/QmPN85AqEMgGpq1ZHuMpkoqo9sjwv7bsmfn3pwx2EqDjfr
+2025-07-06 22:59:06,169 - universal-connectivity-py-peer - INFO - Initializing PubSub and GossipSub...
+2025-07-06 22:59:06,170 - universal-connectivity-py-peer - INFO - Pubsub and GossipSub services started.
+2025-07-06 22:59:06,170 - universal-connectivity-py-peer - INFO - Pubsub ready.
+2025-07-06 22:59:06,170 - universal-connectivity-py-peer - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/53583/p2p/QmZcaLaX3TTegy8DuGUimA2jctxQ3mnHKrzC5aEzYLxQeK
+2025-07-06 22:59:06,170 - universal-connectivity-py-peer - INFO - Connecting to peer: QmZcaLaX3TTegy8DuGUimA2jctxQ3mnHKrzC5aEzYLxQeK
+2025-07-06 22:59:06,221 - universal-connectivity-py-peer - INFO - ✅ Successfully connected to peer: QmZcaLaX3TTegy8DuGUimA2jctxQ3mnHKrzC5aEzYLxQeK
+2025-07-06 22:59:08,224 - universal-connectivity-py-peer - INFO - PubSub peers after connection: ['QmZcaLaX']
+2025-07-06 22:59:08,224 - chatroom - INFO - ChatRoom initialized for peer QmPN85Aq... with nickname 'peer-QmPN85Aq'
+2025-07-06 22:59:08,226 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-06 22:59:08,227 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-06 22:59:08,227 - universal-connectivity-py-peer - INFO - Joined chat room as 'peer-QmPN85Aq'
+2025-07-06 22:59:08,227 - universal-connectivity-py-peer - INFO - Running in headless mode. Press Ctrl+C to exit.
+2025-07-06 22:59:35,979 - universal-connectivity-py-peer - INFO - Shutting down...
+2025-07-06 22:59:35,981 - root - ERROR - Error in handle_incoming for peer QmPN85AqEMgGpq1ZHuMpkoqo9sjwv7bsmfn3pwx2EqDjfr: RawConnError: 
+2025-07-06 22:59:35,982 - root - INFO - Stream closed cleanly for peer QmZcaLaX3TTegy8DuGUimA2jctxQ3mnHKrzC5aEzYLxQeK (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-06 22:59:38,203 - universal-connectivity-py-peer - INFO - Shutting down...
+2025-07-07 22:19:47,978 - universal-connectivity-py-peer - INFO - Starting Universal Connectivity Python Peer...
+2025-07-07 22:19:48,079 - universal-connectivity-py-peer - INFO - Using port: 54071
+2025-07-07 22:19:48,100 - universal-connectivity-py-peer - INFO - Host created with PeerID: QmRQTzueNxajwPhPKeBx5vceuUbn3SA4ausqzQdPs9DVcc
+2025-07-07 22:19:48,100 - universal-connectivity-py-peer - INFO - Listening on: /ip4/0.0.0.0/tcp/54071
+2025-07-07 22:19:48,100 - universal-connectivity-py-peer - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/54071/p2p/QmRQTzueNxajwPhPKeBx5vceuUbn3SA4ausqzQdPs9DVcc
+2025-07-07 22:19:48,102 - universal-connectivity-py-peer - INFO - Initializing PubSub and GossipSub...
+2025-07-07 22:19:48,102 - universal-connectivity-py-peer - INFO - Pubsub and GossipSub services started.
+2025-07-07 22:19:48,102 - universal-connectivity-py-peer - INFO - Pubsub ready.
+2025-07-07 22:19:48,102 - chatroom - INFO - ChatRoom initialized for peer QmRQTzue... with nickname 'peer-QmRQTzue'
+2025-07-07 22:19:48,103 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-07 22:19:48,103 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 22:19:48,103 - universal-connectivity-py-peer - INFO - Joined chat room as 'peer-QmRQTzue'
+2025-07-07 22:19:48,110 - ui - INFO - ChatUI initialized for peer QmRQTzue...
+2025-07-07 22:20:15,863 - universal-connectivity-py-peer - INFO - Starting Universal Connectivity Python Peer...
+2025-07-07 22:20:16,168 - universal-connectivity-py-peer - INFO - Using port: 39657
+2025-07-07 22:20:16,185 - universal-connectivity-py-peer - INFO - Host created with PeerID: QmWo6M19WAsxmLbAS9bDYLXoe1833twjdpc5PBoD9umTyG
+2025-07-07 22:20:16,185 - universal-connectivity-py-peer - INFO - Listening on: /ip4/0.0.0.0/tcp/39657
+2025-07-07 22:20:16,185 - universal-connectivity-py-peer - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/39657/p2p/QmWo6M19WAsxmLbAS9bDYLXoe1833twjdpc5PBoD9umTyG
+2025-07-07 22:20:16,187 - universal-connectivity-py-peer - INFO - Initializing PubSub and GossipSub...
+2025-07-07 22:20:16,187 - universal-connectivity-py-peer - INFO - Pubsub and GossipSub services started.
+2025-07-07 22:20:16,187 - universal-connectivity-py-peer - INFO - Pubsub ready.
+2025-07-07 22:20:16,187 - chatroom - INFO - ChatRoom initialized for peer QmWo6M19... with nickname 'peer-QmWo6M19'
+2025-07-07 22:20:16,187 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-07 22:20:16,188 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 22:20:16,188 - universal-connectivity-py-peer - INFO - Joined chat room as 'peer-QmWo6M19'
+2025-07-07 22:20:16,194 - ui - INFO - ChatUI initialized for peer QmWo6M19...
+2025-07-07 22:21:50,472 - universal-connectivity-py-peer - INFO - Starting Universal Connectivity Python Peer...
+2025-07-07 22:21:50,969 - universal-connectivity-py-peer - INFO - Using port: 59895
+2025-07-07 22:21:50,986 - universal-connectivity-py-peer - INFO - Host created with PeerID: QmR5TLbQrpK15VQ7NdbSrtK4ARu5sToPTyi3mKt5zCiGTS
+2025-07-07 22:21:50,986 - universal-connectivity-py-peer - INFO - Listening on: /ip4/0.0.0.0/tcp/59895
+2025-07-07 22:21:50,986 - universal-connectivity-py-peer - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/59895/p2p/QmR5TLbQrpK15VQ7NdbSrtK4ARu5sToPTyi3mKt5zCiGTS
+2025-07-07 22:21:50,988 - universal-connectivity-py-peer - INFO - Initializing PubSub and GossipSub...
+2025-07-07 22:21:50,988 - universal-connectivity-py-peer - INFO - Pubsub and GossipSub services started.
+2025-07-07 22:21:50,988 - universal-connectivity-py-peer - INFO - Pubsub ready.
+2025-07-07 22:21:50,988 - universal-connectivity-py-peer - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/54071/p2p/QmRQTzueNxajwPhPKeBx5vceuUbn3SA4ausqzQdPs9DVcc
+2025-07-07 22:21:50,989 - universal-connectivity-py-peer - INFO - Connecting to peer: QmRQTzueNxajwPhPKeBx5vceuUbn3SA4ausqzQdPs9DVcc
+2025-07-07 22:21:51,042 - universal-connectivity-py-peer - INFO - ✅ Successfully connected to peer: QmRQTzueNxajwPhPKeBx5vceuUbn3SA4ausqzQdPs9DVcc
+2025-07-07 22:21:53,044 - universal-connectivity-py-peer - INFO - PubSub peers after connection: ['QmRQTzue']
+2025-07-07 22:21:53,044 - chatroom - INFO - ChatRoom initialized for peer QmR5TLbQ... with nickname 'peer-QmR5TLbQ'
+2025-07-07 22:21:53,044 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-07 22:21:53,045 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 22:21:53,045 - universal-connectivity-py-peer - INFO - Joined chat room as 'peer-QmR5TLbQ'
+2025-07-07 22:21:53,050 - ui - INFO - ChatUI initialized for peer QmR5TLbQ...
+2025-07-07 22:22:58,460 - universal-connectivity-py-peer - INFO - Starting Universal Connectivity Python Peer...
+2025-07-07 22:22:58,562 - universal-connectivity-py-peer - INFO - Using port: 40381
+2025-07-07 22:22:58,580 - universal-connectivity-py-peer - INFO - Host created with PeerID: QmWu1tnvZNaZaC4v1VfTT9KA8DmUGv4rRWobsZFjnGEorW
+2025-07-07 22:22:58,580 - universal-connectivity-py-peer - INFO - Listening on: /ip4/0.0.0.0/tcp/40381
+2025-07-07 22:22:58,580 - universal-connectivity-py-peer - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/40381/p2p/QmWu1tnvZNaZaC4v1VfTT9KA8DmUGv4rRWobsZFjnGEorW
+2025-07-07 22:22:58,582 - universal-connectivity-py-peer - INFO - Initializing PubSub and GossipSub...
+2025-07-07 22:22:58,583 - universal-connectivity-py-peer - INFO - Pubsub and GossipSub services started.
+2025-07-07 22:22:58,583 - universal-connectivity-py-peer - INFO - Pubsub ready.
+2025-07-07 22:22:58,583 - universal-connectivity-py-peer - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/54071/p2p/QmRQTzueNxajwPhPKeBx5vceuUbn3SA4ausqzQdPs9DVcc
+2025-07-07 22:22:58,584 - universal-connectivity-py-peer - INFO - Connecting to peer: QmRQTzueNxajwPhPKeBx5vceuUbn3SA4ausqzQdPs9DVcc
+2025-07-07 22:22:58,613 - universal-connectivity-py-peer - INFO - ✅ Successfully connected to peer: QmRQTzueNxajwPhPKeBx5vceuUbn3SA4ausqzQdPs9DVcc
+2025-07-07 22:23:00,616 - universal-connectivity-py-peer - INFO - PubSub peers after connection: ['QmRQTzue']
+2025-07-07 22:23:00,616 - chatroom - INFO - ChatRoom initialized for peer QmWu1tnv... with nickname 'peer-QmWu1tnv'
+2025-07-07 22:23:00,618 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-07 22:23:00,619 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 22:23:00,619 - universal-connectivity-py-peer - INFO - Joined chat room as 'peer-QmWu1tnv'
+2025-07-07 22:23:00,624 - ui - INFO - ChatUI initialized for peer QmWu1tnv...

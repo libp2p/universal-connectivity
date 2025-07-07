@@ -11,6 +11,7 @@ import argparse
 import logging
 import sys
 import trio
+import trio_asyncio
 import socket
 import multiaddr
 
@@ -57,102 +58,105 @@ def find_free_port() -> int:
         return s.getsockname()[1]    
 
 async def main_async(args):
-    """Main async function."""
-    # Load identity
-    key_pair = create_new_key_pair() 
-    
-    # Determine port
-    port = args.port if args.port and args.port != 0 else find_free_port()
-    logger.info(f"Using port: {port}")
-    
-    # Create listen address
-    listen_addr = multiaddr.Multiaddr(f"/ip4/0.0.0.0/tcp/{port}")
-    
-    # Create libp2p host
-    host = new_host(
-        key_pair=key_pair,
-    )
-    
-    full_multiaddr = f"{listen_addr}/p2p/{host.get_id()}"
-    logger.info(f"Host created with PeerID: {host.get_id()}")
-    logger.info(f"Listening on: {listen_addr}")
-    logger.info(f"Full multiaddr: {full_multiaddr}")
-    
-    # Log system event
-    system_logger.info(f"Peer started - ID: {host.get_id()}, Multiaddr: {full_multiaddr}")
-    
-    print(f"\n🔗 To connect to this peer, use:")
-    print(f'  --connect {full_multiaddr}')
-    print(f"\n📋 Multiaddress (copy this):")
-    print(f"{full_multiaddr}")
-    print()
-    
-    # Create GossipSub with optimized parameters
-    gossipsub = GossipSub(
-        protocols=[GOSSIPSUB_PROTOCOL_ID],
-        degree=3,  # Number of peers to maintain in mesh
-        degree_low=2,  # Lower bound for mesh peers
-        degree_high=4,  # Upper bound for mesh peers
-    )
-    
-    # Create PubSub
-    pubsub = Pubsub(host, gossipsub)
-    
-    async with host.run(listen_addrs=[listen_addr]):
-        logger.info("Initializing PubSub and GossipSub...")
+    """Main async function with trio-asyncio support."""
+    # Enable trio-asyncio mode for running asyncio code in trio context
+    async with trio_asyncio.open_loop():
+        # Load identity
+        key_pair = create_new_key_pair() 
         
-        async with background_trio_service(pubsub):
-            async with background_trio_service(gossipsub):
-                logger.info("Pubsub and GossipSub services started.")
-                await pubsub.wait_until_ready()
-                logger.info("Pubsub ready.")
-                
-                # Connect to peer if specified
-                if args.connect:
-                    for addr_str in args.connect:
+        # Determine port
+        port = args.port if args.port and args.port != 0 else find_free_port()
+        logger.info(f"Using port: {port}")
+        
+        # Create listen address
+        listen_addr = multiaddr.Multiaddr(f"/ip4/0.0.0.0/tcp/{port}")
+        
+        # Create libp2p host
+        host = new_host(
+            key_pair=key_pair,
+        )
+        
+        full_multiaddr = f"{listen_addr}/p2p/{host.get_id()}"
+        logger.info(f"Host created with PeerID: {host.get_id()}")
+        logger.info(f"Listening on: {listen_addr}")
+        logger.info(f"Full multiaddr: {full_multiaddr}")
+        
+        # Log system event
+        system_logger.info(f"Peer started - ID: {host.get_id()}, Multiaddr: {full_multiaddr}")
+        
+        print(f"\n🔗 To connect to this peer, use:")
+        print(f'  --connect {full_multiaddr}')
+        print(f"\n📋 Multiaddress (copy this):")
+        print(f"{full_multiaddr}")
+        print()
+        
+        # Create GossipSub with optimized parameters
+        gossipsub = GossipSub(
+            protocols=[GOSSIPSUB_PROTOCOL_ID],
+            degree=3,  # Number of peers to maintain in mesh
+            degree_low=2,  # Lower bound for mesh peers
+            degree_high=4,  # Upper bound for mesh peers
+        )
+        
+        # Create PubSub
+        pubsub = Pubsub(host, gossipsub)
+        
+        async with host.run(listen_addrs=[listen_addr]):
+            logger.info("Initializing PubSub and GossipSub...")
+            
+            async with background_trio_service(pubsub):
+                async with background_trio_service(gossipsub):
+                    logger.info("Pubsub and GossipSub services started.")
+                    await pubsub.wait_until_ready()
+                    logger.info("Pubsub ready.")
+                    
+                    # Connect to peer if specified
+                    if args.connect:
+                        for addr_str in args.connect:
+                            try:
+                                logger.info(f"Attempting to connect to: {addr_str}")
+                                maddr = multiaddr.Multiaddr(addr_str)
+                                info = info_from_p2p_addr(maddr)
+                                logger.info(f"Connecting to peer: {info.peer_id}")
+                                await host.connect(info)
+                                logger.info(f"✅ Successfully connected to peer: {info.peer_id}")
+                                system_logger.info(f"Connected to peer: {info.peer_id} at {addr_str}")
+                                
+                                # Wait a bit for the connection to stabilize and gossipsub to sync
+                                await trio.sleep(2)
+                                
+                                # Check if we can see the peer in pubsub
+                                connected_peers = list(pubsub.peers.keys())
+                                logger.info(f"PubSub peers after connection: {[str(p)[:8] for p in connected_peers]}")
+                                
+                            except Exception as e:
+                                logger.error(f"❌ Failed to connect to {addr_str}: {e}")
+                                system_logger.info(f"Failed to connect to {addr_str}: {e}")
+                                logger.error(f"Make sure the target peer is running and reachable")
+                    
+                    # Create and join chat room
+                    nickname = args.nick or f"peer-{str(host.get_id())[:8]}"
+                    chat_room = await ChatRoom.join_chat_room(
+                        host=host,
+                        pubsub=pubsub,
+                        nickname=nickname,
+                        multiaddr=full_multiaddr
+                    )
+                    
+                    logger.info(f"Joined chat room as '{nickname}'")
+                    
+                    if not args.headless:
+                        # Start UI mode with trio-asyncio support
+                        ui = NewChatUI(chat_room)
+                        # Now ui.Run() can use asyncio internally while running in trio context
+                        await trio_asyncio.aio_as_trio(ui.run_async)()
+                    else:
+                        # Run in headless mode
+                        logger.info("Running in headless mode. Press Ctrl+C to exit.")
                         try:
-                            logger.info(f"Attempting to connect to: {addr_str}")
-                            maddr = multiaddr.Multiaddr(addr_str)
-                            info = info_from_p2p_addr(maddr)
-                            logger.info(f"Connecting to peer: {info.peer_id}")
-                            await host.connect(info)
-                            logger.info(f"✅ Successfully connected to peer: {info.peer_id}")
-                            system_logger.info(f"Connected to peer: {info.peer_id} at {addr_str}")
-                            
-                            # Wait a bit for the connection to stabilize and gossipsub to sync
-                            await trio.sleep(2)
-                            
-                            # Check if we can see the peer in pubsub
-                            connected_peers = list(pubsub.peers.keys())
-                            logger.info(f"PubSub peers after connection: {[str(p)[:8] for p in connected_peers]}")
-                            
-                        except Exception as e:
-                            logger.error(f"❌ Failed to connect to {addr_str}: {e}")
-                            system_logger.info(f"Failed to connect to {addr_str}: {e}")
-                            logger.error(f"Make sure the target peer is running and reachable")
-                
-                # Create and join chat room
-                nickname = args.nick or f"peer-{str(host.get_id())[:8]}"
-                chat_room = await ChatRoom.join_chat_room(
-                    host=host,
-                    pubsub=pubsub,
-                    nickname=nickname,
-                    multiaddr=full_multiaddr
-                )
-                
-                logger.info(f"Joined chat room as '{nickname}'")
-                
-                if not args.headless:
-                    # Start UI mode (matches go-peer logic)  
-                    ui = NewChatUI(chat_room)
-                    ui.Run()
-                else:
-                    # Run in headless mode
-                    logger.info("Running in headless mode. Press Ctrl+C to exit.")
-                    try:
-                        await trio.sleep_forever()
-                    except KeyboardInterrupt:
-                        logger.info("Shutting down...")
+                            await trio.sleep_forever()
+                        except KeyboardInterrupt:
+                            logger.info("Shutting down...")
 
 
 def main():
