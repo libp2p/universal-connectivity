@@ -28,3 +28,121 @@
 2025-07-07 22:23:00,617 - ChatRoom initialized - Peer: QmWu1tnv, Nickname: peer-QmWu1tnv, Multiaddr: /ip4/0.0.0.0/tcp/40381/p2p/QmWu1tnvZNaZaC4v1VfTT9KA8DmUGv4rRWobsZFjnGEorW
 2025-07-07 22:23:00,618 - Subscribed to chat topic: universal-connectivity
 2025-07-07 22:23:00,619 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:02:29,382 - ChatRoom initialized - Peer: QmZuFbhz, Nickname: peer-QmZuFbhz, Multiaddr: /ip4/0.0.0.0/tcp/43565/p2p/QmZuFbhzhvi92tqQLVEeFuKnNxcTkV9VmG14AGy2C2wn8W
+2025-07-07 23:02:29,382 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:02:29,382 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:02:50,839 - ChatRoom initialized - Peer: QmWeYxWH, Nickname: peer-QmWeYxWH, Multiaddr: /ip4/0.0.0.0/tcp/36591/p2p/QmWeYxWHAzUkiHGikd7p3DJxkhaNccomBdskv3bkhU3j3D
+2025-07-07 23:02:50,840 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:02:50,840 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:03:45,417 - ChatRoom initialized - Peer: Qmbre1S6, Nickname: peer-Qmbre1S6, Multiaddr: /ip4/0.0.0.0/tcp/53931/p2p/Qmbre1S6R1bxZmaoHhn9zGnYfjGHQEyyMYUuJKczs2jrpQ
+2025-07-07 23:03:45,418 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:03:45,419 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:07:44,189 - ChatRoom initialized - Peer: QmZiZmYC, Nickname: test-peer, Multiaddr: /ip4/0.0.0.0/tcp/9000/p2p/QmZiZmYCXMEBZPLLymJSacmfPDNqsd1w1QwaBicrrempmg
+2025-07-07 23:07:44,189 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:07:44,190 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:14:30,975 - ChatRoom initialized - Peer: QmVA7Zg2, Nickname: TestPeer, Multiaddr: /ip4/0.0.0.0/tcp/9000/p2p/QmVA7Zg29gqiRkuxTYEZqaDHvcbX7GcXDhTweuLLAuRo49
+2025-07-07 23:14:30,975 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:14:30,976 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:21:21,652 - ChatRoom initialized - Peer: QmcjcG7d, Nickname: TestPeer, Multiaddr: /ip4/0.0.0.0/tcp/9001/p2p/QmcjcG7dGzqqBiodwFsoscvVX5xp5u87YvuNoemVNd3wbZ
+2025-07-07 23:21:21,652 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:21:21,652 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:21:25,464 - Message sent by TestPeer to 0 peers: hi
+2025-07-07 23:21:25,465 - Message received from TestPeer (QmcjcG7d): hi
+2025-07-07 23:22:06,389 - ChatRoom initialized - Peer: Qmcj973H, Nickname: TestPeer, Multiaddr: /ip4/0.0.0.0/tcp/9008/p2p/Qmcj973H6vaxxDio2n33e5VQs8YfMmHsjhueNCEDAe9fsR
+2025-07-07 23:22:06,389 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:22:06,390 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:22:14,534 - Message received from TestPeer (Qmcj973H): hello from 2nd node
+2025-07-07 23:22:14,534 - Message sent by TestPeer to 1 peers: hello from 2nd node
+2025-07-07 23:22:14,536 - Message received from TestPeer (Qmcj973H): hello from 2nd node
+2025-07-07 23:22:25,694 - Message received from TestPeer (QmcjcG7d): Hello ji
+2025-07-07 23:22:25,695 - Message sent by TestPeer to 1 peers: Hello ji
+2025-07-07 23:22:25,698 - Message received from TestPeer (QmcjcG7d): Hello ji
+2025-07-07 23:22:38,496 - Message received from TestPeer (QmcjcG7d): I am priti wifey of suman
+2025-07-07 23:22:38,497 - Message sent by TestPeer to 1 peers: I am priti wifey of suman
+2025-07-07 23:22:38,499 - Message received from TestPeer (QmcjcG7d): I am priti wifey of suman
+2025-07-07 23:23:40,191 - ChatRoom initialized - Peer: QmWY9xdW, Nickname: peer-QmWY9xdW, Multiaddr: /ip4/0.0.0.0/tcp/41099/p2p/QmWY9xdWRvKpWBXWMwR4b1iBZsMfoG4DYbUD9JJf8TMeTL
+2025-07-07 23:23:40,191 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:23:40,192 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:25:02,923 - ChatRoom initialized - Peer: QmUyo7fx, Nickname: test-peer, Multiaddr: /ip4/0.0.0.0/tcp/9000/p2p/QmUyo7fxapwtK1WAjL1EFs639xmuGm3KXRf11kWPUhYm8Y
+2025-07-07 23:25:02,923 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:25:02,923 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:25:23,811 - ChatRoom initialized - Peer: QmWRVpDR, Nickname: TestPeer, Multiaddr: /ip4/0.0.0.0/tcp/9001/p2p/QmWRVpDRkwsbazYLe26aLCeQJBaYF9uSkRvm98AcFZdnas
+2025-07-07 23:25:23,811 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:25:23,812 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:25:40,418 - ChatRoom initialized - Peer: QmZDAcFC, Nickname: TestPeer, Multiaddr: /ip4/0.0.0.0/tcp/9008/p2p/QmZDAcFCuvJvCSovbx8mFZ1m1gukpDfMzhW1Vs4MwkziBX
+2025-07-07 23:25:40,419 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:25:40,420 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:25:48,576 - Message received from TestPeer (QmWRVpDR): asd
+2025-07-07 23:25:48,576 - Message sent by TestPeer to 1 peers: asd
+2025-07-07 23:25:48,578 - Message received from TestPeer (QmWRVpDR): asd
+2025-07-07 23:25:57,589 - ChatRoom initialized - Peer: QmUFF8hE, Nickname: TestPeer, Multiaddr: /ip4/0.0.0.0/tcp/9008/p2p/QmUFF8hEGDco3biwv9AAHbqQbickeEWgLV8J3KZTEMSt6A
+2025-07-07 23:25:57,589 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:25:57,590 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:25:59,826 - Message received from TestPeer (QmUFF8hE): k
+2025-07-07 23:25:59,826 - Message sent by TestPeer to 1 peers: k
+2025-07-07 23:25:59,827 - Message received from TestPeer (QmUFF8hE): k
+2025-07-07 23:27:55,757 - ChatRoom initialized - Peer: Qmaqd54t, Nickname: peer-Qmaqd54t, Multiaddr: /ip4/0.0.0.0/tcp/39897/p2p/Qmaqd54tZ62enHQAQ1ajJ7ZArTV6UoDM4Z1k9r5cSRyxEN
+2025-07-07 23:27:55,757 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:27:55,757 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:28:05,872 - ChatRoom initialized - Peer: QmbHJYNx, Nickname: UITest, Multiaddr: /ip4/0.0.0.0/tcp/9010/p2p/QmbHJYNxwrjDjAMq8kCd1hgZi19S3FdH8V7kHYez3buCSA
+2025-07-07 23:28:05,872 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:28:05,872 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:28:10,975 - ChatRoom initialized - Peer: QmU6MLhq, Nickname: UITest, Multiaddr: /ip4/0.0.0.0/tcp/9010/p2p/QmU6MLhqRnR6rMgHktkbREJzPDjrChj73ryjKEkiW3qJaB
+2025-07-07 23:28:10,975 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:28:10,975 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:30:53,225 - ChatRoom initialized - Peer: QmP4yFKk, Nickname: InteractiveTest, Multiaddr: /ip4/0.0.0.0/tcp/9020/p2p/QmP4yFKkMHhSQ3rWkAMPDpPyeVgqp6emRiqNMHCavedQTm
+2025-07-07 23:30:53,225 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:30:53,225 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:30:59,818 - Message sent by InteractiveTest to 0 peers: hi
+2025-07-07 23:30:59,819 - Message received from InteractiveTest (QmP4yFKk): hi
+2025-07-07 23:31:28,139 - ChatRoom initialized - Peer: QmVZxpvG, Nickname: UITest, Multiaddr: /ip4/0.0.0.0/tcp/9025/p2p/QmVZxpvGev8BEau2Us26syhHt35HCtN7rjm3ktjjUwyk6M
+2025-07-07 23:31:28,139 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:31:28,139 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:31:33,056 - ChatRoom initialized - Peer: QmXgZbDm, Nickname: UITest, Multiaddr: /ip4/0.0.0.0/tcp/9025/p2p/QmXgZbDmbXviK6yYaaV2DZZ1PZiF5hTfq3ydzexG8jtB19
+2025-07-07 23:31:33,056 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:31:33,056 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:32:03,335 - ChatRoom initialized - Peer: Qmc9hLPA, Nickname: UITest2, Multiaddr: /ip4/0.0.0.0/tcp/9026/p2p/Qmc9hLPARHaF7SxcnMQfCrr1Rf4qfkydC2kxbeNb85j8J7
+2025-07-07 23:32:03,335 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:32:03,336 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:32:24,277 - ChatRoom initialized - Peer: QmWPPfPm, Nickname: UITest2, Multiaddr: /ip4/0.0.0.0/tcp/9026/p2p/QmWPPfPmPRRd4eVEAgWMhyLFtMoYcwMTsGLq9cB369XdsU
+2025-07-07 23:32:24,277 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:32:24,277 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:33:19,730 - ChatRoom initialized - Peer: QmYXgw6P, Nickname: peer-QmYXgw6P, Multiaddr: /ip4/0.0.0.0/tcp/50119/p2p/QmYXgw6Psm9zPBTbHgQYsJPyGHzixp5EzhcZ4PRSe9zyKH
+2025-07-07 23:33:19,730 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:33:19,730 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:34:20,266 - ChatRoom initialized - Peer: QmWmTPWE, Nickname: Peer1, Multiaddr: /ip4/0.0.0.0/tcp/9030/p2p/QmWmTPWEiXAD5td4tq8Svvw7gBx1kSEn9uUTeCBDBpHZ49
+2025-07-07 23:34:20,266 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:34:20,266 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:34:43,639 - ChatRoom initialized - Peer: QmYD2DHe, Nickname: UITest2, Multiaddr: /ip4/0.0.0.0/tcp/9026/p2p/QmYD2DHeyrNB9CvqPhPCbmVn8xmgJTsVewqjWKbbtrghqB
+2025-07-07 23:34:43,640 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:34:43,640 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:35:04,173 - ChatRoom initialized - Peer: QmT9sEN7, Nickname: peer-QmT9sEN7, Multiaddr: /ip4/0.0.0.0/tcp/54295/p2p/QmT9sEN7yH3TSvhtkRNcFKA3BpWiSJY9RedYmr8YZC9ZHF
+2025-07-07 23:35:04,174 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:35:04,175 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:35:06,109 - Message received from peer-QmT9sEN7 (QmT9sEN7): hi
+2025-07-07 23:35:06,109 - Message sent by peer-QmT9sEN7 to 1 peers: hi
+2025-07-07 23:35:06,110 - Message received from peer-QmT9sEN7 (QmT9sEN7): hi
+2025-07-07 23:35:10,900 - Message received from UITest2 (QmYD2DHe): as
+2025-07-07 23:35:10,901 - Message sent by UITest2 to 1 peers: as
+2025-07-07 23:35:10,904 - Message received from UITest2 (QmYD2DHe): as
+2025-07-07 23:35:25,205 - ChatRoom initialized - Peer: QmUAxkfg, Nickname: peer-QmUAxkfg, Multiaddr: /ip4/0.0.0.0/tcp/44061/p2p/QmUAxkfggJ6Fv6dCyQuiTQyd1Mbdd7SSfQpZEhf3Yox4g3
+2025-07-07 23:35:25,206 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:35:25,207 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:35:27,859 - Message received from peer-QmUAxkfg (QmUAxkfg): hi
+2025-07-07 23:35:27,860 - ERROR: Failed to publish message: Task got bad yield: <class 'trio._core._traps.CancelShieldedCheckpoint'>
+2025-07-07 23:35:37,217 - Message received from UITest2 (QmYD2DHe): asd
+2025-07-07 23:35:37,218 - Message sent by UITest2 to 1 peers: asd
+2025-07-07 23:35:48,616 - Message received from UITest2 (QmYD2DHe): hiiiiiiiiiiiiiiiiiiiiiiiiiiii
+2025-07-07 23:35:48,617 - Message sent by UITest2 to 1 peers: hiiiiiiiiiiiiiiiiiiiiiiiiiiii
+2025-07-07 23:35:59,565 - ERROR: Failed to publish message: attempt to re-acquire an already held Lock
+2025-07-07 23:35:59,566 - Message received from peer-QmUAxkfg (QmUAxkfg): asdasdasdads
+2025-07-07 23:37:28,413 - ChatRoom initialized - Peer: QmVpKhTD, Nickname: peer-QmVpKhTD, Multiaddr: /ip4/0.0.0.0/tcp/46949/p2p/QmVpKhTDMV5g3LA9SSTWjfefb5cmojnmNuc3MAyvAXkhFX
+2025-07-07 23:37:28,413 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:37:28,414 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-07 23:37:35,001 - Message received from peer-QmVpKhTD (QmVpKhTD): last peer
+2025-07-07 23:37:35,002 - ERROR: Failed to publish message: Task got bad yield: <class 'trio._core._traps.CancelShieldedCheckpoint'>
+2025-07-07 23:37:52,311 - Message received from UITest2 (QmYD2DHe): asd
+2025-07-07 23:37:52,312 - Message sent by UITest2 to 2 peers: asd
+2025-07-07 23:39:01,187 - ChatRoom initialized - Peer: QmdvBsqt, Nickname: peer-QmdvBsqt, Multiaddr: /ip4/0.0.0.0/tcp/38037/p2p/QmdvBsqtA2Uv2bTC9Q7rXyjNjSBwadpkXPR8q7wZKoPHK5
+2025-07-07 23:39:01,187 - Subscribed to chat topic: universal-connectivity
+2025-07-07 23:39:01,187 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery

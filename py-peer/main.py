@@ -146,10 +146,18 @@ async def main_async(args):
                     logger.info(f"Joined chat room as '{nickname}'")
                     
                     if not args.headless:
-                        # Start UI mode with trio-asyncio support
-                        ui = NewChatUI(chat_room)
-                        # Now ui.Run() can use asyncio internally while running in trio context
-                        await trio_asyncio.aio_as_trio(ui.run_async)()
+                        if args.ui:
+                            # Start Textual UI mode
+                            logger.info("Starting Textual UI mode...")
+                            ui = NewChatUI(chat_room)
+                            
+                            # Exit trio context to run UI in main thread
+                            # This is the cleanest approach for Textual integration
+                            return ui  # Return UI instance to run after trio exits
+                        else:
+                            # Start simple interactive mode (default)
+                            logger.info("Starting interactive chat mode...")
+                            await chat_room.run_interactive()
                     else:
                         # Run in headless mode
                         logger.info("Running in headless mode. Press Ctrl+C to exit.")
@@ -157,10 +165,12 @@ async def main_async(args):
                             await trio.sleep_forever()
                         except KeyboardInterrupt:
                             logger.info("Shutting down...")
+                    
+                    return None  # No UI instance to return
 
 
 def main():
-    """Main entry point."""
+    """Main entry point."""    
     parser = argparse.ArgumentParser(description="Universal Connectivity Python Peer")
     
     parser.add_argument(
@@ -173,6 +183,12 @@ def main():
         "--headless",
         action="store_true",
         help="Run without chat UI"
+    )
+    
+    parser.add_argument(
+        "--ui",
+        action="store_true",
+        help="Use Textual TUI instead of simple interactive mode"
     )
     
     parser.add_argument(
@@ -206,7 +222,13 @@ def main():
     logger.info("Starting Universal Connectivity Python Peer...")
     
     try:
-        trio.run(main_async, args)
+        ui_instance = trio.run(main_async, args)
+        
+        # If UI instance was returned, run it after trio context
+        if ui_instance and args.ui:
+            logger.info("Starting Textual UI after trio context...")
+            ui_instance.Run()
+            
     except KeyboardInterrupt:
         logger.info("Application terminated by user")
     except Exception as e:

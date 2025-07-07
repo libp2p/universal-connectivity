@@ -7,9 +7,8 @@ It mirrors the functionality and layout of the go-peer UI implementation.
 
 import logging
 import time
-from typing import Optional, List
+from typing import Optional, List, Tuple, Any
 import trio
-import asyncio
 from trio import MemoryReceiveChannel, MemorySendChannel
 
 from textual.app import App, ComposeResult
@@ -102,10 +101,12 @@ class ChatUI(App[None]):
         self.chat_room = chat_room
         self.running = False
         
-        # Use simple queues for thread-safe communication
-        import queue
-        self.message_queue = queue.Queue()
-        self.ui_to_chat_queue = queue.Queue()
+        # Use trio memory channels for async communication
+        self.message_send_channel: Optional[MemorySendChannel] = None
+        self.message_receive_channel: Optional[MemoryReceiveChannel] = None
+        
+        # Simple list for pending messages (thread-safe)
+        self.pending_messages: List[ChatMessage] = []
         
         # Widgets (will be set in compose)
         self.chat_log: Optional[Log] = None
@@ -182,7 +183,10 @@ class ChatUI(App[None]):
         
         # Start background tasks
         self.set_interval(1.0, self.refresh_peers)
-        self.set_interval(0.1, self._check_message_queue)
+        self.set_interval(0.1, self._check_pending_messages)
+        
+        # Start chat room handlers as background worker
+        self.run_worker(self._run_chat_handlers(), exclusive=False)
     
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle input submission."""
@@ -208,21 +212,22 @@ class ChatUI(App[None]):
             await self._show_multiaddr()
             return
         
-        # Send regular message - put in queue for background thread to handle
+        # Send regular message - use simple async call
         try:
-            self.ui_to_chat_queue.put(("message", message))
             # Display in our own chat log immediately
             self.display_self_message(message)
+            
+            # Send message asynchronously using textual's async support
+            self.run_worker(self._send_message_to_chat(message), exclusive=False)
         except Exception as e:
-            self.display_system_message(f"Error queuing message: {e}")
+            self.display_system_message(f"Error sending message: {e}")
     
-    def _check_message_queue(self) -> None:
-        """Check for incoming messages from the chat room."""
-        import queue
+    async def _handle_incoming_messages(self):
+        """Handle incoming messages from the chat room using trio memory channels."""
         try:
-            while True:
+            while self.running and self.message_receive_channel:
                 try:
-                    msg_type, data = self.message_queue.get_nowait()
+                    msg_type, data = await self.message_receive_channel.receive()
                     if msg_type == "chat_message":
                         self.display_chat_message(data)
                     elif msg_type == "system_message":
@@ -230,10 +235,38 @@ class ChatUI(App[None]):
                     elif msg_type == "peers_update":
                         # Peers will be refreshed by the interval timer
                         pass
-                except queue.Empty:
+                except trio.ClosedResourceError:
                     break
+                except Exception as e:
+                    logger.error(f"Error handling incoming message: {e}")
+                    await trio.sleep(0.1)
         except Exception as e:
-            logger.error(f"Error checking message queue: {e}")
+            logger.error(f"Error in message handler: {e}")
+
+    async def _handle_outgoing_messages(self):
+        """Handle messages from UI to chat room using trio memory channels."""
+        try:
+            while self.running and self.ui_to_chat_receive_channel:
+                try:
+                    msg_type, data = await self.ui_to_chat_receive_channel.receive()
+                    if msg_type == "message":
+                        try:
+                            await self.chat_room.publish_message(data)
+                            logger.debug(f"Published message: {data}")
+                        except Exception as e:
+                            logger.error(f"Error publishing message: {e}")
+                            self.display_system_message(f"Failed to send message: {e}")
+                    elif msg_type == "quit":
+                        logger.info("UI requested quit")
+                        self.running = False
+                        break
+                except trio.ClosedResourceError:
+                    break
+                except Exception as e:
+                    logger.error(f"Error handling outgoing message: {e}")
+                    await trio.sleep(0.1)
+        except Exception as e:
+            logger.error(f"Error in outgoing message handler: {e}")
     
     def refresh_peers(self) -> None:
         """Update the peers list display."""
@@ -346,83 +379,81 @@ class ChatUI(App[None]):
     async def action_quit(self) -> None:
         """Quit the application."""
         self.running = False
-        self.ui_to_chat_queue.put(("quit", None))
         self.exit()
     
+    async def run_async(self) -> None:
+        """Run the UI asynchronously - simplified version."""
+        logger.info("Running UI in async mode...")
+        
+        # For now, just run the sync version
+        # This method exists for compatibility but uses the sync approach
+        self.Run()
+
     def Run(self) -> None:
         """Run the UI - matches go-peer ui.Run() method."""
-        # Add message handler to chat room
-        async def message_handler(chat_msg: ChatMessage):
-            if self.message_queue:
-                self.message_queue.put(("chat_message", chat_msg))
+        logger.info("Starting Textual UI...")
         
-        self.chat_room.add_message_handler(message_handler)
-        
-        # Start background threads for networking
-        import threading
-        
-        def run_chat_handlers():
-            """Run chat room message handlers in background thread."""
-            try:
-                logger.info("Starting background chat handlers...")
-                trio.run(self.chat_room.start_message_handlers)
-            except Exception as e:
-                logger.error(f"Error in background chat handlers: {e}")
-        
-        def run_message_publisher():
-            """Handle messages from UI to chat room."""
-            import queue
-            while self.running:
-                try:
-                    try:
-                        msg_type, data = self.ui_to_chat_queue.get_nowait()
-                        if msg_type == "message":
-                            # Publish message in background
-                            def publish_message():
-                                try:
-                                    trio.run(self.chat_room.publish_message, data)
-                                    logger.debug(f"Published message: {data}")
-                                except Exception as e:
-                                    logger.error(f"Error publishing message: {e}")
-                            
-                            pub_thread = threading.Thread(target=publish_message, daemon=True)
-                            pub_thread.start()
-                            
-                        elif msg_type == "quit":
-                            logger.info("UI requested quit")
-                            break
-                    except queue.Empty:
-                        pass
-                    
-                    import time
-                    time.sleep(0.1)  # Small delay to prevent busy loop
-                    
-                except Exception as e:
-                    logger.error(f"Error in message publisher: {e}")
-                    import time
-                    time.sleep(1.0)
-        
-        # Start background threads
-        chat_thread = threading.Thread(target=run_chat_handlers, daemon=True)
-        pub_thread = threading.Thread(target=run_message_publisher, daemon=True)
-        
-        chat_thread.start()
-        pub_thread.start()
-        
-        # Give background threads time to start
-        import time
-        time.sleep(0.5)
-        
-        # Run UI in main thread
-        logger.info("🚀 Starting UI in main thread...")
+        # Run the textual app directly with no arguments
+        # This will work when called from trio.to_thread.run_sync()
         try:
-            super().run()
+            # Use the run method without arguments (sync version)
+            import asyncio
+            
+            # Create new event loop for textual
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                # Run textual app in this new loop
+                loop.run_until_complete(super().run_async())
+            finally:
+                loop.close()
+                
         except KeyboardInterrupt:
             logger.info("UI interrupted by user")
         except Exception as e:
             logger.error(f"Error running UI: {e}")
         finally:
             self.running = False
+
+    async def _run_chat_handlers(self):
+        """Run chat room message handlers in the background."""
+        try:
+            # Add message handler to chat room
+            async def message_handler(chat_msg: ChatMessage):
+                # Add to pending messages for UI thread to process
+                self.pending_messages.append(chat_msg)
+            
+            self.chat_room.add_message_handler(message_handler)
+            
+            # Start the chat room handlers
+            await self.chat_room.start_message_handlers()
+            
+        except Exception as e:
+            logger.error(f"Error in chat handlers: {e}")
+
+    def _check_pending_messages(self) -> None:
+        """Check for pending messages and display them."""
+        try:
+            # Process all pending messages
+            messages_to_process = self.pending_messages.copy()
+            self.pending_messages.clear()
+            
+            for chat_msg in messages_to_process:
+                self.display_chat_message(chat_msg)
+                
+        except Exception as e:
+            logger.error(f"Error checking pending messages: {e}")
+    
+    async def _send_message_to_chat(self, message: str):
+        """Send a message to the chat room."""
+        try:
+            await self.chat_room.publish_message(message)
+            logger.debug(f"Published message: {message}")
+        except Exception as e:
+            logger.error(f"Error publishing message: {e}")
+            # Use call_later to safely update UI from worker context
+            self.call_later(lambda: self.display_system_message(f"Failed to send message: {e}"))
 
 
 def NewChatUI(chat_room: ChatRoom) -> ChatUI:
