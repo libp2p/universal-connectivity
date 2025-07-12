@@ -208,8 +208,7 @@ class HeadlessService:
             
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("Full traceback:")
     
     async def _send_system_message(self, message: str):
         """Send system message to UI queue."""

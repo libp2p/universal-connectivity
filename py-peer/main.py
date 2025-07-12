@@ -18,14 +18,23 @@ from headless import HeadlessService
 from ui import ChatUI
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),  # Console output
-        logging.FileHandler("py-peer.log", mode='a')  # File output
+def setup_logging(ui_mode=False):
+    """Setup logging configuration based on whether UI is active."""
+    handlers = [
+        logging.FileHandler("py-peer.log", mode='a')  # Always log to file
     ]
-)
+    
+    # Only add console handler if not in UI mode
+    if not ui_mode:
+        handlers.append(logging.StreamHandler())
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=handlers,
+        force=True  # Force reconfiguration
+    )
+
 logger = logging.getLogger("main")
 
 
@@ -259,6 +268,9 @@ def main():
     
     args = parser.parse_args()
     
+    # Default logging setup (will be reconfigured based on mode)
+    setup_logging(ui_mode=False)
+    
     # Set debug level if verbose flag is provided
     if args.verbose:
         logger.setLevel(logging.DEBUG)
@@ -268,6 +280,9 @@ def main():
     
     try:
         if args.ui:
+            # Configure logging for UI mode (no console output)
+            setup_logging(ui_mode=True)
+            
             # Special handling for UI mode
             logger.info("Starting in UI mode...")
             
@@ -299,6 +314,9 @@ def main():
             ui.run()
             
         else:
+            # Configure logging for non-UI mode (console output enabled)
+            setup_logging(ui_mode=False)
+            
             # Run the main async function for other modes
             trio.run(main_async, args)
             
