@@ -45,10 +45,11 @@ class HeadlessService:
     Headless service that manages libp2p components and provides data to UI through queues.
     """
     
-    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None):
+    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False):
         self.nickname = nickname
         self.port = port if port != 0 else find_free_port()
         self.connect_addrs = connect_addrs or []
+        self.ui_mode = ui_mode  # Flag to control logging behavior
         
         # libp2p components
         self.host = None
@@ -70,7 +71,8 @@ class HeadlessService:
         self.ready_event = trio.Event()
         self.stop_event = trio.Event()
         
-        logger.info(f"HeadlessService initialized - nickname: {nickname}, port: {self.port}")
+        if not ui_mode:  # Only log initialization if not in UI mode
+            logger.info(f"HeadlessService initialized - nickname: {nickname}, port: {self.port}")
     
     async def start(self):
         """Start the headless service."""
@@ -193,7 +195,9 @@ class HeadlessService:
     async def _handle_chat_message(self, message: ChatMessage):
         """Handle incoming chat messages and forward to UI."""
         try:
-            logger.info(f"📨 Received chat message: {message.message} from {message.sender_nick}")
+            # Log in simplified format only if not in UI mode
+            if not self.ui_mode:
+                logger.info(f"{message.sender_nick}: {message.message}")
             
             # Put message in queue for UI
             await self.message_queue.async_q.put({
@@ -203,8 +207,6 @@ class HeadlessService:
                 'sender_id': message.sender_id,
                 'timestamp': message.timestamp
             })
-            
-            logger.debug(f"📤 Message forwarded to UI queue")
             
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")
@@ -224,8 +226,6 @@ class HeadlessService:
     
     async def _process_messages(self):
         """Process messages from chat room."""
-        logger.info("Starting message processing...")
-        
         try:
             # Start chat room message handlers
             await self.chat_room.start_message_handlers()
@@ -234,7 +234,6 @@ class HeadlessService:
     
     async def _process_outgoing_messages(self):
         """Process outgoing messages from UI to chat room."""
-        logger.info("Starting outgoing message processing...")
         
         while self.running:
             try:
@@ -243,12 +242,13 @@ class HeadlessService:
                     outgoing_data = self.outgoing_queue.sync_q.get_nowait()
                     if outgoing_data and 'message' in outgoing_data:
                         message = outgoing_data['message']
-                        logger.info(f"📤 Sending message from UI: {message}")
                         
                         # Send message through chat room
                         if self.chat_room and self.running:
                             await self.chat_room.publish_message(message)
-                            logger.debug(f"✅ Message sent successfully: {message}")
+                            # Log in simplified format only if not in UI mode
+                            if not self.ui_mode:
+                                logger.info(f"{self.nickname} (you): {message}")
                         else:
                             logger.warning("Cannot send message: chat room not ready")
                             await self._send_system_message("Cannot send message: chat room not ready")
@@ -263,8 +263,6 @@ class HeadlessService:
             except Exception as e:
                 logger.error(f"Error in outgoing message processing: {e}")
                 await trio.sleep(0.1)
-        
-        logger.info("Outgoing message processing stopped")
 
     async def _wait_for_stop(self):
         """Wait for stop signal."""
@@ -281,7 +279,6 @@ class HeadlessService:
                     'message': message,
                     'timestamp': time.time()
                 })
-                logger.debug(f"Message queued for sending: {message}")
             except Exception as e:
                 logger.error(f"Failed to queue message: {e}")
         else:

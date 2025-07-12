@@ -205,10 +205,6 @@ class ChatUI(App[None]):
         try:
             self.headless_service.send_message(message)  # Now synchronous
             
-            # Display own message
-            nickname = self.connection_info.get('nickname', 'Unknown')
-            self.display_chat_message(message, nickname, "self")
-            
         except Exception as e:
             logger.error(f"Failed to send message: {e}")
             self.display_system_message(f"Error sending message: {e}")
