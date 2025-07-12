@@ -82,6 +82,10 @@ class ModularChatUI(App[None]):
     .system-message {
         color: $accent;
     }
+    
+    Log {
+        scrollbar-size: 0 0;
+    }
     """
     
     BINDINGS = [
