@@ -268,3 +268,401 @@
 2025-07-12 16:19:53,357 - Message sent by Aryan to 1 peers: Aap dono yahi pe suru mat ho jaiye
 2025-07-12 16:19:53,359 - Message received from Aryan (QmaTtrP5): Aap dono yahi pe suru mat ho jaiye
 2025-07-12 16:19:53,361 - Message received from Aryan (QmaTtrP5): Aap dono yahi pe suru mat ho jaiye
+2025-07-12 16:32:53,206 - ChatRoom initialized - Peer: Qmcd2RdQ, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/49749/p2p/Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:32:53,206 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:32:53,207 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:33:45,436 - ChatRoom initialized - Peer: QmVkfLzF, Nickname: Priti, Multiaddr: /ip4/0.0.0.0/tcp/46815/p2p/QmVkfLzF7Uza9Yzyb7aNuchnfHmiWG4PLeYGKQ62oJKX2e
+2025-07-12 16:33:45,438 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:33:45,438 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:34:03,273 - ChatRoom initialized - Peer: QmXArXFR, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/59023/p2p/QmXArXFREPS8QMTnxGs6WgtM8K3isxqD1nPtX7G29ASVAw
+2025-07-12 16:34:03,275 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:34:03,276 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:34:19,764 - ChatRoom initialized - Peer: QmQPnvQf, Nickname: Suraj, Multiaddr: /ip4/0.0.0.0/tcp/41965/p2p/QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 16:34:19,765 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:34:19,766 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:34:28,420 - Message received from Suraj (QmQPnvQf): Hello I am Suraj
+2025-07-12 16:34:28,421 - Message sent by Suraj to 1 peers: Hello I am Suraj
+2025-07-12 16:34:28,422 - Message received from Suraj (QmQPnvQf): Hello I am Suraj
+2025-07-12 16:34:28,424 - Message received from Suraj (QmQPnvQf): Hello I am Suraj
+2025-07-12 16:34:28,425 - Message received from Suraj (QmQPnvQf): Hello I am Suraj
+2025-07-12 16:34:37,350 - Message received from Aryan (QmXArXFR): Its Aryan
+2025-07-12 16:34:37,351 - Message sent by Aryan to 1 peers: Its Aryan
+2025-07-12 16:34:37,352 - Message received from Aryan (QmXArXFR): Its Aryan
+2025-07-12 16:34:37,354 - Message received from Aryan (QmXArXFR): Its Aryan
+2025-07-12 16:34:37,354 - Message received from Aryan (QmXArXFR): Its Aryan
+2025-07-12 16:34:53,806 - Message received from Priti (QmVkfLzF): Lets meet Priti Ji
+2025-07-12 16:34:53,806 - Message sent by Priti to 1 peers: Lets meet Priti Ji
+2025-07-12 16:34:53,807 - Message received from Priti (QmVkfLzF): Lets meet Priti Ji
+2025-07-12 16:34:53,810 - Message received from Priti (QmVkfLzF): Lets meet Priti Ji
+2025-07-12 16:34:53,810 - Message received from Priti (QmVkfLzF): Lets meet Priti Ji
+2025-07-12 16:35:04,905 - Message received from Sumanjeet (Qmcd2RdQ): I am Sumanjeet
+2025-07-12 16:35:04,905 - Message sent by Sumanjeet to 3 peers: I am Sumanjeet
+2025-07-12 16:35:04,906 - Message received from Sumanjeet (Qmcd2RdQ): I am Sumanjeet
+2025-07-12 16:35:04,906 - Message received from Sumanjeet (Qmcd2RdQ): I am Sumanjeet
+2025-07-12 16:35:04,907 - Message received from Sumanjeet (Qmcd2RdQ): I am Sumanjeet
+2025-07-12 16:41:17,739 - ChatRoom initialized - Peer: QmUg1j9W, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:41:17,740 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:41:17,740 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:41:51,256 - ChatRoom initialized - Peer: QmPX13X9, Nickname: Priti, Multiaddr: /ip4/0.0.0.0/tcp/49723/p2p/QmPX13X9UzwF9jUFT9taPi1SZLUtHsVHN6km6u34wf4GiY
+2025-07-12 16:41:51,257 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:41:51,257 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:41:56,585 - Message received from Priti (QmPX13X9): hi
+2025-07-12 16:41:56,586 - Message sent by Priti to 1 peers: hi
+2025-07-12 16:41:56,587 - Message received from Priti (QmPX13X9): hi
+2025-07-12 16:42:01,656 - Message received from Sumanjeet (QmUg1j9W): asd
+2025-07-12 16:42:01,657 - Message sent by Sumanjeet to 1 peers: asd
+2025-07-12 16:42:01,658 - Message received from Sumanjeet (QmUg1j9W): asd
+2025-07-12 16:42:59,691 - ChatRoom initialized - Peer: QmTsmSqu, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/56339/p2p/QmTsmSquppwskktcsehx7G1yNrA1zw3CFGGwZRkcmQ9t28
+2025-07-12 16:42:59,692 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:42:59,692 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:43:05,528 - Message received from Aryan (QmTsmSqu): hi
+2025-07-12 16:43:05,528 - Message sent by Aryan to 1 peers: hi
+2025-07-12 16:43:05,530 - Message received from Aryan (QmTsmSqu): hi
+2025-07-12 16:43:05,531 - Message received from Aryan (QmTsmSqu): hi
+2025-07-12 16:43:08,143 - Message received from Aryan (QmTsmSqu): asd
+2025-07-12 16:43:08,143 - Message sent by Aryan to 1 peers: asd
+2025-07-12 16:43:08,144 - Message received from Aryan (QmTsmSqu): asd
+2025-07-12 16:43:08,146 - Message received from Aryan (QmTsmSqu): asd
+2025-07-12 16:47:47,466 - ChatRoom initialized - Peer: Qmd2mjtN, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/52551/p2p/Qmd2mjtNpLw3NtLtbzJh4gHWiAs4MvYUaVtnHD39RJJD3x
+2025-07-12 16:47:47,468 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:47:47,468 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:48:37,657 - ChatRoom initialized - Peer: Qmb7a9Rd, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/55329/p2p/Qmb7a9Rd64zwzqqQU5BgZtoEUCQAgsxeR9qn6LVEebuQ3A
+2025-07-12 16:48:37,658 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:48:37,659 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:48:40,073 - Message received from Aryan (Qmb7a9Rd): hi
+2025-07-12 16:48:40,073 - Message sent by Aryan to 1 peers: hi
+2025-07-12 16:48:40,075 - Message received from Aryan (Qmb7a9Rd): hi
+2025-07-12 16:48:40,077 - Message received from Aryan (Qmb7a9Rd): hi
+2025-07-12 16:48:42,192 - Message received from Aryan (Qmb7a9Rd): ihi
+2025-07-12 16:48:42,192 - Message sent by Aryan to 1 peers: ihi
+2025-07-12 16:48:42,194 - Message received from Aryan (Qmb7a9Rd): ihi
+2025-07-12 16:48:42,195 - Message received from Aryan (Qmb7a9Rd): ihi
+2025-07-12 16:51:33,970 - ChatRoom initialized - Peer: QmYYeMbJ, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/56987/p2p/QmYYeMbJkpF6HDfT4Nb1rgcD8rsCfpKjZwYtCkFPz5qK9Q
+2025-07-12 16:51:33,971 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:51:33,972 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:52:43,301 - ChatRoom initialized - Peer: Qmc6f6Vo, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/52017/p2p/Qmc6f6VojZoVexfvuqhZcrfd1FsrSs9n6cF7FDXFSFpHaf
+2025-07-12 16:52:43,302 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:52:43,302 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:53:31,833 - ChatRoom initialized - Peer: QmfXbEjZ, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/37593/p2p/QmfXbEjZU36jK1XoMgJsioMnKQazvNUDRA9NF6hJdBfG9r
+2025-07-12 16:53:31,834 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:53:31,834 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:53:35,765 - Message received from Aryan (QmfXbEjZ): hi
+2025-07-12 16:53:35,772 - Message sent by Aryan to 1 peers: hi
+2025-07-12 16:53:35,773 - Message received from Aryan (QmfXbEjZ): hi
+2025-07-12 16:53:35,776 - Message received from Aryan (QmfXbEjZ): hi
+2025-07-12 16:53:37,181 - Message received from Aryan (QmfXbEjZ): asd
+2025-07-12 16:53:37,195 - Message sent by Aryan to 1 peers: asd
+2025-07-12 16:53:37,196 - Message received from Aryan (QmfXbEjZ): asd
+2025-07-12 16:53:37,198 - Message received from Aryan (QmfXbEjZ): asd
+2025-07-12 16:56:58,780 - ChatRoom initialized - Peer: QmXRNwtX, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/45909/p2p/QmXRNwtXoegjBRD4xp2PXmrV4tkw7buK5aXPVLY33uw8Gq
+2025-07-12 16:56:58,782 - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:56:58,782 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:57:01,516 - Message received from Aryan (QmXRNwtX): asd
+2025-07-12 16:57:01,517 - Message sent by Aryan to 1 peers: asd
+2025-07-12 16:57:01,518 - Message received from Aryan (QmXRNwtX): asd
+2025-07-12 16:57:01,521 - Message received from Aryan (QmXRNwtX): asd
+2025-07-12 16:57:02,428 - Message received from Aryan (QmXRNwtX): asd
+2025-07-12 16:57:02,429 - Message sent by Aryan to 1 peers: asd
+2025-07-12 16:57:02,430 - Message received from Aryan (QmXRNwtX): asd
+2025-07-12 16:57:02,432 - Message received from Aryan (QmXRNwtX): asd
+2025-07-12 16:57:04,038 - Message received from Aryan (QmXRNwtX): sad
+2025-07-12 16:57:04,039 - Message sent by Aryan to 1 peers: sad
+2025-07-12 16:57:04,041 - Message received from Aryan (QmXRNwtX): sad
+2025-07-12 16:57:04,042 - Message received from Aryan (QmXRNwtX): sad
+2025-07-12 16:57:09,468 - Message received from Aryan (QmXRNwtX): last msg
+2025-07-12 16:57:09,468 - Message sent by Aryan to 1 peers: last msg
+2025-07-12 16:57:09,469 - Message received from Aryan (QmXRNwtX): last msg
+2025-07-12 16:57:09,471 - Message received from Aryan (QmXRNwtX): last msg
+2025-07-12 16:59:42,836 - Message received from Sumanjeet (QmUg1j9W): hello
+2025-07-12 16:59:42,837 - Message sent by Sumanjeet to 2 peers: hello
+2025-07-12 16:59:42,838 - Message received from Sumanjeet (QmUg1j9W): hello
+2025-07-12 16:59:42,838 - Message received from Sumanjeet (QmUg1j9W): hello
+2025-07-12 17:10:16,832 - ChatRoom initialized - Peer: QmdqVkbV, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/48545/p2p/QmdqVkbVVLVWEHuEakHFJ3MyrdQhrcKtf329zjwVyX6gh5
+2025-07-12 17:10:16,833 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:10:16,834 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:11:28,549 - ChatRoom initialized - Peer: QmYRKsg7, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/33553/p2p/QmYRKsg7Jwmrc2uTVyzjGnjCrpCofkTsmF9gwYCw9DaAaA
+2025-07-12 17:11:28,550 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:11:28,550 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:13:20,272 - ChatRoom initialized - Peer: QmRdumhu, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/57379/p2p/QmRdumhuvpQkb7QjDcsd3mS4jpw9KjJ95J2wJjJrGc63W1
+2025-07-12 17:13:20,273 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:13:20,274 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:13:26,917 - Message received from Aryan (QmRdumhu): hi
+2025-07-12 17:13:26,917 - Message sent by Aryan to 1 peers: hi
+2025-07-12 17:13:26,918 - Message received from Aryan (QmRdumhu): hi
+2025-07-12 17:13:26,920 - Message received from Aryan (QmRdumhu): hi
+2025-07-12 17:15:07,475 - ChatRoom initialized - Peer: QmP3a27v, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/36901/p2p/QmP3a27vKDHHguN6aQs1suUkvcrBwYYa8iSKHLsAzC9G6a
+2025-07-12 17:15:07,476 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:15:07,477 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:17:54,416 - ChatRoom initialized - Peer: Qmf5LKfH, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/60891/p2p/Qmf5LKfHguQxq99kcXhY7DfrZCrJAZBXB6Z6nzwDGQNwxX
+2025-07-12 17:17:54,417 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:17:54,418 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:18:01,349 - Message received from Aryan (Qmf5LKfH): hi
+2025-07-12 17:18:01,349 - Message sent by Aryan to 1 peers: hi
+2025-07-12 17:18:01,350 - Message received from Aryan (Qmf5LKfH): hi
+2025-07-12 17:18:01,353 - Message received from Aryan (Qmf5LKfH): hi
+2025-07-12 17:18:01,953 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:01,953 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:01,955 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:01,957 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:02,457 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:02,458 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:02,459 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:02,461 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:02,865 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:02,865 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:02,867 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:02,870 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:03,187 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:03,187 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:03,189 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:03,190 - Message received from Aryan (Qmf5LKfH): asd
+2025-07-12 17:18:03,501 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:03,501 - Message sent by Aryan to 1 peers: sd
+2025-07-12 17:18:03,502 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:03,504 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:03,805 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:03,805 - Message sent by Aryan to 1 peers: sd
+2025-07-12 17:18:03,806 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:03,808 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:04,223 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:04,224 - Message sent by Aryan to 1 peers: ds
+2025-07-12 17:18:04,226 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:04,228 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:04,527 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:04,528 - Message sent by Aryan to 1 peers: ds
+2025-07-12 17:18:04,529 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:04,531 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:04,831 - Message received from Aryan (Qmf5LKfH): d
+2025-07-12 17:18:04,831 - Message sent by Aryan to 1 peers: d
+2025-07-12 17:18:04,833 - Message received from Aryan (Qmf5LKfH): d
+2025-07-12 17:18:04,834 - Message received from Aryan (Qmf5LKfH): d
+2025-07-12 17:18:05,136 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:05,136 - Message sent by Aryan to 1 peers: sd
+2025-07-12 17:18:05,137 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:05,139 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:05,540 - Message received from Aryan (Qmf5LKfH): sds
+2025-07-12 17:18:05,541 - Message sent by Aryan to 1 peers: sds
+2025-07-12 17:18:05,542 - Message received from Aryan (Qmf5LKfH): sds
+2025-07-12 17:18:05,544 - Message received from Aryan (Qmf5LKfH): sds
+2025-07-12 17:18:05,946 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:05,947 - Message sent by Aryan to 1 peers: ds
+2025-07-12 17:18:05,948 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:05,950 - Message received from Aryan (Qmf5LKfH): ds
+2025-07-12 17:18:06,361 - Message received from Aryan (Qmf5LKfH): dsd
+2025-07-12 17:18:06,362 - Message sent by Aryan to 1 peers: dsd
+2025-07-12 17:18:06,364 - Message received from Aryan (Qmf5LKfH): dsd
+2025-07-12 17:18:06,365 - Message received from Aryan (Qmf5LKfH): dsd
+2025-07-12 17:18:06,866 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:06,866 - Message sent by Aryan to 1 peers: sd
+2025-07-12 17:18:06,868 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:06,869 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:07,271 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:07,272 - Message sent by Aryan to 1 peers: sd
+2025-07-12 17:18:07,273 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:07,275 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:07,791 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:07,791 - Message sent by Aryan to 1 peers: sd
+2025-07-12 17:18:07,793 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:07,794 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:08,396 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:08,396 - Message sent by Aryan to 1 peers: sd
+2025-07-12 17:18:08,398 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:08,404 - Message received from Aryan (Qmf5LKfH): sd
+2025-07-12 17:18:19,866 - Message received from Aryan (Qmf5LKfH): ads/quit
+2025-07-12 17:18:19,866 - Message sent by Aryan to 1 peers: ads/quit
+2025-07-12 17:18:19,867 - Message received from Aryan (Qmf5LKfH): ads/quit
+2025-07-12 17:18:19,869 - Message received from Aryan (Qmf5LKfH): ads/quit
+2025-07-12 17:18:30,891 - ChatRoom initialized - Peer: QmV6yDru, Nickname: Aryan, Multiaddr: /ip4/0.0.0.0/tcp/49297/p2p/QmV6yDruYQSC8zSCXYQdDVSro1L8KxjdnA3u6z7pUvtink
+2025-07-12 17:18:30,892 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:18:30,892 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:18:32,607 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:32,607 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:32,608 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:32,610 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:33,817 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:33,817 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:33,831 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:33,833 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:34,422 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:34,422 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:34,423 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:34,426 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:34,926 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:34,927 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:34,928 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:34,930 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:35,533 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:35,533 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:35,534 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:35,536 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,038 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,039 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:36,040 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,043 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,544 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,545 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:36,547 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,548 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,954 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,954 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:36,956 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:36,958 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:37,559 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:37,559 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:37,560 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:37,562 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:38,072 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:38,072 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:38,074 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:38,075 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:38,678 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:38,678 - Message sent by Aryan to 1 peers: asd
+2025-07-12 17:18:38,680 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:38,681 - Message received from Aryan (QmV6yDru): asd
+2025-07-12 17:18:39,991 - Message received from Aryan (QmV6yDru): s
+2025-07-12 17:18:39,992 - Message sent by Aryan to 1 peers: s
+2025-07-12 17:18:39,993 - Message received from Aryan (QmV6yDru): s
+2025-07-12 17:18:39,996 - Message received from Aryan (QmV6yDru): s
+2025-07-12 17:18:41,111 - Message received from Aryan (QmV6yDru): ddddddd
+2025-07-12 17:18:41,111 - Message sent by Aryan to 1 peers: ddddddd
+2025-07-12 17:18:41,113 - Message received from Aryan (QmV6yDru): ddddddd
+2025-07-12 17:18:41,114 - Message received from Aryan (QmV6yDru): ddddddd
+2025-07-12 17:18:41,718 - Message received from Aryan (QmV6yDru): s
+2025-07-12 17:18:41,718 - Message sent by Aryan to 1 peers: s
+2025-07-12 17:18:41,719 - Message received from Aryan (QmV6yDru): s
+2025-07-12 17:18:41,721 - Message received from Aryan (QmV6yDru): s
+2025-07-12 17:18:42,122 - Message received from Aryan (QmV6yDru): as
+2025-07-12 17:18:42,122 - Message sent by Aryan to 1 peers: as
+2025-07-12 17:18:42,124 - Message received from Aryan (QmV6yDru): as
+2025-07-12 17:18:42,126 - Message received from Aryan (QmV6yDru): as
+2025-07-12 17:18:51,659 - ChatRoom initialized - Peer: Qmckn7cL, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/39475/p2p/Qmckn7cLZCiyJNPRukz72WcDxJsU97ks5qEgT2hMSZnNgz
+2025-07-12 17:18:51,659 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:18:51,659 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:18:54,403 - Message sent by Sumanjeet to 0 peers: sad
+2025-07-12 17:18:54,403 - Message received from Sumanjeet (Qmckn7cL): sad
+2025-07-12 17:18:55,009 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:18:55,009 - Message received from Sumanjeet (Qmckn7cL): asd
+2025-07-12 17:18:55,522 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:18:55,522 - Message received from Sumanjeet (Qmckn7cL): asd
+2025-07-12 17:18:56,035 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:18:56,035 - Message received from Sumanjeet (Qmckn7cL): asd
+2025-07-12 17:18:56,745 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:18:56,745 - Message received from Sumanjeet (Qmckn7cL): asd
+2025-07-12 17:18:57,852 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:18:57,852 - Message received from Sumanjeet (Qmckn7cL): asd
+2025-07-12 17:18:58,359 - Message sent by Sumanjeet to 0 peers: sad
+2025-07-12 17:18:58,359 - Message received from Sumanjeet (Qmckn7cL): sad
+2025-07-12 17:18:58,666 - Message sent by Sumanjeet to 0 peers: s
+2025-07-12 17:18:58,667 - Message received from Sumanjeet (Qmckn7cL): s
+2025-07-12 17:18:59,073 - Message sent by Sumanjeet to 0 peers: dasa
+2025-07-12 17:18:59,074 - Message received from Sumanjeet (Qmckn7cL): dasa
+2025-07-12 17:19:20,068 - Message sent by Sumanjeet to 0 peers: dsad/quit
+2025-07-12 17:19:20,068 - Message received from Sumanjeet (Qmckn7cL): dsad/quit
+2025-07-12 17:19:31,833 - ChatRoom initialized - Peer: QmS7Mztv, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/38193/p2p/QmS7MztvMTq3d7XFvSKMtQWbFYsCoSPiA48HyR2pF36n5X
+2025-07-12 17:19:31,833 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:19:31,833 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:22:21,103 - ChatRoom initialized - Peer: QmNwkVaE, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/46491/p2p/QmNwkVaERq4rUuCDdBYdz9bbd98s3HomcAKmKu9hALZzPJ
+2025-07-12 17:22:21,103 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:22:21,103 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:22:26,663 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:22:26,663 - Message received from Sumanjeet (QmNwkVaE): asd
+2025-07-12 17:22:27,168 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:22:27,168 - Message received from Sumanjeet (QmNwkVaE): asd
+2025-07-12 17:22:27,672 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:22:27,672 - Message received from Sumanjeet (QmNwkVaE): asd
+2025-07-12 17:22:28,178 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:22:28,178 - Message received from Sumanjeet (QmNwkVaE): asd
+2025-07-12 17:22:29,184 - Message sent by Sumanjeet to 0 peers: sdf
+2025-07-12 17:22:29,184 - Message received from Sumanjeet (QmNwkVaE): sdf
+2025-07-12 17:22:30,492 - Message sent by Sumanjeet to 0 peers: d
+2025-07-12 17:22:30,492 - Message received from Sumanjeet (QmNwkVaE): d
+2025-07-12 17:22:31,003 - Message sent by Sumanjeet to 0 peers: s
+2025-07-12 17:22:31,003 - Message received from Sumanjeet (QmNwkVaE): s
+2025-07-12 17:22:31,609 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:22:31,609 - Message received from Sumanjeet (QmNwkVaE): asd
+2025-07-12 17:22:32,118 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:22:32,118 - Message received from Sumanjeet (QmNwkVaE): asd
+2025-07-12 17:22:32,527 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:22:32,527 - Message received from Sumanjeet (QmNwkVaE): asd
+2025-07-12 17:22:32,931 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:22:32,932 - Message received from Sumanjeet (QmNwkVaE): asd
+2025-07-12 17:22:33,840 - Message sent by Sumanjeet to 0 peers: sdf
+2025-07-12 17:22:33,841 - Message received from Sumanjeet (QmNwkVaE): sdf
+2025-07-12 17:22:34,747 - Message sent by Sumanjeet to 0 peers: sd
+2025-07-12 17:22:34,748 - Message received from Sumanjeet (QmNwkVaE): sd
+2025-07-12 17:22:35,252 - Message sent by Sumanjeet to 0 peers: ds
+2025-07-12 17:22:35,252 - Message received from Sumanjeet (QmNwkVaE): ds
+2025-07-12 17:22:35,656 - Message sent by Sumanjeet to 0 peers: ds
+2025-07-12 17:22:35,656 - Message received from Sumanjeet (QmNwkVaE): ds
+2025-07-12 17:22:35,959 - Message sent by Sumanjeet to 0 peers: ds
+2025-07-12 17:22:35,960 - Message received from Sumanjeet (QmNwkVaE): ds
+2025-07-12 17:22:36,263 - Message sent by Sumanjeet to 0 peers: ds
+2025-07-12 17:22:36,263 - Message received from Sumanjeet (QmNwkVaE): ds
+2025-07-12 17:22:36,672 - Message sent by Sumanjeet to 0 peers: sd
+2025-07-12 17:22:36,672 - Message received from Sumanjeet (QmNwkVaE): sd
+2025-07-12 17:22:47,142 - Message sent by Sumanjeet to 0 peers: k
+2025-07-12 17:22:47,142 - Message received from Sumanjeet (QmNwkVaE): k
+2025-07-12 17:31:08,831 - ChatRoom initialized - Peer: Qmcx42eb, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/38115/p2p/Qmcx42ebq9jtwpRqyrpsRUTFozvPQQHbrCsDnadfdiXgFc
+2025-07-12 17:31:08,831 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:31:08,832 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:31:12,680 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:31:12,680 - Message received from Sumanjeet (Qmcx42eb): asd
+2025-07-12 17:31:14,894 - Message sent by Sumanjeet to 0 peers: asd
+2025-07-12 17:31:14,894 - Message received from Sumanjeet (Qmcx42eb): asd
+2025-07-12 17:31:16,204 - Message sent by Sumanjeet to 0 peers: dsf
+2025-07-12 17:31:16,204 - Message received from Sumanjeet (Qmcx42eb): dsf
+2025-07-12 17:31:16,809 - Message sent by Sumanjeet to 0 peers: d
+2025-07-12 17:31:16,809 - Message received from Sumanjeet (Qmcx42eb): d
+2025-07-12 17:31:17,128 - Message sent by Sumanjeet to 0 peers: d
+2025-07-12 17:31:17,128 - Message received from Sumanjeet (Qmcx42eb): d
+2025-07-12 17:31:17,434 - Message sent by Sumanjeet to 0 peers: d
+2025-07-12 17:31:17,435 - Message received from Sumanjeet (Qmcx42eb): d
+2025-07-12 17:31:17,738 - Message sent by Sumanjeet to 0 peers: d
+2025-07-12 17:31:17,739 - Message received from Sumanjeet (Qmcx42eb): d
+2025-07-12 17:31:17,952 - Message sent by Sumanjeet to 0 peers: d
+2025-07-12 17:31:17,953 - Message received from Sumanjeet (Qmcx42eb): d
+2025-07-12 17:31:18,156 - Message sent by Sumanjeet to 0 peers: dd
+2025-07-12 17:31:18,156 - Message received from Sumanjeet (Qmcx42eb): dd
+2025-07-12 17:31:18,465 - Message sent by Sumanjeet to 0 peers: ds
+2025-07-12 17:31:18,466 - Message received from Sumanjeet (Qmcx42eb): ds
+2025-07-12 17:31:18,888 - Message sent by Sumanjeet to 0 peers: df
+2025-07-12 17:31:18,889 - Message received from Sumanjeet (Qmcx42eb): df
+2025-07-12 17:31:19,192 - Message sent by Sumanjeet to 0 peers: sfd
+2025-07-12 17:31:19,192 - Message received from Sumanjeet (Qmcx42eb): sfd
+2025-07-12 17:31:19,497 - Message sent by Sumanjeet to 0 peers: sd
+2025-07-12 17:31:19,498 - Message received from Sumanjeet (Qmcx42eb): sd
+2025-07-12 17:31:19,904 - Message sent by Sumanjeet to 0 peers: f
+2025-07-12 17:31:19,904 - Message received from Sumanjeet (Qmcx42eb): f
+2025-07-12 17:31:20,207 - Message sent by Sumanjeet to 0 peers: sdf
+2025-07-12 17:31:20,208 - Message received from Sumanjeet (Qmcx42eb): sdf
+2025-07-12 17:31:20,712 - Message sent by Sumanjeet to 0 peers: sdf
+2025-07-12 17:31:20,712 - Message received from Sumanjeet (Qmcx42eb): sdf
+2025-07-12 17:31:21,517 - Message sent by Sumanjeet to 0 peers: sfd
+2025-07-12 17:31:21,517 - Message received from Sumanjeet (Qmcx42eb): sfd
+2025-07-12 17:32:03,854 - ChatRoom initialized - Peer: QmXZzsaX, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/37029/p2p/QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3
+2025-07-12 17:32:03,855 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:32:03,856 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:32:09,283 - Message received from Sumanjeet (QmXZzsaX): asd
+2025-07-12 17:32:09,283 - Message sent by Sumanjeet to 1 peers: asd
+2025-07-12 17:32:09,290 - Message received from Sumanjeet (QmXZzsaX): asd
+2025-07-12 17:32:11,497 - Message received from Sumanjeet (QmXZzsaX): fes
+2025-07-12 17:32:11,497 - Message sent by Sumanjeet to 1 peers: fes
+2025-07-12 17:32:11,500 - Message received from Sumanjeet (QmXZzsaX): fes
+2025-07-12 17:33:09,359 - ChatRoom initialized - Peer: QmRukyCL, Nickname: Priti, Multiaddr: /ip4/0.0.0.0/tcp/52913/p2p/QmRukyCLDPrVxLwyou7TPZKf4ZdqLLf7WsxESrbBZFL1h5
+2025-07-12 17:33:09,361 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:33:09,361 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:36:56,248 - ChatRoom initialized - Peer: QmRpmRbi, Nickname: Sumanjeet, Multiaddr: /ip4/0.0.0.0/tcp/56913/p2p/QmRpmRbizRC2it321813Rq64vTKTDER3Sdw7H5Vhk99ay8
+2025-07-12 17:36:56,249 - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:36:56,250 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:36:58,873 - Message received from Sumanjeet (QmRpmRbi): hi
+2025-07-12 17:36:58,873 - Message sent by Sumanjeet to 1 peers: hi
+2025-07-12 17:36:58,876 - Message received from Sumanjeet (QmRpmRbi): hi
+2025-07-12 17:37:01,284 - Message received from Sumanjeet (QmRpmRbi): asd
+2025-07-12 17:37:01,285 - Message sent by Sumanjeet to 1 peers: asd
+2025-07-12 17:37:01,287 - Message received from Sumanjeet (QmRpmRbi): asd
+2025-07-12 17:37:57,319 - Message received from Suraj (QmQPnvQf): asd
+2025-07-12 17:37:57,319 - Message sent by Suraj to 1 peers: asd
+2025-07-12 17:37:57,324 - Message received from Suraj (QmQPnvQf): asd
+2025-07-12 17:37:58,734 - Message received from Suraj (QmQPnvQf): dd
+2025-07-12 17:37:58,734 - Message sent by Suraj to 1 peers: dd
+2025-07-12 17:37:58,736 - Message received from Suraj (QmQPnvQf): dd

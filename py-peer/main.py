@@ -15,7 +15,7 @@ import threading
 from typing import Optional
 
 from headless import HeadlessService
-from ui_modular import ModularChatUI
+from ui import ChatUI
 
 # Configure logging
 logging.basicConfig(
@@ -289,7 +289,7 @@ def main():
             logger.info("Starting Textual UI in main thread...")
             
             # Create and run UI in main thread
-            ui = ModularChatUI(
+            ui = ChatUI(
                 headless_service=headless_service,
                 message_queue=headless_service.get_message_queue(),
                 system_queue=headless_service.get_system_queue()

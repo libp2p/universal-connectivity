@@ -24494,3 +24494,1193 @@
 2025-07-12 16:19:53,356 - headless - INFO - 📨 Received chat message: Aap dono yahi pe suru mat ho jaiye from Aryan
 2025-07-12 16:19:53,359 - headless - INFO - 📨 Received chat message: Aap dono yahi pe suru mat ho jaiye from Aryan
 2025-07-12 16:19:53,361 - headless - INFO - 📨 Received chat message: Aap dono yahi pe suru mat ho jaiye from Aryan
+2025-07-12 16:32:53,089 - main - INFO - Starting in UI mode...
+2025-07-12 16:32:53,089 - headless - INFO - HeadlessService initialized - nickname: Sumanjeet, port: 49749
+2025-07-12 16:32:53,089 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:32:53,090 - headless - INFO - Starting headless service...
+2025-07-12 16:32:53,203 - headless - INFO - Host created with PeerID: Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:32:53,203 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/49749
+2025-07-12 16:32:53,203 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/49749/p2p/Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:32:53,205 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:32:53,206 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:32:53,206 - headless - INFO - Pubsub ready.
+2025-07-12 16:32:53,206 - headless - INFO - Setting up chat room...
+2025-07-12 16:32:53,206 - chatroom - INFO - ChatRoom initialized for peer Qmcd2RdQ... with nickname 'Sumanjeet'
+2025-07-12 16:32:53,206 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:32:53,207 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:32:53,207 - headless - INFO - Chat room setup complete for 'Sumanjeet'
+2025-07-12 16:32:53,207 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:32:53,207 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:32:53,207 - headless - INFO - Starting message processing...
+2025-07-12 16:32:53,290 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:32:53,290 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:32:53,298 - ui_modular - INFO - ModularChatUI initialized for peer Qmcd2RdQ...
+2025-07-12 16:32:53,315 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:33:43,160 - main - INFO - Starting in UI mode...
+2025-07-12 16:33:43,160 - headless - INFO - HeadlessService initialized - nickname: Priti, port: 46815
+2025-07-12 16:33:43,160 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:33:43,161 - headless - INFO - Starting headless service...
+2025-07-12 16:33:43,377 - headless - INFO - Host created with PeerID: QmVkfLzF7Uza9Yzyb7aNuchnfHmiWG4PLeYGKQ62oJKX2e
+2025-07-12 16:33:43,377 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/46815
+2025-07-12 16:33:43,377 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/46815/p2p/QmVkfLzF7Uza9Yzyb7aNuchnfHmiWG4PLeYGKQ62oJKX2e
+2025-07-12 16:33:43,379 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:33:43,379 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:33:43,379 - headless - INFO - Pubsub ready.
+2025-07-12 16:33:43,380 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/49749/p2p/Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:33:43,380 - headless - INFO - Connecting to peer: Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:33:43,432 - headless - INFO - ✅ Successfully connected to peer: Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:33:45,435 - headless - INFO - PubSub peers after connection: ['Qmcd2RdQ']
+2025-07-12 16:33:45,436 - headless - INFO - Setting up chat room...
+2025-07-12 16:33:45,436 - chatroom - INFO - ChatRoom initialized for peer QmVkfLzF... with nickname 'Priti'
+2025-07-12 16:33:45,437 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:33:45,438 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:33:45,439 - headless - INFO - Chat room setup complete for 'Priti'
+2025-07-12 16:33:45,439 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:33:45,439 - headless - INFO - Starting message processing...
+2025-07-12 16:33:45,439 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:33:45,463 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:33:45,463 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:33:45,469 - ui_modular - INFO - ModularChatUI initialized for peer QmVkfLzF...
+2025-07-12 16:33:45,486 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:34:00,844 - main - INFO - Starting in UI mode...
+2025-07-12 16:34:00,844 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 59023
+2025-07-12 16:34:00,845 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:34:00,845 - headless - INFO - Starting headless service...
+2025-07-12 16:34:01,233 - headless - INFO - Host created with PeerID: QmXArXFREPS8QMTnxGs6WgtM8K3isxqD1nPtX7G29ASVAw
+2025-07-12 16:34:01,234 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/59023
+2025-07-12 16:34:01,234 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/59023/p2p/QmXArXFREPS8QMTnxGs6WgtM8K3isxqD1nPtX7G29ASVAw
+2025-07-12 16:34:01,235 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:34:01,236 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:34:01,236 - headless - INFO - Pubsub ready.
+2025-07-12 16:34:01,236 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/49749/p2p/Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:34:01,237 - headless - INFO - Connecting to peer: Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:34:01,268 - headless - INFO - ✅ Successfully connected to peer: Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:34:03,272 - headless - INFO - PubSub peers after connection: ['Qmcd2RdQ']
+2025-07-12 16:34:03,272 - headless - INFO - Setting up chat room...
+2025-07-12 16:34:03,273 - chatroom - INFO - ChatRoom initialized for peer QmXArXFR... with nickname 'Aryan'
+2025-07-12 16:34:03,274 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:34:03,276 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:34:03,276 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 16:34:03,276 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:34:03,277 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:34:03,277 - headless - INFO - Starting message processing...
+2025-07-12 16:34:03,348 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:34:03,348 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:34:03,356 - ui_modular - INFO - ModularChatUI initialized for peer QmXArXFR...
+2025-07-12 16:34:03,383 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:34:17,542 - main - INFO - Starting Universal Connectivity Python Peer...
+2025-07-12 16:34:17,542 - headless - INFO - HeadlessService initialized - nickname: Suraj, port: 41965
+2025-07-12 16:34:17,542 - main - INFO - Starting headless service in background...
+2025-07-12 16:34:17,542 - headless - INFO - Starting headless service...
+2025-07-12 16:34:17,727 - headless - INFO - Host created with PeerID: QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 16:34:17,727 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/41965
+2025-07-12 16:34:17,727 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/41965/p2p/QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 16:34:17,729 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:34:17,729 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:34:17,730 - headless - INFO - Pubsub ready.
+2025-07-12 16:34:17,730 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/49749/p2p/Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:34:17,730 - headless - INFO - Connecting to peer: Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:34:17,759 - headless - INFO - ✅ Successfully connected to peer: Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD
+2025-07-12 16:34:19,762 - headless - INFO - PubSub peers after connection: ['Qmcd2RdQ']
+2025-07-12 16:34:19,763 - headless - INFO - Setting up chat room...
+2025-07-12 16:34:19,763 - chatroom - INFO - ChatRoom initialized for peer QmQPnvQf... with nickname 'Suraj'
+2025-07-12 16:34:19,765 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:34:19,766 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:34:19,766 - headless - INFO - Chat room setup complete for 'Suraj'
+2025-07-12 16:34:19,766 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:34:19,767 - main - INFO - ✅ Headless service is ready, starting UI...
+2025-07-12 16:34:19,767 - headless - INFO - Starting message processing...
+2025-07-12 16:34:19,767 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:34:19,768 - main - INFO - 📡 Starting message queue monitoring...
+2025-07-12 16:34:19,768 - main - INFO - 📡 Got system message from queue: {'type': 'system_message', 'message': 'Connected to peer: Qmcd2RdQ', 'timestamp': 241141.70241727625}
+2025-07-12 16:34:19,869 - main - INFO - 📡 Got system message from queue: {'type': 'system_message', 'message': "Joined chat room as 'Suraj'", 'timestamp': 241141.70600438523}
+2025-07-12 16:34:28,417 - headless - INFO - 📤 Sending message from UI: Hello I am Suraj
+2025-07-12 16:34:28,420 - headless - INFO - 📨 Received chat message: Hello I am Suraj from Suraj
+2025-07-12 16:34:28,421 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'Hello I am Suraj', 'sender_nick': 'Suraj', 'sender_id': 'QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu', 'timestamp': 1752318268.417389}
+2025-07-12 16:34:28,422 - headless - INFO - 📨 Received chat message: Hello I am Suraj from Suraj
+2025-07-12 16:34:28,424 - headless - INFO - 📨 Received chat message: Hello I am Suraj from Suraj
+2025-07-12 16:34:28,425 - headless - INFO - 📨 Received chat message: Hello I am Suraj from Suraj
+2025-07-12 16:34:37,348 - headless - INFO - 📤 Sending message from UI: Its Aryan
+2025-07-12 16:34:37,350 - headless - INFO - 📨 Received chat message: Its Aryan from Aryan
+2025-07-12 16:34:37,352 - headless - INFO - 📨 Received chat message: Its Aryan from Aryan
+2025-07-12 16:34:37,354 - headless - INFO - 📨 Received chat message: Its Aryan from Aryan
+2025-07-12 16:34:37,354 - headless - INFO - 📨 Received chat message: Its Aryan from Aryan
+2025-07-12 16:34:37,358 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'Its Aryan', 'sender_nick': 'Aryan', 'sender_id': 'QmXArXFREPS8QMTnxGs6WgtM8K3isxqD1nPtX7G29ASVAw', 'timestamp': 1752318277.348284}
+2025-07-12 16:34:53,803 - headless - INFO - 📤 Sending message from UI: Lets meet Priti Ji
+2025-07-12 16:34:53,806 - headless - INFO - 📨 Received chat message: Lets meet Priti Ji from Priti
+2025-07-12 16:34:53,807 - headless - INFO - 📨 Received chat message: Lets meet Priti Ji from Priti
+2025-07-12 16:34:53,810 - headless - INFO - 📨 Received chat message: Lets meet Priti Ji from Priti
+2025-07-12 16:34:53,810 - headless - INFO - 📨 Received chat message: Lets meet Priti Ji from Priti
+2025-07-12 16:34:53,828 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'Lets meet Priti Ji', 'sender_nick': 'Priti', 'sender_id': 'QmVkfLzF7Uza9Yzyb7aNuchnfHmiWG4PLeYGKQ62oJKX2e', 'timestamp': 1752318293.8035932}
+2025-07-12 16:35:04,902 - headless - INFO - 📤 Sending message from UI: I am Sumanjeet
+2025-07-12 16:35:04,905 - headless - INFO - 📨 Received chat message: I am Sumanjeet from Sumanjeet
+2025-07-12 16:35:04,907 - headless - INFO - 📨 Received chat message: I am Sumanjeet from Sumanjeet
+2025-07-12 16:35:04,907 - headless - INFO - 📨 Received chat message: I am Sumanjeet from Sumanjeet
+2025-07-12 16:35:04,907 - headless - INFO - 📨 Received chat message: I am Sumanjeet from Sumanjeet
+2025-07-12 16:35:04,973 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'I am Sumanjeet', 'sender_nick': 'Sumanjeet', 'sender_id': 'Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD', 'timestamp': 1752318304.9025729}
+2025-07-12 16:41:14,887 - ui_modular - INFO - UI unmounted
+2025-07-12 16:41:14,991 - root - INFO - Stream closed cleanly for peer Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:41:14,991 - root - INFO - Stream closed cleanly for peer Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:41:14,992 - root - INFO - Stream closed cleanly for peer Qmcd2RdQU8rJfU6HT9PVSbvMiBTJgiaaDUx5AssCoiFrwD (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:41:17,486 - main - INFO - Starting in UI mode...
+2025-07-12 16:41:17,486 - headless - INFO - HeadlessService initialized - nickname: Sumanjeet, port: 51435
+2025-07-12 16:41:17,486 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:41:17,487 - headless - INFO - Starting headless service...
+2025-07-12 16:41:17,736 - headless - INFO - Host created with PeerID: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:41:17,737 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/51435
+2025-07-12 16:41:17,737 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:41:17,739 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:41:17,739 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:41:17,739 - headless - INFO - Pubsub ready.
+2025-07-12 16:41:17,739 - headless - INFO - Setting up chat room...
+2025-07-12 16:41:17,739 - chatroom - INFO - ChatRoom initialized for peer QmUg1j9W... with nickname 'Sumanjeet'
+2025-07-12 16:41:17,740 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:41:17,740 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:41:17,740 - headless - INFO - Chat room setup complete for 'Sumanjeet'
+2025-07-12 16:41:17,740 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:41:17,740 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:41:17,740 - headless - INFO - Starting message processing...
+2025-07-12 16:41:17,786 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:41:17,787 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:41:17,795 - ui_modular - INFO - ModularChatUI initialized for peer QmUg1j9W...
+2025-07-12 16:41:17,815 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:41:23,081 - ui_modular - INFO - UI unmounted
+2025-07-12 16:41:49,033 - main - INFO - Starting in UI mode...
+2025-07-12 16:41:49,033 - headless - INFO - HeadlessService initialized - nickname: Priti, port: 49723
+2025-07-12 16:41:49,033 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:41:49,034 - headless - INFO - Starting headless service...
+2025-07-12 16:41:49,200 - headless - INFO - Host created with PeerID: QmPX13X9UzwF9jUFT9taPi1SZLUtHsVHN6km6u34wf4GiY
+2025-07-12 16:41:49,201 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/49723
+2025-07-12 16:41:49,201 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/49723/p2p/QmPX13X9UzwF9jUFT9taPi1SZLUtHsVHN6km6u34wf4GiY
+2025-07-12 16:41:49,202 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:41:49,203 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:41:49,203 - headless - INFO - Pubsub ready.
+2025-07-12 16:41:49,203 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:41:49,204 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:41:49,254 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:41:51,256 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 16:41:51,256 - headless - INFO - Setting up chat room...
+2025-07-12 16:41:51,256 - chatroom - INFO - ChatRoom initialized for peer QmPX13X9... with nickname 'Priti'
+2025-07-12 16:41:51,257 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:41:51,257 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:41:51,258 - headless - INFO - Chat room setup complete for 'Priti'
+2025-07-12 16:41:51,258 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:41:51,258 - headless - INFO - Starting message processing...
+2025-07-12 16:41:51,258 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:41:51,336 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:41:51,337 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:41:51,348 - ui_modular - INFO - ModularChatUI initialized for peer QmPX13X9...
+2025-07-12 16:41:51,369 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:41:56,582 - headless - INFO - 📤 Sending message from UI: hi
+2025-07-12 16:41:56,586 - headless - INFO - 📨 Received chat message: hi from Priti
+2025-07-12 16:41:56,587 - headless - INFO - 📨 Received chat message: hi from Priti
+2025-07-12 16:42:01,652 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 16:42:01,656 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 16:42:01,658 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 16:42:30,026 - ui_modular - INFO - UI unmounted
+2025-07-12 16:42:57,453 - main - INFO - Starting in UI mode...
+2025-07-12 16:42:57,453 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 56339
+2025-07-12 16:42:57,453 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:42:57,454 - headless - INFO - Starting headless service...
+2025-07-12 16:42:57,655 - headless - INFO - Host created with PeerID: QmTsmSquppwskktcsehx7G1yNrA1zw3CFGGwZRkcmQ9t28
+2025-07-12 16:42:57,655 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/56339
+2025-07-12 16:42:57,655 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/56339/p2p/QmTsmSquppwskktcsehx7G1yNrA1zw3CFGGwZRkcmQ9t28
+2025-07-12 16:42:57,657 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:42:57,658 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:42:57,658 - headless - INFO - Pubsub ready.
+2025-07-12 16:42:57,658 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:42:57,658 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:42:57,689 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:42:59,691 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 16:42:59,691 - headless - INFO - Setting up chat room...
+2025-07-12 16:42:59,691 - chatroom - INFO - ChatRoom initialized for peer QmTsmSqu... with nickname 'Aryan'
+2025-07-12 16:42:59,692 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:42:59,692 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:42:59,692 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 16:42:59,692 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:42:59,692 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:42:59,692 - headless - INFO - Starting message processing...
+2025-07-12 16:42:59,758 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:42:59,759 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:42:59,770 - ui_modular - INFO - ModularChatUI initialized for peer QmTsmSqu...
+2025-07-12 16:42:59,789 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:43:05,525 - headless - INFO - 📤 Sending message from UI: hi
+2025-07-12 16:43:05,528 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:43:05,530 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:43:05,531 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:43:08,140 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 16:43:08,143 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:43:08,145 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:43:08,146 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:47:42,164 - ui_modular - INFO - UI unmounted
+2025-07-12 16:47:42,266 - root - INFO - Stream closed cleanly for peer QmTsmSquppwskktcsehx7G1yNrA1zw3CFGGwZRkcmQ9t28 (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:47:45,304 - main - INFO - Starting in UI mode...
+2025-07-12 16:47:45,304 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 52551
+2025-07-12 16:47:45,304 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:47:45,305 - headless - INFO - Starting headless service...
+2025-07-12 16:47:45,429 - headless - INFO - Host created with PeerID: Qmd2mjtNpLw3NtLtbzJh4gHWiAs4MvYUaVtnHD39RJJD3x
+2025-07-12 16:47:45,429 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/52551
+2025-07-12 16:47:45,429 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/52551/p2p/Qmd2mjtNpLw3NtLtbzJh4gHWiAs4MvYUaVtnHD39RJJD3x
+2025-07-12 16:47:45,431 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:47:45,432 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:47:45,432 - headless - INFO - Pubsub ready.
+2025-07-12 16:47:45,432 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:47:45,433 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:47:45,462 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:47:47,465 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 16:47:47,466 - headless - INFO - Setting up chat room...
+2025-07-12 16:47:47,466 - chatroom - INFO - ChatRoom initialized for peer Qmd2mjtN... with nickname 'Aryan'
+2025-07-12 16:47:47,467 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:47:47,468 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:47:47,469 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 16:47:47,469 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:47:47,469 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:47:47,470 - headless - INFO - Starting message processing...
+2025-07-12 16:47:47,507 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:47:47,508 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:47:47,515 - ui_modular - INFO - ModularChatUI initialized for peer Qmd2mjtN...
+2025-07-12 16:47:47,843 - ui_modular - INFO - UI unmounted
+2025-07-12 16:47:47,946 - root - INFO - Stream closed cleanly for peer Qmd2mjtNpLw3NtLtbzJh4gHWiAs4MvYUaVtnHD39RJJD3x (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:48:34,880 - main - INFO - Starting in UI mode...
+2025-07-12 16:48:34,881 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 55329
+2025-07-12 16:48:34,881 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:48:34,881 - headless - INFO - Starting headless service...
+2025-07-12 16:48:35,615 - headless - INFO - Host created with PeerID: Qmb7a9Rd64zwzqqQU5BgZtoEUCQAgsxeR9qn6LVEebuQ3A
+2025-07-12 16:48:35,615 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/55329
+2025-07-12 16:48:35,615 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/55329/p2p/Qmb7a9Rd64zwzqqQU5BgZtoEUCQAgsxeR9qn6LVEebuQ3A
+2025-07-12 16:48:35,617 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:48:35,618 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:48:35,618 - headless - INFO - Pubsub ready.
+2025-07-12 16:48:35,618 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:48:35,618 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:48:35,653 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:48:37,655 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 16:48:37,656 - headless - INFO - Setting up chat room...
+2025-07-12 16:48:37,656 - chatroom - INFO - ChatRoom initialized for peer Qmb7a9Rd... with nickname 'Aryan'
+2025-07-12 16:48:37,658 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:48:37,659 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:48:37,659 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 16:48:37,659 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:48:37,660 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:48:37,660 - headless - INFO - Starting message processing...
+2025-07-12 16:48:37,684 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:48:37,684 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:48:37,690 - ui_modular - INFO - ModularChatUI initialized for peer Qmb7a9Rd...
+2025-07-12 16:48:37,707 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:48:38,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:39,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:40,069 - headless - INFO - 📤 Sending message from UI: hi
+2025-07-12 16:48:40,073 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:48:40,075 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:48:40,077 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:48:40,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:41,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:42,189 - headless - INFO - 📤 Sending message from UI: ihi
+2025-07-12 16:48:42,192 - headless - INFO - 📨 Received chat message: ihi from Aryan
+2025-07-12 16:48:42,194 - headless - INFO - 📨 Received chat message: ihi from Aryan
+2025-07-12 16:48:42,195 - headless - INFO - 📨 Received chat message: ihi from Aryan
+2025-07-12 16:48:42,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:43,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:44,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:45,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:46,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:47,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:48,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:49,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:50,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:51,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:52,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:53,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:54,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:55,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:56,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:57,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:58,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:48:59,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:00,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:01,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:02,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:03,712 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:04,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:05,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:06,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:07,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:08,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:09,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:10,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:11,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:12,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:13,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:14,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:15,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:16,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:17,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:18,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:19,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:20,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:21,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:22,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:23,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:24,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:25,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:26,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:27,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:28,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:29,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:30,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:31,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:32,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:33,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:34,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:35,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:36,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:37,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:38,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:39,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:40,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:41,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:42,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:43,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:44,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:45,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:46,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:47,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:48,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:49,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:50,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:51,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:52,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:53,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:54,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:55,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:56,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:57,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:58,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:49:59,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:00,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:01,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:02,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:03,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:04,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:05,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:06,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:07,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:08,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:09,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:10,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:11,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:12,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:13,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:14,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:15,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:16,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:17,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:18,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:19,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:20,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:21,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:22,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:23,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:24,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:25,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:26,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:27,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:28,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:29,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:30,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:31,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:32,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:33,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:34,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:35,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:36,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:37,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:38,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:39,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:40,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:41,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:42,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:43,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:44,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:45,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:46,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:47,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:48,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:49,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:50,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:51,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:52,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:53,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:54,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:55,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:56,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:57,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:58,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:50:59,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:00,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:01,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:02,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:03,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:04,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:05,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:06,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:07,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:08,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:09,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:10,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:11,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:12,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:13,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:14,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:15,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:16,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:17,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:18,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:19,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:20,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:21,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:22,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:23,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:24,708 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:25,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:26,710 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:27,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:28,709 - ui_modular - ERROR - Error refreshing peers: 'Log' object has no attribute 'print'
+2025-07-12 16:51:29,375 - ui_modular - INFO - UI unmounted
+2025-07-12 16:51:29,489 - root - INFO - Stream closed cleanly for peer Qmb7a9Rd64zwzqqQU5BgZtoEUCQAgsxeR9qn6LVEebuQ3A (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:51:31,498 - main - INFO - Starting in UI mode...
+2025-07-12 16:51:31,498 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 56987
+2025-07-12 16:51:31,498 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:51:31,499 - headless - INFO - Starting headless service...
+2025-07-12 16:51:31,933 - headless - INFO - Host created with PeerID: QmYYeMbJkpF6HDfT4Nb1rgcD8rsCfpKjZwYtCkFPz5qK9Q
+2025-07-12 16:51:31,933 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/56987
+2025-07-12 16:51:31,933 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/56987/p2p/QmYYeMbJkpF6HDfT4Nb1rgcD8rsCfpKjZwYtCkFPz5qK9Q
+2025-07-12 16:51:31,935 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:51:31,935 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:51:31,936 - headless - INFO - Pubsub ready.
+2025-07-12 16:51:31,936 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:51:31,936 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:51:31,966 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:51:33,969 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 16:51:33,969 - headless - INFO - Setting up chat room...
+2025-07-12 16:51:33,970 - chatroom - INFO - ChatRoom initialized for peer QmYYeMbJ... with nickname 'Aryan'
+2025-07-12 16:51:33,971 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:51:33,972 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:51:33,972 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 16:51:33,972 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:51:33,973 - headless - INFO - Starting message processing...
+2025-07-12 16:51:33,973 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:51:34,002 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:51:34,002 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:51:34,008 - ui_modular - INFO - ModularChatUI initialized for peer QmYYeMbJ...
+2025-07-12 16:51:34,221 - ui_modular - INFO - UI unmounted
+2025-07-12 16:51:34,326 - root - INFO - Stream closed cleanly for peer QmYYeMbJkpF6HDfT4Nb1rgcD8rsCfpKjZwYtCkFPz5qK9Q (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:52:41,035 - main - INFO - Starting in UI mode...
+2025-07-12 16:52:41,036 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 52017
+2025-07-12 16:52:41,036 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:52:41,036 - headless - INFO - Starting headless service...
+2025-07-12 16:52:41,265 - headless - INFO - Host created with PeerID: Qmc6f6VojZoVexfvuqhZcrfd1FsrSs9n6cF7FDXFSFpHaf
+2025-07-12 16:52:41,266 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/52017
+2025-07-12 16:52:41,266 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/52017/p2p/Qmc6f6VojZoVexfvuqhZcrfd1FsrSs9n6cF7FDXFSFpHaf
+2025-07-12 16:52:41,267 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:52:41,268 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:52:41,268 - headless - INFO - Pubsub ready.
+2025-07-12 16:52:41,268 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:52:41,269 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:52:41,299 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:52:43,301 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 16:52:43,301 - headless - INFO - Setting up chat room...
+2025-07-12 16:52:43,301 - chatroom - INFO - ChatRoom initialized for peer Qmc6f6Vo... with nickname 'Aryan'
+2025-07-12 16:52:43,302 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:52:43,302 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:52:43,302 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 16:52:43,302 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:52:43,302 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:52:43,302 - headless - INFO - Starting message processing...
+2025-07-12 16:52:43,339 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:52:43,339 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:52:43,346 - ui_modular - INFO - ModularChatUI initialized for peer Qmc6f6Vo...
+2025-07-12 16:52:43,666 - ui_modular - INFO - UI unmounted
+2025-07-12 16:52:43,768 - root - INFO - Stream closed cleanly for peer Qmc6f6VojZoVexfvuqhZcrfd1FsrSs9n6cF7FDXFSFpHaf (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:53:29,578 - main - INFO - Starting in UI mode...
+2025-07-12 16:53:29,579 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 37593
+2025-07-12 16:53:29,579 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:53:29,579 - headless - INFO - Starting headless service...
+2025-07-12 16:53:29,783 - headless - INFO - Host created with PeerID: QmfXbEjZU36jK1XoMgJsioMnKQazvNUDRA9NF6hJdBfG9r
+2025-07-12 16:53:29,783 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/37593
+2025-07-12 16:53:29,783 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/37593/p2p/QmfXbEjZU36jK1XoMgJsioMnKQazvNUDRA9NF6hJdBfG9r
+2025-07-12 16:53:29,785 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:53:29,785 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:53:29,785 - headless - INFO - Pubsub ready.
+2025-07-12 16:53:29,785 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:53:29,786 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:53:29,829 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:53:31,832 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 16:53:31,832 - headless - INFO - Setting up chat room...
+2025-07-12 16:53:31,832 - chatroom - INFO - ChatRoom initialized for peer QmfXbEjZ... with nickname 'Aryan'
+2025-07-12 16:53:31,833 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:53:31,834 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:53:31,834 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 16:53:31,835 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:53:31,835 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:53:31,835 - headless - INFO - Starting message processing...
+2025-07-12 16:53:31,882 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:53:31,882 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:53:31,888 - ui_modular - INFO - ModularChatUI initialized for peer QmfXbEjZ...
+2025-07-12 16:53:31,906 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:53:35,762 - headless - INFO - 📤 Sending message from UI: hi
+2025-07-12 16:53:35,766 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:53:35,774 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:53:35,776 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 16:53:37,177 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 16:53:37,186 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:53:37,196 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:53:37,198 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:56:25,712 - ui_modular - INFO - UI unmounted
+2025-07-12 16:56:25,832 - root - INFO - Stream closed cleanly for peer QmfXbEjZU36jK1XoMgJsioMnKQazvNUDRA9NF6hJdBfG9r (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 16:56:56,414 - main - INFO - Starting in UI mode...
+2025-07-12 16:56:56,414 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 45909
+2025-07-12 16:56:56,414 - main - INFO - Starting headless service in background thread...
+2025-07-12 16:56:56,415 - headless - INFO - Starting headless service...
+2025-07-12 16:56:56,740 - headless - INFO - Host created with PeerID: QmXRNwtXoegjBRD4xp2PXmrV4tkw7buK5aXPVLY33uw8Gq
+2025-07-12 16:56:56,740 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/45909
+2025-07-12 16:56:56,740 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/45909/p2p/QmXRNwtXoegjBRD4xp2PXmrV4tkw7buK5aXPVLY33uw8Gq
+2025-07-12 16:56:56,742 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 16:56:56,743 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 16:56:56,743 - headless - INFO - Pubsub ready.
+2025-07-12 16:56:56,743 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:56:56,744 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:56:56,777 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 16:56:58,779 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 16:56:58,780 - headless - INFO - Setting up chat room...
+2025-07-12 16:56:58,780 - chatroom - INFO - ChatRoom initialized for peer QmXRNwtX... with nickname 'Aryan'
+2025-07-12 16:56:58,782 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 16:56:58,782 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 16:56:58,782 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 16:56:58,782 - headless - INFO - ✅ Headless service is ready
+2025-07-12 16:56:58,783 - headless - INFO - Starting message processing...
+2025-07-12 16:56:58,783 - headless - INFO - Starting outgoing message processing...
+2025-07-12 16:56:58,817 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 16:56:58,817 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 16:56:58,823 - ui_modular - INFO - ModularChatUI initialized for peer QmXRNwtX...
+2025-07-12 16:56:58,840 - ui_modular - INFO - UI mounted and running
+2025-07-12 16:57:01,500 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 16:57:01,517 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:57:01,518 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:57:01,521 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:57:02,424 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 16:57:02,428 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:57:02,430 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:57:02,433 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 16:57:04,034 - headless - INFO - 📤 Sending message from UI: sad
+2025-07-12 16:57:04,038 - headless - INFO - 📨 Received chat message: sad from Aryan
+2025-07-12 16:57:04,041 - headless - INFO - 📨 Received chat message: sad from Aryan
+2025-07-12 16:57:04,042 - headless - INFO - 📨 Received chat message: sad from Aryan
+2025-07-12 16:57:09,465 - headless - INFO - 📤 Sending message from UI: last msg
+2025-07-12 16:57:09,468 - headless - INFO - 📨 Received chat message: last msg from Aryan
+2025-07-12 16:57:09,470 - headless - INFO - 📨 Received chat message: last msg from Aryan
+2025-07-12 16:57:09,471 - headless - INFO - 📨 Received chat message: last msg from Aryan
+2025-07-12 16:59:42,822 - headless - INFO - 📤 Sending message from UI: hello
+2025-07-12 16:59:42,836 - headless - INFO - 📨 Received chat message: hello from Sumanjeet
+2025-07-12 16:59:42,838 - headless - INFO - 📨 Received chat message: hello from Sumanjeet
+2025-07-12 16:59:42,838 - headless - INFO - 📨 Received chat message: hello from Sumanjeet
+2025-07-12 17:10:13,106 - ui_modular - INFO - UI unmounted
+2025-07-12 17:10:13,227 - root - INFO - Stream closed cleanly for peer QmXRNwtXoegjBRD4xp2PXmrV4tkw7buK5aXPVLY33uw8Gq (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:10:14,682 - main - INFO - Starting in UI mode...
+2025-07-12 17:10:14,682 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 48545
+2025-07-12 17:10:14,682 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:10:14,683 - headless - INFO - Starting headless service...
+2025-07-12 17:10:14,782 - headless - INFO - Host created with PeerID: QmdqVkbVVLVWEHuEakHFJ3MyrdQhrcKtf329zjwVyX6gh5
+2025-07-12 17:10:14,782 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/48545
+2025-07-12 17:10:14,782 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/48545/p2p/QmdqVkbVVLVWEHuEakHFJ3MyrdQhrcKtf329zjwVyX6gh5
+2025-07-12 17:10:14,783 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:10:14,784 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:10:14,784 - headless - INFO - Pubsub ready.
+2025-07-12 17:10:14,784 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:10:14,785 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:10:14,829 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:10:16,831 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 17:10:16,832 - headless - INFO - Setting up chat room...
+2025-07-12 17:10:16,832 - chatroom - INFO - ChatRoom initialized for peer QmdqVkbV... with nickname 'Aryan'
+2025-07-12 17:10:16,833 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:10:16,834 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:10:16,834 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 17:10:16,834 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:10:16,835 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:10:16,835 - headless - INFO - Starting message processing...
+2025-07-12 17:10:16,885 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:10:16,885 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:10:16,892 - ui_modular - INFO - ModularChatUI initialized for peer QmdqVkbV...
+2025-07-12 17:10:17,045 - ui_modular - INFO - UI unmounted
+2025-07-12 17:10:17,137 - root - INFO - Stream closed cleanly for peer QmdqVkbVVLVWEHuEakHFJ3MyrdQhrcKtf329zjwVyX6gh5 (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:11:26,118 - main - INFO - Starting in UI mode...
+2025-07-12 17:11:26,118 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 33553
+2025-07-12 17:11:26,118 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:11:26,119 - headless - INFO - Starting headless service...
+2025-07-12 17:11:26,513 - headless - INFO - Host created with PeerID: QmYRKsg7Jwmrc2uTVyzjGnjCrpCofkTsmF9gwYCw9DaAaA
+2025-07-12 17:11:26,514 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/33553
+2025-07-12 17:11:26,514 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/33553/p2p/QmYRKsg7Jwmrc2uTVyzjGnjCrpCofkTsmF9gwYCw9DaAaA
+2025-07-12 17:11:26,515 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:11:26,516 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:11:26,516 - headless - INFO - Pubsub ready.
+2025-07-12 17:11:26,516 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:11:26,517 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:11:26,547 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:11:28,549 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 17:11:28,549 - headless - INFO - Setting up chat room...
+2025-07-12 17:11:28,549 - chatroom - INFO - ChatRoom initialized for peer QmYRKsg7... with nickname 'Aryan'
+2025-07-12 17:11:28,550 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:11:28,550 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:11:28,550 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 17:11:28,550 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:11:28,550 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:11:28,550 - headless - INFO - Starting message processing...
+2025-07-12 17:11:28,621 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:11:28,621 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:11:28,628 - ui_modular - INFO - ModularChatUI initialized for peer QmYRKsg7...
+2025-07-12 17:11:28,646 - ui_modular - INFO - UI mounted and running
+2025-07-12 17:13:15,645 - ui_modular - INFO - UI unmounted
+2025-07-12 17:13:15,763 - root - INFO - Stream closed cleanly for peer QmYRKsg7Jwmrc2uTVyzjGnjCrpCofkTsmF9gwYCw9DaAaA (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:13:17,942 - main - INFO - Starting in UI mode...
+2025-07-12 17:13:17,943 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 57379
+2025-07-12 17:13:17,943 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:13:17,944 - headless - INFO - Starting headless service...
+2025-07-12 17:13:18,236 - headless - INFO - Host created with PeerID: QmRdumhuvpQkb7QjDcsd3mS4jpw9KjJ95J2wJjJrGc63W1
+2025-07-12 17:13:18,237 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/57379
+2025-07-12 17:13:18,237 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/57379/p2p/QmRdumhuvpQkb7QjDcsd3mS4jpw9KjJ95J2wJjJrGc63W1
+2025-07-12 17:13:18,239 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:13:18,239 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:13:18,239 - headless - INFO - Pubsub ready.
+2025-07-12 17:13:18,239 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:13:18,240 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:13:18,269 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:13:20,272 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 17:13:20,272 - headless - INFO - Setting up chat room...
+2025-07-12 17:13:20,272 - chatroom - INFO - ChatRoom initialized for peer QmRdumhu... with nickname 'Aryan'
+2025-07-12 17:13:20,273 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:13:20,273 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:13:20,274 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 17:13:20,274 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:13:20,274 - headless - INFO - Starting message processing...
+2025-07-12 17:13:20,274 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:13:20,348 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:13:20,349 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:13:20,356 - ui_modular - INFO - ModularChatUI initialized for peer QmRdumhu...
+2025-07-12 17:13:20,374 - ui_modular - INFO - UI mounted and running
+2025-07-12 17:13:26,910 - headless - INFO - 📤 Sending message from UI: hi
+2025-07-12 17:13:26,917 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 17:13:26,919 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 17:13:26,920 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 17:15:03,204 - ui_modular - INFO - UI unmounted
+2025-07-12 17:15:03,317 - root - INFO - Stream closed cleanly for peer QmRdumhuvpQkb7QjDcsd3mS4jpw9KjJ95J2wJjJrGc63W1 (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:15:05,147 - main - INFO - Starting in UI mode...
+2025-07-12 17:15:05,147 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 36901
+2025-07-12 17:15:05,148 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:15:05,148 - headless - INFO - Starting headless service...
+2025-07-12 17:15:05,435 - headless - INFO - Host created with PeerID: QmP3a27vKDHHguN6aQs1suUkvcrBwYYa8iSKHLsAzC9G6a
+2025-07-12 17:15:05,435 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/36901
+2025-07-12 17:15:05,435 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/36901/p2p/QmP3a27vKDHHguN6aQs1suUkvcrBwYYa8iSKHLsAzC9G6a
+2025-07-12 17:15:05,438 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:15:05,438 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:15:05,438 - headless - INFO - Pubsub ready.
+2025-07-12 17:15:05,438 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:15:05,439 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:15:05,471 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:15:07,474 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 17:15:07,475 - headless - INFO - Setting up chat room...
+2025-07-12 17:15:07,475 - chatroom - INFO - ChatRoom initialized for peer QmP3a27v... with nickname 'Aryan'
+2025-07-12 17:15:07,476 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:15:07,477 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:15:07,478 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 17:15:07,478 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:15:07,478 - headless - INFO - Starting message processing...
+2025-07-12 17:15:07,478 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:15:07,550 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:15:07,551 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:15:07,559 - ui_modular - INFO - ModularChatUI initialized for peer QmP3a27v...
+2025-07-12 17:15:07,576 - ui_modular - INFO - UI mounted and running
+2025-07-12 17:17:50,425 - ui_modular - INFO - UI unmounted
+2025-07-12 17:17:50,575 - root - INFO - Stream closed cleanly for peer QmP3a27vKDHHguN6aQs1suUkvcrBwYYa8iSKHLsAzC9G6a (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:17:52,144 - main - INFO - Starting in UI mode...
+2025-07-12 17:17:52,144 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 60891
+2025-07-12 17:17:52,144 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:17:52,145 - headless - INFO - Starting headless service...
+2025-07-12 17:17:52,371 - headless - INFO - Host created with PeerID: Qmf5LKfHguQxq99kcXhY7DfrZCrJAZBXB6Z6nzwDGQNwxX
+2025-07-12 17:17:52,371 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/60891
+2025-07-12 17:17:52,372 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/60891/p2p/Qmf5LKfHguQxq99kcXhY7DfrZCrJAZBXB6Z6nzwDGQNwxX
+2025-07-12 17:17:52,373 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:17:52,374 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:17:52,374 - headless - INFO - Pubsub ready.
+2025-07-12 17:17:52,374 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:17:52,375 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:17:52,413 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:17:54,416 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 17:17:54,416 - headless - INFO - Setting up chat room...
+2025-07-12 17:17:54,416 - chatroom - INFO - ChatRoom initialized for peer Qmf5LKfH... with nickname 'Aryan'
+2025-07-12 17:17:54,417 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:17:54,418 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:17:54,418 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 17:17:54,418 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:17:54,418 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:17:54,418 - headless - INFO - Starting message processing...
+2025-07-12 17:17:54,448 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:17:54,448 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:17:54,455 - ui_modular - INFO - ModularChatUI initialized for peer Qmf5LKfH...
+2025-07-12 17:17:54,471 - ui_modular - INFO - UI mounted and running
+2025-07-12 17:18:01,344 - headless - INFO - 📤 Sending message from UI: hi
+2025-07-12 17:18:01,349 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 17:18:01,351 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 17:18:01,353 - headless - INFO - 📨 Received chat message: hi from Aryan
+2025-07-12 17:18:01,950 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:01,953 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:01,955 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:01,958 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:02,455 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:02,458 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:02,459 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:02,461 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:02,863 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:02,865 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:02,868 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:02,870 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:03,172 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:03,187 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:03,189 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:03,191 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:03,488 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:18:03,501 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:03,502 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:03,504 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:03,802 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:18:03,805 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:03,806 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:03,809 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:04,216 - headless - INFO - 📤 Sending message from UI: ds
+2025-07-12 17:18:04,224 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:04,226 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:04,228 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:04,525 - headless - INFO - 📤 Sending message from UI: ds
+2025-07-12 17:18:04,527 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:04,529 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:04,531 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:04,829 - headless - INFO - 📤 Sending message from UI: d
+2025-07-12 17:18:04,831 - headless - INFO - 📨 Received chat message: d from Aryan
+2025-07-12 17:18:04,833 - headless - INFO - 📨 Received chat message: d from Aryan
+2025-07-12 17:18:04,835 - headless - INFO - 📨 Received chat message: d from Aryan
+2025-07-12 17:18:05,133 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:18:05,136 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:05,137 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:05,139 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:05,537 - headless - INFO - 📤 Sending message from UI: sds
+2025-07-12 17:18:05,540 - headless - INFO - 📨 Received chat message: sds from Aryan
+2025-07-12 17:18:05,542 - headless - INFO - 📨 Received chat message: sds from Aryan
+2025-07-12 17:18:05,544 - headless - INFO - 📨 Received chat message: sds from Aryan
+2025-07-12 17:18:05,942 - headless - INFO - 📤 Sending message from UI: ds
+2025-07-12 17:18:05,946 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:05,948 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:05,950 - headless - INFO - 📨 Received chat message: ds from Aryan
+2025-07-12 17:18:06,353 - headless - INFO - 📤 Sending message from UI: dsd
+2025-07-12 17:18:06,362 - headless - INFO - 📨 Received chat message: dsd from Aryan
+2025-07-12 17:18:06,364 - headless - INFO - 📨 Received chat message: dsd from Aryan
+2025-07-12 17:18:06,366 - headless - INFO - 📨 Received chat message: dsd from Aryan
+2025-07-12 17:18:06,863 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:18:06,866 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:06,868 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:06,869 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:07,267 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:18:07,272 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:07,273 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:07,275 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:07,784 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:18:07,791 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:07,793 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:07,795 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:08,393 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:18:08,396 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:08,398 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:08,404 - headless - INFO - 📨 Received chat message: sd from Aryan
+2025-07-12 17:18:19,863 - headless - INFO - 📤 Sending message from UI: ads/quit
+2025-07-12 17:18:19,866 - headless - INFO - 📨 Received chat message: ads/quit from Aryan
+2025-07-12 17:18:19,867 - headless - INFO - 📨 Received chat message: ads/quit from Aryan
+2025-07-12 17:18:19,869 - headless - INFO - 📨 Received chat message: ads/quit from Aryan
+2025-07-12 17:18:25,982 - ui_modular - INFO - UI unmounted
+2025-07-12 17:18:26,100 - root - INFO - Stream closed cleanly for peer Qmf5LKfHguQxq99kcXhY7DfrZCrJAZBXB6Z6nzwDGQNwxX (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:18:28,710 - main - INFO - Starting in UI mode...
+2025-07-12 17:18:28,710 - headless - INFO - HeadlessService initialized - nickname: Aryan, port: 49297
+2025-07-12 17:18:28,710 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:18:28,711 - headless - INFO - Starting headless service...
+2025-07-12 17:18:28,851 - headless - INFO - Host created with PeerID: QmV6yDruYQSC8zSCXYQdDVSro1L8KxjdnA3u6z7pUvtink
+2025-07-12 17:18:28,851 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/49297
+2025-07-12 17:18:28,851 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/49297/p2p/QmV6yDruYQSC8zSCXYQdDVSro1L8KxjdnA3u6z7pUvtink
+2025-07-12 17:18:28,852 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:18:28,853 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:18:28,853 - headless - INFO - Pubsub ready.
+2025-07-12 17:18:28,853 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/51435/p2p/QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:18:28,854 - headless - INFO - Connecting to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:18:28,888 - headless - INFO - ✅ Successfully connected to peer: QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo
+2025-07-12 17:18:30,891 - headless - INFO - PubSub peers after connection: ['QmUg1j9W']
+2025-07-12 17:18:30,891 - headless - INFO - Setting up chat room...
+2025-07-12 17:18:30,891 - chatroom - INFO - ChatRoom initialized for peer QmV6yDru... with nickname 'Aryan'
+2025-07-12 17:18:30,892 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:18:30,892 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:18:30,892 - headless - INFO - Chat room setup complete for 'Aryan'
+2025-07-12 17:18:30,892 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:18:30,893 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:18:30,893 - headless - INFO - Starting message processing...
+2025-07-12 17:18:30,913 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:18:30,913 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:18:30,919 - ui_modular - INFO - ModularChatUI initialized for peer QmV6yDru...
+2025-07-12 17:18:30,938 - ui_modular - INFO - UI mounted and running
+2025-07-12 17:18:32,601 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:32,607 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:32,608 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:32,610 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:33,812 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:33,817 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:33,831 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:33,833 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:34,419 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:34,422 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:34,424 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:34,426 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:34,924 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:34,927 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:34,928 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:34,930 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:35,530 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:35,533 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:35,534 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:35,536 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,034 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:36,038 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,040 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,043 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,540 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:36,544 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,547 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,549 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,951 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:36,954 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,956 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:36,958 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:37,556 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:37,559 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:37,560 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:37,562 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:38,065 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:38,072 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:38,074 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:38,076 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:38,674 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:38,678 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:38,680 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:38,681 - headless - INFO - 📨 Received chat message: asd from Aryan
+2025-07-12 17:18:39,988 - headless - INFO - 📤 Sending message from UI: s
+2025-07-12 17:18:39,991 - headless - INFO - 📨 Received chat message: s from Aryan
+2025-07-12 17:18:39,994 - headless - INFO - 📨 Received chat message: s from Aryan
+2025-07-12 17:18:39,996 - headless - INFO - 📨 Received chat message: s from Aryan
+2025-07-12 17:18:41,102 - headless - INFO - 📤 Sending message from UI: ddddddd
+2025-07-12 17:18:41,111 - headless - INFO - 📨 Received chat message: ddddddd from Aryan
+2025-07-12 17:18:41,113 - headless - INFO - 📨 Received chat message: ddddddd from Aryan
+2025-07-12 17:18:41,115 - headless - INFO - 📨 Received chat message: ddddddd from Aryan
+2025-07-12 17:18:41,715 - headless - INFO - 📤 Sending message from UI: s
+2025-07-12 17:18:41,718 - headless - INFO - 📨 Received chat message: s from Aryan
+2025-07-12 17:18:41,720 - headless - INFO - 📨 Received chat message: s from Aryan
+2025-07-12 17:18:41,721 - headless - INFO - 📨 Received chat message: s from Aryan
+2025-07-12 17:18:42,119 - headless - INFO - 📤 Sending message from UI: as
+2025-07-12 17:18:42,122 - headless - INFO - 📨 Received chat message: as from Aryan
+2025-07-12 17:18:42,124 - headless - INFO - 📨 Received chat message: as from Aryan
+2025-07-12 17:18:42,126 - headless - INFO - 📨 Received chat message: as from Aryan
+2025-07-12 17:18:49,737 - ui_modular - INFO - UI unmounted
+2025-07-12 17:18:49,854 - root - INFO - Stream closed cleanly for peer QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:18:49,854 - root - INFO - Stream closed cleanly for peer QmUg1j9WKYXcdFJ1bhfRfRXM9b6WPd7aD5EdhajyyVGXYo (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:18:51,277 - main - INFO - Starting in UI mode...
+2025-07-12 17:18:51,277 - headless - INFO - HeadlessService initialized - nickname: Sumanjeet, port: 39475
+2025-07-12 17:18:51,277 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:18:51,278 - headless - INFO - Starting headless service...
+2025-07-12 17:18:51,656 - headless - INFO - Host created with PeerID: Qmckn7cLZCiyJNPRukz72WcDxJsU97ks5qEgT2hMSZnNgz
+2025-07-12 17:18:51,656 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/39475
+2025-07-12 17:18:51,656 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/39475/p2p/Qmckn7cLZCiyJNPRukz72WcDxJsU97ks5qEgT2hMSZnNgz
+2025-07-12 17:18:51,658 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:18:51,659 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:18:51,659 - headless - INFO - Pubsub ready.
+2025-07-12 17:18:51,659 - headless - INFO - Setting up chat room...
+2025-07-12 17:18:51,659 - chatroom - INFO - ChatRoom initialized for peer Qmckn7cL... with nickname 'Sumanjeet'
+2025-07-12 17:18:51,659 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:18:51,659 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:18:51,659 - headless - INFO - Chat room setup complete for 'Sumanjeet'
+2025-07-12 17:18:51,659 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:18:51,660 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:18:51,660 - headless - INFO - Starting message processing...
+2025-07-12 17:18:51,678 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:18:51,678 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:18:51,686 - ui_modular - INFO - ModularChatUI initialized for peer Qmckn7cL...
+2025-07-12 17:18:51,703 - ui_modular - INFO - UI mounted and running
+2025-07-12 17:18:54,373 - headless - INFO - 📤 Sending message from UI: sad
+2025-07-12 17:18:54,404 - headless - INFO - 📨 Received chat message: sad from Sumanjeet
+2025-07-12 17:18:55,006 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:55,009 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:18:55,519 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:55,522 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:18:56,033 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:56,035 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:18:56,743 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:56,745 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:18:57,849 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:18:57,852 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:18:58,354 - headless - INFO - 📤 Sending message from UI: sad
+2025-07-12 17:18:58,359 - headless - INFO - 📨 Received chat message: sad from Sumanjeet
+2025-07-12 17:18:58,664 - headless - INFO - 📤 Sending message from UI: s
+2025-07-12 17:18:58,667 - headless - INFO - 📨 Received chat message: s from Sumanjeet
+2025-07-12 17:18:59,068 - headless - INFO - 📤 Sending message from UI: dasa
+2025-07-12 17:18:59,074 - headless - INFO - 📨 Received chat message: dasa from Sumanjeet
+2025-07-12 17:19:20,064 - headless - INFO - 📤 Sending message from UI: dsad/quit
+2025-07-12 17:19:20,068 - headless - INFO - 📨 Received chat message: dsad/quit from Sumanjeet
+2025-07-12 17:19:29,374 - ui_modular - INFO - UI unmounted
+2025-07-12 17:19:31,270 - main - INFO - Starting in UI mode...
+2025-07-12 17:19:31,270 - headless - INFO - HeadlessService initialized - nickname: Sumanjeet, port: 38193
+2025-07-12 17:19:31,270 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:19:31,271 - headless - INFO - Starting headless service...
+2025-07-12 17:19:31,830 - headless - INFO - Host created with PeerID: QmS7MztvMTq3d7XFvSKMtQWbFYsCoSPiA48HyR2pF36n5X
+2025-07-12 17:19:31,830 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/38193
+2025-07-12 17:19:31,830 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/38193/p2p/QmS7MztvMTq3d7XFvSKMtQWbFYsCoSPiA48HyR2pF36n5X
+2025-07-12 17:19:31,832 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:19:31,833 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:19:31,833 - headless - INFO - Pubsub ready.
+2025-07-12 17:19:31,833 - headless - INFO - Setting up chat room...
+2025-07-12 17:19:31,833 - chatroom - INFO - ChatRoom initialized for peer QmS7Mztv... with nickname 'Sumanjeet'
+2025-07-12 17:19:31,833 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:19:31,833 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:19:31,833 - headless - INFO - Chat room setup complete for 'Sumanjeet'
+2025-07-12 17:19:31,833 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:19:31,833 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:19:31,833 - headless - INFO - Starting message processing...
+2025-07-12 17:19:31,871 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:19:31,871 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:19:31,879 - ui_modular - INFO - ModularChatUI initialized for peer QmS7Mztv...
+2025-07-12 17:19:31,896 - ui_modular - INFO - UI mounted and running
+2025-07-12 17:22:19,560 - ui_modular - INFO - UI unmounted
+2025-07-12 17:22:20,673 - main - INFO - Starting in UI mode...
+2025-07-12 17:22:20,674 - headless - INFO - HeadlessService initialized - nickname: Sumanjeet, port: 46491
+2025-07-12 17:22:20,674 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:22:20,674 - headless - INFO - Starting headless service...
+2025-07-12 17:22:21,100 - headless - INFO - Host created with PeerID: QmNwkVaERq4rUuCDdBYdz9bbd98s3HomcAKmKu9hALZzPJ
+2025-07-12 17:22:21,100 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/46491
+2025-07-12 17:22:21,100 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/46491/p2p/QmNwkVaERq4rUuCDdBYdz9bbd98s3HomcAKmKu9hALZzPJ
+2025-07-12 17:22:21,102 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:22:21,102 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:22:21,103 - headless - INFO - Pubsub ready.
+2025-07-12 17:22:21,103 - headless - INFO - Setting up chat room...
+2025-07-12 17:22:21,103 - chatroom - INFO - ChatRoom initialized for peer QmNwkVaE... with nickname 'Sumanjeet'
+2025-07-12 17:22:21,103 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:22:21,103 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:22:21,103 - headless - INFO - Chat room setup complete for 'Sumanjeet'
+2025-07-12 17:22:21,103 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:22:21,103 - headless - INFO - Starting message processing...
+2025-07-12 17:22:21,103 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:22:21,175 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:22:21,175 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:22:21,184 - ui_modular - INFO - ModularChatUI initialized for peer QmNwkVaE...
+2025-07-12 17:22:21,206 - ui_modular - INFO - UI mounted and running
+2025-07-12 17:22:26,633 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:22:26,663 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:22:27,165 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:22:27,168 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:22:27,669 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:22:27,672 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:22:28,174 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:22:28,178 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:22:29,182 - headless - INFO - 📤 Sending message from UI: sdf
+2025-07-12 17:22:29,185 - headless - INFO - 📨 Received chat message: sdf from Sumanjeet
+2025-07-12 17:22:30,489 - headless - INFO - 📤 Sending message from UI: d
+2025-07-12 17:22:30,492 - headless - INFO - 📨 Received chat message: d from Sumanjeet
+2025-07-12 17:22:30,997 - headless - INFO - 📤 Sending message from UI: s
+2025-07-12 17:22:31,003 - headless - INFO - 📨 Received chat message: s from Sumanjeet
+2025-07-12 17:22:31,605 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:22:31,609 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:22:32,115 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:22:32,118 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:22:32,525 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:22:32,527 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:22:32,929 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:22:32,932 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:22:33,835 - headless - INFO - 📤 Sending message from UI: sdf
+2025-07-12 17:22:33,841 - headless - INFO - 📨 Received chat message: sdf from Sumanjeet
+2025-07-12 17:22:34,745 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:22:34,748 - headless - INFO - 📨 Received chat message: sd from Sumanjeet
+2025-07-12 17:22:35,249 - headless - INFO - 📤 Sending message from UI: ds
+2025-07-12 17:22:35,252 - headless - INFO - 📨 Received chat message: ds from Sumanjeet
+2025-07-12 17:22:35,653 - headless - INFO - 📤 Sending message from UI: ds
+2025-07-12 17:22:35,656 - headless - INFO - 📨 Received chat message: ds from Sumanjeet
+2025-07-12 17:22:35,957 - headless - INFO - 📤 Sending message from UI: ds
+2025-07-12 17:22:35,960 - headless - INFO - 📨 Received chat message: ds from Sumanjeet
+2025-07-12 17:22:36,260 - headless - INFO - 📤 Sending message from UI: ds
+2025-07-12 17:22:36,263 - headless - INFO - 📨 Received chat message: ds from Sumanjeet
+2025-07-12 17:22:36,667 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:22:36,672 - headless - INFO - 📨 Received chat message: sd from Sumanjeet
+2025-07-12 17:22:47,140 - headless - INFO - 📤 Sending message from UI: k
+2025-07-12 17:22:47,142 - headless - INFO - 📨 Received chat message: k from Sumanjeet
+2025-07-12 17:31:07,241 - ui_modular - INFO - UI unmounted
+2025-07-12 17:31:08,538 - main - INFO - Starting in UI mode...
+2025-07-12 17:31:08,538 - headless - INFO - HeadlessService initialized - nickname: Sumanjeet, port: 38115
+2025-07-12 17:31:08,538 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:31:08,539 - headless - INFO - Starting headless service...
+2025-07-12 17:31:08,828 - headless - INFO - Host created with PeerID: Qmcx42ebq9jtwpRqyrpsRUTFozvPQQHbrCsDnadfdiXgFc
+2025-07-12 17:31:08,829 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/38115
+2025-07-12 17:31:08,829 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/38115/p2p/Qmcx42ebq9jtwpRqyrpsRUTFozvPQQHbrCsDnadfdiXgFc
+2025-07-12 17:31:08,830 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:31:08,831 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:31:08,831 - headless - INFO - Pubsub ready.
+2025-07-12 17:31:08,831 - headless - INFO - Setting up chat room...
+2025-07-12 17:31:08,831 - chatroom - INFO - ChatRoom initialized for peer Qmcx42eb... with nickname 'Sumanjeet'
+2025-07-12 17:31:08,831 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:31:08,831 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:31:08,832 - headless - INFO - Chat room setup complete for 'Sumanjeet'
+2025-07-12 17:31:08,832 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:31:08,832 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:31:08,832 - headless - INFO - Starting message processing...
+2025-07-12 17:31:08,839 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:31:08,839 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:31:08,846 - ui - INFO - ModularChatUI initialized for peer Qmcx42eb...
+2025-07-12 17:31:08,863 - ui - INFO - UI mounted and running
+2025-07-12 17:31:12,650 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:31:12,680 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:31:14,891 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:31:14,894 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:31:16,200 - headless - INFO - 📤 Sending message from UI: dsf
+2025-07-12 17:31:16,204 - headless - INFO - 📨 Received chat message: dsf from Sumanjeet
+2025-07-12 17:31:16,806 - headless - INFO - 📤 Sending message from UI: d
+2025-07-12 17:31:16,809 - headless - INFO - 📨 Received chat message: d from Sumanjeet
+2025-07-12 17:31:17,120 - headless - INFO - 📤 Sending message from UI: d
+2025-07-12 17:31:17,128 - headless - INFO - 📨 Received chat message: d from Sumanjeet
+2025-07-12 17:31:17,432 - headless - INFO - 📤 Sending message from UI: d
+2025-07-12 17:31:17,435 - headless - INFO - 📨 Received chat message: d from Sumanjeet
+2025-07-12 17:31:17,736 - headless - INFO - 📤 Sending message from UI: d
+2025-07-12 17:31:17,739 - headless - INFO - 📨 Received chat message: d from Sumanjeet
+2025-07-12 17:31:17,944 - headless - INFO - 📤 Sending message from UI: d
+2025-07-12 17:31:17,953 - headless - INFO - 📨 Received chat message: d from Sumanjeet
+2025-07-12 17:31:18,153 - headless - INFO - 📤 Sending message from UI: dd
+2025-07-12 17:31:18,156 - headless - INFO - 📨 Received chat message: dd from Sumanjeet
+2025-07-12 17:31:18,461 - headless - INFO - 📤 Sending message from UI: ds
+2025-07-12 17:31:18,466 - headless - INFO - 📨 Received chat message: ds from Sumanjeet
+2025-07-12 17:31:18,885 - headless - INFO - 📤 Sending message from UI: df
+2025-07-12 17:31:18,889 - headless - INFO - 📨 Received chat message: df from Sumanjeet
+2025-07-12 17:31:19,190 - headless - INFO - 📤 Sending message from UI: sfd
+2025-07-12 17:31:19,193 - headless - INFO - 📨 Received chat message: sfd from Sumanjeet
+2025-07-12 17:31:19,494 - headless - INFO - 📤 Sending message from UI: sd
+2025-07-12 17:31:19,498 - headless - INFO - 📨 Received chat message: sd from Sumanjeet
+2025-07-12 17:31:19,900 - headless - INFO - 📤 Sending message from UI: f
+2025-07-12 17:31:19,904 - headless - INFO - 📨 Received chat message: f from Sumanjeet
+2025-07-12 17:31:20,205 - headless - INFO - 📤 Sending message from UI: sdf
+2025-07-12 17:31:20,208 - headless - INFO - 📨 Received chat message: sdf from Sumanjeet
+2025-07-12 17:31:20,709 - headless - INFO - 📤 Sending message from UI: sdf
+2025-07-12 17:31:20,712 - headless - INFO - 📨 Received chat message: sdf from Sumanjeet
+2025-07-12 17:31:21,514 - headless - INFO - 📤 Sending message from UI: sfd
+2025-07-12 17:31:21,517 - headless - INFO - 📨 Received chat message: sfd from Sumanjeet
+2025-07-12 17:31:55,760 - ui - INFO - UI unmounted
+2025-07-12 17:32:01,545 - main - INFO - Starting in UI mode...
+2025-07-12 17:32:01,546 - headless - INFO - HeadlessService initialized - nickname: Sumanjeet, port: 37029
+2025-07-12 17:32:01,546 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:32:01,546 - headless - INFO - Starting headless service...
+2025-07-12 17:32:01,714 - headless - INFO - Host created with PeerID: QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3
+2025-07-12 17:32:01,715 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/37029
+2025-07-12 17:32:01,715 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/37029/p2p/QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3
+2025-07-12 17:32:01,716 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:32:01,717 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:32:01,717 - headless - INFO - Pubsub ready.
+2025-07-12 17:32:01,717 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/41965/p2p/QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 17:32:01,718 - headless - INFO - Connecting to peer: QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 17:32:01,850 - headless - INFO - ✅ Successfully connected to peer: QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 17:32:03,853 - headless - INFO - PubSub peers after connection: ['QmQPnvQf']
+2025-07-12 17:32:03,853 - headless - INFO - Setting up chat room...
+2025-07-12 17:32:03,854 - chatroom - INFO - ChatRoom initialized for peer QmXZzsaX... with nickname 'Sumanjeet'
+2025-07-12 17:32:03,855 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:32:03,856 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:32:03,856 - headless - INFO - Chat room setup complete for 'Sumanjeet'
+2025-07-12 17:32:03,857 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:32:03,857 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:32:03,857 - headless - INFO - Starting message processing...
+2025-07-12 17:32:03,949 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:32:03,949 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:32:03,957 - ui - INFO - ModularChatUI initialized for peer QmXZzsaX...
+2025-07-12 17:32:03,977 - ui - INFO - UI mounted and running
+2025-07-12 17:32:09,280 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:32:09,283 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:32:09,295 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:32:09,384 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'asd', 'sender_nick': 'Sumanjeet', 'sender_id': 'QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3', 'timestamp': 1752321729.2808003}
+2025-07-12 17:32:11,492 - headless - INFO - 📤 Sending message from UI: fes
+2025-07-12 17:32:11,497 - headless - INFO - 📨 Received chat message: fes from Sumanjeet
+2025-07-12 17:32:11,500 - headless - INFO - 📨 Received chat message: fes from Sumanjeet
+2025-07-12 17:32:11,594 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'fes', 'sender_nick': 'Sumanjeet', 'sender_id': 'QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3', 'timestamp': 1752321731.493081}
+2025-07-12 17:32:55,020 - ui_modular - INFO - UI unmounted
+2025-07-12 17:33:06,892 - main - INFO - Starting in UI mode...
+2025-07-12 17:33:06,892 - headless - INFO - HeadlessService initialized - nickname: Priti, port: 52913
+2025-07-12 17:33:06,892 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:33:06,893 - headless - INFO - Starting headless service...
+2025-07-12 17:33:07,324 - headless - INFO - Host created with PeerID: QmRukyCLDPrVxLwyou7TPZKf4ZdqLLf7WsxESrbBZFL1h5
+2025-07-12 17:33:07,324 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/52913
+2025-07-12 17:33:07,324 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/52913/p2p/QmRukyCLDPrVxLwyou7TPZKf4ZdqLLf7WsxESrbBZFL1h5
+2025-07-12 17:33:07,326 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:33:07,326 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:33:07,326 - headless - INFO - Pubsub ready.
+2025-07-12 17:33:07,326 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/37029/p2p/QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3
+2025-07-12 17:33:07,327 - headless - INFO - Connecting to peer: QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3
+2025-07-12 17:33:07,356 - headless - INFO - ✅ Successfully connected to peer: QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3
+2025-07-12 17:33:09,359 - headless - INFO - PubSub peers after connection: ['QmXZzsaX']
+2025-07-12 17:33:09,359 - headless - INFO - Setting up chat room...
+2025-07-12 17:33:09,359 - chatroom - INFO - ChatRoom initialized for peer QmRukyCL... with nickname 'Priti'
+2025-07-12 17:33:09,360 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:33:09,361 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:33:09,361 - headless - INFO - Chat room setup complete for 'Priti'
+2025-07-12 17:33:09,361 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:33:09,361 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:33:09,361 - headless - INFO - Starting message processing...
+2025-07-12 17:33:09,396 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:33:09,396 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:33:09,403 - ui - INFO - ModularChatUI initialized for peer QmRukyCL...
+2025-07-12 17:33:09,421 - ui - INFO - UI mounted and running
+2025-07-12 17:36:52,660 - ui - INFO - UI unmounted
+2025-07-12 17:36:52,777 - root - INFO - Stream closed cleanly for peer QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3 (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:36:52,778 - root - INFO - Stream closed cleanly for peer QmXZzsaXJywv6HuSDas6YLjdPJZPPfFUF1q9GrH5kGXGa3 (IncompleteReadError: {'requested_count': 2, 'received_count': 0})
+2025-07-12 17:36:53,982 - main - INFO - Starting in UI mode...
+2025-07-12 17:36:53,983 - headless - INFO - HeadlessService initialized - nickname: Sumanjeet, port: 56913
+2025-07-12 17:36:53,983 - main - INFO - Starting headless service in background thread...
+2025-07-12 17:36:53,984 - headless - INFO - Starting headless service...
+2025-07-12 17:36:54,212 - headless - INFO - Host created with PeerID: QmRpmRbizRC2it321813Rq64vTKTDER3Sdw7H5Vhk99ay8
+2025-07-12 17:36:54,212 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/56913
+2025-07-12 17:36:54,212 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/56913/p2p/QmRpmRbizRC2it321813Rq64vTKTDER3Sdw7H5Vhk99ay8
+2025-07-12 17:36:54,213 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 17:36:54,214 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 17:36:54,214 - headless - INFO - Pubsub ready.
+2025-07-12 17:36:54,214 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/41965/p2p/QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 17:36:54,215 - headless - INFO - Connecting to peer: QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 17:36:54,244 - headless - INFO - ✅ Successfully connected to peer: QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu
+2025-07-12 17:36:56,247 - headless - INFO - PubSub peers after connection: ['QmQPnvQf']
+2025-07-12 17:36:56,248 - headless - INFO - Setting up chat room...
+2025-07-12 17:36:56,248 - chatroom - INFO - ChatRoom initialized for peer QmRpmRbi... with nickname 'Sumanjeet'
+2025-07-12 17:36:56,249 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 17:36:56,250 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 17:36:56,251 - headless - INFO - Chat room setup complete for 'Sumanjeet'
+2025-07-12 17:36:56,252 - headless - INFO - ✅ Headless service is ready
+2025-07-12 17:36:56,253 - headless - INFO - Starting outgoing message processing...
+2025-07-12 17:36:56,254 - headless - INFO - Starting message processing...
+2025-07-12 17:36:56,286 - main - INFO - ✅ Headless service is ready in background thread
+2025-07-12 17:36:56,286 - main - INFO - Starting Textual UI in main thread...
+2025-07-12 17:36:56,293 - ui - INFO - ModularChatUI initialized for peer QmRpmRbi...
+2025-07-12 17:36:56,310 - ui - INFO - UI mounted and running
+2025-07-12 17:36:58,870 - headless - INFO - 📤 Sending message from UI: hi
+2025-07-12 17:36:58,873 - headless - INFO - 📨 Received chat message: hi from Sumanjeet
+2025-07-12 17:36:58,876 - headless - INFO - 📨 Received chat message: hi from Sumanjeet
+2025-07-12 17:36:58,877 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'hi', 'sender_nick': 'Sumanjeet', 'sender_id': 'QmRpmRbizRC2it321813Rq64vTKTDER3Sdw7H5Vhk99ay8', 'timestamp': 1752322018.871275}
+2025-07-12 17:37:01,282 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:37:01,284 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:37:01,287 - headless - INFO - 📨 Received chat message: asd from Sumanjeet
+2025-07-12 17:37:01,288 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'asd', 'sender_nick': 'Sumanjeet', 'sender_id': 'QmRpmRbizRC2it321813Rq64vTKTDER3Sdw7H5Vhk99ay8', 'timestamp': 1752322021.2822807}
+2025-07-12 17:37:57,312 - headless - INFO - 📤 Sending message from UI: asd
+2025-07-12 17:37:57,319 - headless - INFO - 📨 Received chat message: asd from Suraj
+2025-07-12 17:37:57,324 - headless - INFO - 📨 Received chat message: asd from Suraj
+2025-07-12 17:37:57,412 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'asd', 'sender_nick': 'Suraj', 'sender_id': 'QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu', 'timestamp': 1752322077.312849}
+2025-07-12 17:37:58,729 - headless - INFO - 📤 Sending message from UI: dd
+2025-07-12 17:37:58,734 - headless - INFO - 📨 Received chat message: dd from Suraj
+2025-07-12 17:37:58,736 - headless - INFO - 📨 Received chat message: dd from Suraj
+2025-07-12 17:37:58,823 - main - INFO - 📨 Got message from queue: {'type': 'chat_message', 'message': 'dd', 'sender_nick': 'Suraj', 'sender_id': 'QmQPnvQfQi6Qv7QSPLn3SuBDBWRvS38jLBHfrUVc8XcxAu', 'timestamp': 1752322078.73017}
