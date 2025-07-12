@@ -285,7 +285,7 @@ class ModularChatUI(App[None]):
         
         formatted_message = f"[{timestamp}] [{sender_class}]{sender_display}[/{sender_class}]: {message}"
         
-        self.chat_log.write(formatted_message)
+        self.chat_log.write_line(formatted_message)
     
     def display_system_message(self, message: str) -> None:
         """Display a system message."""
@@ -295,7 +295,7 @@ class ModularChatUI(App[None]):
         timestamp = time.strftime("%H:%M:%S")
         formatted_message = f"[{timestamp}] [system-message]{message}[/system-message]"
         
-        self.system_log.write(formatted_message)
+        self.system_log.write_line(formatted_message)
     
     def refresh_peers(self) -> None:
         """Refresh the peers list."""
@@ -312,14 +312,14 @@ class ModularChatUI(App[None]):
             
             # Clear and update peers list
             self.peers_log.clear()
-            self.peers_log.write(f"Connected: {peer_count}")
+            self.peers_log.write_line(f"Connected: {peer_count}")
             
             if peers:
                 for peer in sorted(peers):
                     peer_short = peer[:8] if len(peer) > 8 else peer
-                    self.peers_log.write(f"  • {peer_short}...")
+                    self.peers_log.write_line(f"  • {peer_short}...")
             else:
-                self.peers_log.write("  (No peers connected)")
+                self.peers_log.write_line("  (No peers connected)")
                 
         except Exception as e:
             logger.error(f"Error refreshing peers: {e}")
