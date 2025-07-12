@@ -10,6 +10,7 @@ dependencies = [
     "trio>=0.22.0",
     "base58>=2.1.0",
     "protobuf>=4.25.0",
+    "janus>=1.0.0",
 ]
 
 [project.scripts]
@@ -18,6 +19,9 @@ py-peer = "main:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
 
 [tool.uv]
 dev-dependencies = [
