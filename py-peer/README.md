@@ -165,6 +165,8 @@ py-peer --nick Charlie --connect /ip4/127.0.0.1/tcp/PORT/p2p/PEER_ID
 | `/status` | Display connection status |
 | `/multiaddr` | Show your multiaddress for sharing |
 
+**Note:** Since the Textual UI doesn't support text copying, to share your multiaddr with others, copy it from the `system_messages.txt` log file where it's logged at startup.
+
 ## ⚙️ Configuration
 
 ### Environment Variables
@@ -254,8 +256,11 @@ Test peer connectivity:
 py-peer --nick Peer1 --port 8080
 
 # Terminal 2 (connect to Peer1)
+# Get the multiaddr from system_messages.txt in Peer1's directory
 py-peer --nick Peer2 --connect /ip4/127.0.0.1/tcp/8080/p2p/PEER_ID_FROM_PEER1
 ```
+
+**Tip:** When using the Textual UI, the multiaddr is displayed but cannot be copied directly. Check the `system_messages.txt` file for the full multiaddr that you can copy and share with others.
 
 ## 🤝 Contributing
 
