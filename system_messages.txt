@@ -1,0 +1,172 @@
+2025-07-12 15:28:15,437 - ChatRoom initialized - Peer: QmdEj1pp, Nickname: test-peer, Multiaddr: /ip4/0.0.0.0/tcp/47947/p2p/QmdEj1ppAiCzEGD8nBJAFkURYLFWChjX9CbNipbhX2WYKQ
+2025-07-12 15:28:15,438 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:28:15,438 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:29:58,705 - ChatRoom initialized - Peer: QmUf14eU, Nickname: peer-325637, Multiaddr: /ip4/0.0.0.0/tcp/60079/p2p/QmUf14eUi1tQ2QC3LVDCwY88Bsj2BxDhP6WrQJTB3v1rsV
+2025-07-12 15:29:58,705 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:29:58,705 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:30:44,384 - Message received from peer-337005 (QmSccCKh): hi
+2025-07-12 15:30:48,526 - Message received from peer-325637 (QmUf14eU): kk
+2025-07-12 15:30:48,527 - Message sent by peer-325637 to 1 peers: kk
+2025-07-12 15:31:48,620 - ChatRoom initialized - Peer: QmPMTSPT, Nickname: test-peer, Multiaddr: /ip4/0.0.0.0/tcp/58759/p2p/QmPMTSPT6vyoDPVXahZPMia6PV7HUbqcaMNmz5MHf4fzaz
+2025-07-12 15:31:48,620 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:31:48,621 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:32:16,711 - ChatRoom initialized - Peer: Qmek2RMz, Nickname: test-peer, Multiaddr: /ip4/0.0.0.0/tcp/54737/p2p/Qmek2RMzKAqX17Bynhpp7ZdzpUBhFvFLPqGjDpCzhJeDmH
+2025-07-12 15:32:16,712 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:32:16,712 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:33:13,768 - ChatRoom initialized - Peer: QmT8n8uA, Nickname: peer-344176, Multiaddr: /ip4/0.0.0.0/tcp/55725/p2p/QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:33:13,768 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:33:13,768 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:33:39,734 - ChatRoom initialized - Peer: QmPCAPFd, Nickname: peer-253200, Multiaddr: /ip4/0.0.0.0/tcp/39037/p2p/QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:33:39,734 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:33:39,735 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:33:51,127 - Message received from peer-253200 (QmPCAPFd): l
+2025-07-12 15:33:51,128 - Message sent by peer-253200 to 1 peers: l
+2025-07-12 15:33:51,129 - Message received from peer-253200 (QmPCAPFd): l
+2025-07-12 15:34:09,495 - Message received from peer-253200 (QmPCAPFd): asd
+2025-07-12 15:34:09,495 - Message sent by peer-253200 to 1 peers: asd
+2025-07-12 15:34:09,500 - Message received from peer-253200 (QmPCAPFd): asd
+2025-07-12 15:35:54,460 - ChatRoom initialized - Peer: Qme3NNMA, Nickname: sender-peer, Multiaddr: /ip4/0.0.0.0/tcp/58821/p2p/Qme3NNMAW4o7HEtMYr3AsFRo6DL1M2tzgo4BLroBGXngBA
+2025-07-12 15:35:54,461 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:35:54,461 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:36:11,344 - ChatRoom initialized - Peer: Qmehiycy, Nickname: receiver-peer, Multiaddr: /ip4/0.0.0.0/tcp/33325/p2p/QmehiycyPMrvkzmiZYSoDdPjAvariTLoKZRAPY8RTbK67Z
+2025-07-12 15:36:11,345 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:36:11,346 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:36:25,938 - Message received from sender-peer (Qme3NNMA): hi
+2025-07-12 15:36:25,939 - Message sent by sender-peer to 1 peers: hi
+2025-07-12 15:36:25,942 - Message received from sender-peer (Qme3NNMA): hi
+2025-07-12 15:36:48,699 - Message received from receiver-peer (Qmehiycy): (.venv) sumanjeet@sumanjeet:/media/sumanjeet/Study/Code/PLDG/UCdApp/universal-connectivity$ python py-peer/main.py --connect /ip4/0.0.0.0/tcp/55725/p2p/QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,699 - Message sent by receiver-peer to 1 peers: (.venv) sumanjeet@sumanjeet:/media/sumanjeet/Study/Code/PLDG/UCdApp/universal-connectivity$ python py-peer/main.py --connect /ip4/0.0.0.0/tcp/55725/p2p/QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,701 - Message received from receiver-peer (Qmehiycy): (.venv) sumanjeet@sumanjeet:/media/sumanjeet/Study/Code/PLDG/UCdApp/universal-connectivity$ python py-peer/main.py --connect /ip4/0.0.0.0/tcp/55725/p2p/QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,709 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,500 - main - INFO - Starting Universal Connectivity Python Peer...
+2025-07-12 15:36:48,709 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,500 - main - INFO - Starting Universal Connectivity Python Peer...
+2025-07-12 15:36:48,711 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,500 - main - INFO - Starting Universal Connectivity Python Peer...
+2025-07-12 15:36:48,719 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,500 - headless - INFO - HeadlessService initialized - nickname: peer-253200, port: 39037
+2025-07-12 15:36:48,720 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,500 - headless - INFO - HeadlessService initialized - nickname: peer-253200, port: 39037
+2025-07-12 15:36:48,721 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,500 - headless - INFO - HeadlessService initialized - nickname: peer-253200, port: 39037
+2025-07-12 15:36:48,731 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,500 - main - INFO - Starting headless service in background...
+2025-07-12 15:36:48,731 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,500 - main - INFO - Starting headless service in background...
+2025-07-12 15:36:48,733 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,500 - main - INFO - Starting headless service in background...
+2025-07-12 15:36:48,741 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,501 - headless - INFO - Starting headless service...
+2025-07-12 15:36:48,741 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,501 - headless - INFO - Starting headless service...
+2025-07-12 15:36:48,743 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,501 - headless - INFO - Starting headless service...
+2025-07-12 15:36:48,750 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,678 - headless - INFO - Host created with PeerID: QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,750 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,678 - headless - INFO - Host created with PeerID: QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,752 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,678 - headless - INFO - Host created with PeerID: QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,755 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,678 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/39037
+2025-07-12 15:36:48,755 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,678 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/39037
+2025-07-12 15:36:48,757 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,678 - headless - INFO - Listening on: /ip4/0.0.0.0/tcp/39037
+2025-07-12 15:36:48,770 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,678 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/39037/p2p/QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,771 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,678 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/39037/p2p/QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,773 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,678 - headless - INFO - Full multiaddr: /ip4/0.0.0.0/tcp/39037/p2p/QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,780 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,680 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 15:36:48,780 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,680 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 15:36:48,782 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,680 - headless - INFO - Initializing PubSub and GossipSub...
+2025-07-12 15:36:48,785 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,680 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 15:36:48,786 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,680 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 15:36:48,787 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,680 - headless - INFO - Pubsub and GossipSub services started.
+2025-07-12 15:36:48,797 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,680 - headless - INFO - Pubsub ready.
+2025-07-12 15:36:48,797 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,680 - headless - INFO - Pubsub ready.
+2025-07-12 15:36:48,799 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,680 - headless - INFO - Pubsub ready.
+2025-07-12 15:36:48,808 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,681 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/55725/p2p/QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,809 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,681 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/55725/p2p/QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,812 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,681 - headless - INFO - Attempting to connect to: /ip4/0.0.0.0/tcp/55725/p2p/QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,822 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,681 - headless - INFO - Connecting to peer: QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,822 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,681 - headless - INFO - Connecting to peer: QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,824 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,681 - headless - INFO - Connecting to peer: QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,832 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,731 - headless - INFO - ✅ Successfully connected to peer: QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,833 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:37,731 - headless - INFO - ✅ Successfully connected to peer: QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,834 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:37,731 - headless - INFO - ✅ Successfully connected to peer: QmT8n8uA1fpeMwPRPau8HeCmLaooAmhaoq14YtXC8YWTEh
+2025-07-12 15:36:48,842 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,733 - headless - INFO - PubSub peers after connection: ['QmT8n8uA']
+2025-07-12 15:36:48,843 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,733 - headless - INFO - PubSub peers after connection: ['QmT8n8uA']
+2025-07-12 15:36:48,844 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,733 - headless - INFO - PubSub peers after connection: ['QmT8n8uA']
+2025-07-12 15:36:48,847 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,733 - headless - INFO - Setting up chat room...
+2025-07-12 15:36:48,847 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,733 - headless - INFO - Setting up chat room...
+2025-07-12 15:36:48,848 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,733 - headless - INFO - Setting up chat room...
+2025-07-12 15:36:48,861 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,734 - chatroom - INFO - ChatRoom initialized for peer QmPCAPFd... with nickname 'peer-253200'
+2025-07-12 15:36:48,862 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,734 - chatroom - INFO - ChatRoom initialized for peer QmPCAPFd... with nickname 'peer-253200'
+2025-07-12 15:36:48,863 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,734 - chatroom - INFO - ChatRoom initialized for peer QmPCAPFd... with nickname 'peer-253200'
+2025-07-12 15:36:48,867 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,734 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:36:48,867 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,734 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:36:48,869 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,734 - chatroom - INFO - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:36:48,882 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:36:48,883 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,735 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:36:48,884 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - chatroom - INFO - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:36:48,893 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - headless - INFO - Chat room setup complete for 'peer-253200'
+2025-07-12 15:36:48,893 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,735 - headless - INFO - Chat room setup complete for 'peer-253200'
+2025-07-12 15:36:48,894 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - headless - INFO - Chat room setup complete for 'peer-253200'
+2025-07-12 15:36:48,897 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - headless - INFO - ✅ Headless service is ready
+2025-07-12 15:36:48,897 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,735 - headless - INFO - ✅ Headless service is ready
+2025-07-12 15:36:48,898 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - headless - INFO - ✅ Headless service is ready
+2025-07-12 15:36:48,906 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - main - INFO - ✅ Headless service is ready, starting UI...
+2025-07-12 15:36:48,907 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,735 - main - INFO - ✅ Headless service is ready, starting UI...
+2025-07-12 15:36:48,909 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - main - INFO - ✅ Headless service is ready, starting UI...
+2025-07-12 15:36:48,910 - Message received from receiver-peer (Qmehiycy): === Universal Connectivity Chat ===
+2025-07-12 15:36:48,911 - Message sent by receiver-peer to 1 peers: === Universal Connectivity Chat ===
+2025-07-12 15:36:48,912 - Message received from receiver-peer (Qmehiycy): === Universal Connectivity Chat ===
+2025-07-12 15:36:48,913 - Message received from receiver-peer (Qmehiycy): Nickname: peer-253200
+2025-07-12 15:36:48,913 - Message sent by receiver-peer to 1 peers: Nickname: peer-253200
+2025-07-12 15:36:48,914 - Message received from receiver-peer (Qmehiycy): Nickname: peer-253200
+2025-07-12 15:36:48,918 - Message received from receiver-peer (Qmehiycy): Peer ID: QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,918 - Message sent by receiver-peer to 1 peers: Peer ID: QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,919 - Message received from receiver-peer (Qmehiycy): Peer ID: QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,928 - Message received from receiver-peer (Qmehiycy): Multiaddr: /ip4/0.0.0.0/tcp/39037/p2p/QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,928 - Message sent by receiver-peer to 1 peers: Multiaddr: /ip4/0.0.0.0/tcp/39037/p2p/QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,930 - Message received from receiver-peer (Qmehiycy): Multiaddr: /ip4/0.0.0.0/tcp/39037/p2p/QmPCAPFdEunS2Zz37o9XkdGqWLtq3RdbJQVirMb95g474Z
+2025-07-12 15:36:48,933 - Message received from receiver-peer (Qmehiycy): Type messages and press Enter to send. Type 'quit' to exit.
+2025-07-12 15:36:48,933 - Message sent by receiver-peer to 1 peers: Type messages and press Enter to send. Type 'quit' to exit.
+2025-07-12 15:36:48,934 - Message received from receiver-peer (Qmehiycy): Type messages and press Enter to send. Type 'quit' to exit.
+2025-07-12 15:36:48,939 - Message received from receiver-peer (Qmehiycy): Commands: /peers, /status, /multiaddr
+2025-07-12 15:36:48,939 - Message sent by receiver-peer to 1 peers: Commands: /peers, /status, /multiaddr
+2025-07-12 15:36:48,941 - Message received from receiver-peer (Qmehiycy): Commands: /peers, /status, /multiaddr
+2025-07-12 15:36:48,945 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - headless - INFO - Starting message processing...
+2025-07-12 15:36:48,945 - Message sent by receiver-peer to 1 peers: 2025-07-12 15:33:39,735 - headless - INFO - Starting message processing...
+2025-07-12 15:36:48,947 - Message received from receiver-peer (Qmehiycy): 2025-07-12 15:33:39,735 - headless - INFO - Starting message processing...
+2025-07-12 15:36:48,948 - Message received from receiver-peer (Qmehiycy): l
+2025-07-12 15:36:48,948 - Message sent by receiver-peer to 1 peers: l
+2025-07-12 15:36:48,949 - Message received from receiver-peer (Qmehiycy): l
+2025-07-12 15:36:48,950 - Message received from receiver-peer (Qmehiycy): ✓ Message sent to 1 peer(s)
+2025-07-12 15:36:48,950 - Message sent by receiver-peer to 1 peers: ✓ Message sent to 1 peer(s)
+2025-07-12 15:36:48,952 - Message received from receiver-peer (Qmehiycy): ✓ Message sent to 1 peer(s)
+2025-07-12 15:36:48,953 - Message received from receiver-peer (Qmehiycy): asd
+2025-07-12 15:36:48,953 - Message sent by receiver-peer to 1 peers: asd
+2025-07-12 15:36:48,955 - Message received from receiver-peer (Qmehiycy): asd
+2025-07-12 15:36:48,957 - Message received from receiver-peer (Qmehiycy): ✓ Message sent to 1 peer(s)
+2025-07-12 15:36:48,957 - Message sent by receiver-peer to 1 peers: ✓ Message sent to 1 peer(s)
+2025-07-12 15:36:48,958 - Message received from receiver-peer (Qmehiycy): ✓ Message sent to 1 peer(s)
+2025-07-12 15:43:31,789 - ChatRoom initialized - Peer: Qma33DHc, Nickname: ui-test-peer, Multiaddr: /ip4/0.0.0.0/tcp/55777/p2p/Qma33DHcNEKvXU6FxndA7ebHXgavNsCXEdbYCRyXThJ4uV
+2025-07-12 15:43:31,789 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:43:31,789 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:45:26,558 - ChatRoom initialized - Peer: QmWsV9SK, Nickname: ui-test-peer, Multiaddr: /ip4/0.0.0.0/tcp/53353/p2p/QmWsV9SKG5zNjk1qv4MRZhefwnJB4Y4m68eHkVw589swx6
+2025-07-12 15:45:26,558 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:45:26,558 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:45:51,287 - ChatRoom initialized - Peer: QmdYT1Zk, Nickname: sender-peer, Multiaddr: /ip4/0.0.0.0/tcp/53323/p2p/QmdYT1ZkpvovRiSqhUbeiBmDzQ2aS6qBeqXrQ3ym6w5KVx
+2025-07-12 15:45:51,288 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:45:51,289 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:49:06,596 - ChatRoom initialized - Peer: QmQCRiCh, Nickname: connector-peer, Multiaddr: /ip4/0.0.0.0/tcp/45955/p2p/QmQCRiChhmbkRoQ6JXWD1EcKzX2nRog7E36xHThqcfHsvy
+2025-07-12 15:49:06,597 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:49:06,598 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:50:12,643 - ChatRoom initialized - Peer: QmXdAaw4, Nickname: ui-test-peer, Multiaddr: /ip4/0.0.0.0/tcp/42587/p2p/QmXdAaw4Z15DQUhiD8ipHReE7URzeoMNMzCwVi9ja94wCa
+2025-07-12 15:50:12,643 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:50:12,643 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:50:28,435 - ChatRoom initialized - Peer: QmSyrC6C, Nickname: sender-peer, Multiaddr: /ip4/0.0.0.0/tcp/54361/p2p/QmSyrC6CMzgJLfZXvyBX5ZXSriaFDWuUmTcXpgntkooRJr
+2025-07-12 15:50:28,435 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:50:28,435 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:50:50,526 - ChatRoom initialized - Peer: Qmbd8y6z, Nickname: sender-peer, Multiaddr: /ip4/0.0.0.0/tcp/56139/p2p/Qmbd8y6zuPKphcjES4u3Da7LXwVabqsTWasw3f82jFPd3X
+2025-07-12 15:50:50,526 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:50:50,526 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:51:55,872 - ChatRoom initialized - Peer: QmWghfLR, Nickname: ui-test-peer, Multiaddr: /ip4/0.0.0.0/tcp/45745/p2p/QmWghfLRhqPWMVVtnVg75LJ9ByPPjmkZGgbutZv7Pn5re9
+2025-07-12 15:51:55,874 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:51:55,874 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:52:02,509 - Message received from peer-253200 (QmPCAPFd): hi
+2025-07-12 15:52:02,509 - Message sent by peer-253200 to 2 peers: hi
+2025-07-12 15:52:02,512 - Message received from peer-253200 (QmPCAPFd): hi
+2025-07-12 15:52:02,512 - Message received from peer-253200 (QmPCAPFd): hi
+2025-07-12 15:52:09,745 - ERROR: Failed to publish message: 
+2025-07-12 15:52:20,443 - Message received from peer-253200 (QmPCAPFd): lll
+2025-07-12 15:52:20,445 - Message sent by peer-253200 to 2 peers: lll
+2025-07-12 15:52:20,447 - Message received from peer-253200 (QmPCAPFd): lll
+2025-07-12 15:52:26,636 - ERROR: Failed to publish message: Task got bad yield: <class 'trio._core._traps.CancelShieldedCheckpoint'>
+2025-07-12 15:53:20,433 - ChatRoom initialized - Peer: Qmb5phkx, Nickname: ui-test-peer, Multiaddr: /ip4/0.0.0.0/tcp/53471/p2p/Qmb5phkxzvinBDLX2hWYhaVFMTtZEZmwvs62AYvwxMzEV6
+2025-07-12 15:53:20,434 - Subscribed to chat topic: universal-connectivity
+2025-07-12 15:53:20,435 - Subscribed to discovery topic: universal-connectivity-browser-peer-discovery
+2025-07-12 15:53:25,487 - ERROR: Failed to publish message: 
