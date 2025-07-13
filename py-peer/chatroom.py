@@ -142,8 +142,7 @@ class ChatRoom:
             
             await self.pubsub.publish(CHAT_TOPIC, chat_msg.to_json().encode())
             
-            self._log_system_message(f"Message sent by {self.nickname} to {peer_count} peers: {message}")
-            
+         
             if peer_count == 0:
                 print(f"⚠️  No peers connected - message sent to topic but no one will receive it")
             else:
@@ -160,14 +159,10 @@ class ChatRoom:
         try:
             async for message in self._message_stream(self.chat_subscription):
                 try:
-                    # Skip our own messages
-                    if str(message.from_id) == self.peer_id:
-                        continue
+                    # Process all messages including our own (to show them in UI)
+                    # Note: In pubsub, we receive our own messages back through the network
                     
                     chat_msg = ChatMessage.from_json(message.data.decode())
-                    
-                    # Log incoming message
-                    self._log_system_message(f"Message received from {chat_msg.sender_nick} ({chat_msg.sender_id[:8]}): {chat_msg.message}")
                     
                     # Call message handlers
                     for handler in self.message_handlers:
