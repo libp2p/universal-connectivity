@@ -5,17 +5,17 @@ This module handles chat room functionality including message handling,
 pubsub subscriptions, and peer discovery.
 """
 
-import logging
-import json
-import time
-from typing import Dict, Set, Optional, AsyncIterator
-from dataclasses import dataclass
-import trio
 import base58
+import json
+import logging
+import time
+import trio
+from dataclasses import dataclass
+from typing import Set, Optional, AsyncIterator
 
-from libp2p.pubsub.pubsub import Pubsub
-from libp2p.pubsub.pb.rpc_pb2 import Message
 from libp2p.host.basic_host import BasicHost
+from libp2p.pubsub.pb.rpc_pb2 import Message
+from libp2p.pubsub.pubsub import Pubsub
 
 logger = logging.getLogger("chatroom")
 

@@ -7,9 +7,8 @@ It works with the headless service and uses queues for communication.
 
 import logging
 import time
-import threading
-from typing import Optional, Any, Dict
-from queue import Queue, Empty
+from typing import Optional
+from queue import Empty
 
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal
@@ -65,18 +64,6 @@ class ChatUI(App[None]):
     
     #message-input {
         border: solid $primary;
-    }
-    
-    .peer-id {
-        color: $text-muted;
-    }
-    
-    .sender-self {
-        color: $warning;
-    }
-    
-    .sender-other {
-        color: $success;
     }
     
     .system-message {
@@ -280,10 +267,9 @@ class ChatUI(App[None]):
         
         # Format message
         timestamp = time.strftime("%H:%M:%S")
-        sender_class = "sender-self" if is_self else "sender-other"
         sender_display = sender_nick if not is_self else f"{sender_nick} (You)"
         
-        formatted_message = f"[{timestamp}] [{sender_class}]{sender_display}[/{sender_class}]: {message}"
+        formatted_message = f"[{timestamp}] {sender_display}: {message}"
         
         self.chat_log.write_line(formatted_message)
     
@@ -293,7 +279,7 @@ class ChatUI(App[None]):
             return
         
         timestamp = time.strftime("%H:%M:%S")
-        formatted_message = f"[{timestamp}] [system-message]{message}[/system-message]"
+        formatted_message = f"[{timestamp}] {message}"
         
         self.system_log.write_line(formatted_message)
     

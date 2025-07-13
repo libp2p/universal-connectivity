@@ -9,10 +9,9 @@ It handles argument parsing and coordinates between the headless service and UI 
 import argparse
 import logging
 import sys
+import time
 import trio
-import asyncio
 import threading
-from typing import Optional
 
 from headless import HeadlessService
 from ui import ChatUI
@@ -52,7 +51,6 @@ def run_headless_in_thread(headless_service, ready_event):
     thread.start()
     
     # Wait for the service to be ready
-    import time
     max_wait = 30  # Maximum wait time in seconds
     waited = 0
     while not headless_service.ready and waited < max_wait:
@@ -71,7 +69,7 @@ async def main_async(args):
     logger.info("Starting Universal Connectivity Python Peer...")
     
     # Create nickname
-    nickname = args.nick or f"peer-{trio.current_time():.0f}"
+    nickname = args.nick or f"peer-{time.time():.0f}"
     
     # Create headless service
     headless_service = HeadlessService(
@@ -288,7 +286,7 @@ def main():
             logger.info("Starting in UI mode...")
             
             # Create nickname
-            nickname = args.nick or f"peer-{trio.current_time():.0f}"
+            nickname = args.nick or f"peer-{time.time():.0f}"
             
             # Create headless service
             headless_service = HeadlessService(

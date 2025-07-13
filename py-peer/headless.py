@@ -13,7 +13,7 @@ import janus
 import trio
 import trio_asyncio
 from queue import Empty
-from typing import Optional, List, Dict, Any
+from typing import List, Dict, Any
 
 from libp2p import new_host
 from libp2p.crypto.rsa import create_new_key_pair
