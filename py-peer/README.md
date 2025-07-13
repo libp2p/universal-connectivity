@@ -21,6 +21,13 @@ This is the Python implementation of the [Universal Connectivity][UNIV_CONN] app
 
 py-peer is a decentralized chat application that enables peer-to-peer communication without requiring central servers. Built on libp2p, it provides secure, direct communication between participants using modern networking protocols.
 
+## 📸 Screenshots
+
+### Textual TUI Interface
+![py-peer Textual UI](py-peer-textual-ui.png)
+
+*The Textual Terminal User Interface showing a live chat session with multiple connected peers. The interface features a main chat area, connected peers panel, system messages, and input field.*
+
 ### Key Technologies
 
 - **[libp2p](https://libp2p.io/)** - Modular peer-to-peer networking stack
