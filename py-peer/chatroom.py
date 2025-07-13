@@ -22,7 +22,7 @@ logger = logging.getLogger("chatroom")
 # Create a separate logger for system messages
 system_logger = logging.getLogger("system_messages")
 system_handler = logging.FileHandler("system_messages.txt", mode='a')
-system_handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+system_handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s", datefmt="%H:%M:%S"))
 system_logger.addHandler(system_handler)
 system_logger.setLevel(logging.INFO)
 system_logger.propagate = False  # Don't send to parent loggers
@@ -94,7 +94,10 @@ class ChatRoom:
         self.running = False
         
         logger.info(f"ChatRoom initialized for peer {self.peer_id[:8]}... with nickname '{nickname}'")
-        self._log_system_message(f"ChatRoom initialized - Peer: {self.peer_id[:8]}, Nickname: {nickname}, Multiaddr: {self.multiaddr}")
+        self._log_system_message("Universal Connectivity Chat Started")
+        self._log_system_message(f"Nickname: {nickname}")
+        self._log_system_message(f"Multiaddr: {self.multiaddr}")
+        self._log_system_message("Commands: /quit, /peers, /status, /multiaddr")
     
     def _log_system_message(self, message: str):
         """Log system message to file."""
@@ -105,6 +108,7 @@ class ChatRoom:
         """Create and join a chat room."""
         chat_room = cls(host, pubsub, nickname, multiaddr)
         await chat_room._subscribe_to_topics()
+        chat_room._log_system_message(f"Joined chat room as '{nickname}'")
         return chat_room
     
     async def _subscribe_to_topics(self):
@@ -113,12 +117,10 @@ class ChatRoom:
             # Subscribe to chat topic
             self.chat_subscription = await self.pubsub.subscribe(CHAT_TOPIC)
             logger.info(f"Subscribed to chat topic: {CHAT_TOPIC}")
-            self._log_system_message(f"Subscribed to chat topic: {CHAT_TOPIC}")
             
             # Subscribe to discovery topic
             self.discovery_subscription = await self.pubsub.subscribe(PUBSUB_DISCOVERY_TOPIC)
             logger.info(f"Subscribed to discovery topic: {PUBSUB_DISCOVERY_TOPIC}")
-            self._log_system_message(f"Subscribed to discovery topic: {PUBSUB_DISCOVERY_TOPIC}")
             
         except Exception as e:
             logger.error(f"Failed to subscribe to topics: {e}")

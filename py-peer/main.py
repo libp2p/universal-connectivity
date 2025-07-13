@@ -19,18 +19,19 @@ from ui import ChatUI
 # Configure logging
 def setup_logging(ui_mode=False):
     """Setup logging configuration based on whether UI is active."""
-    handlers = [
-        logging.FileHandler("py-peer.log", mode='a')  # Always log to file
-    ]
+    handlers = []
     
     # Only add console handler if not in UI mode
     if not ui_mode:
         handlers.append(logging.StreamHandler())
     
+    # If no handlers, add a null handler to prevent logging errors
+    if not handlers:
+        handlers.append(logging.NullHandler())
+    
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s %(message)s",
-        datefmt="%H:%M:%S",
+        format="%(asctime)s - %(name)s - %(message)s",
         handlers=handlers,
         force=True  # Force reconfiguration
     )
