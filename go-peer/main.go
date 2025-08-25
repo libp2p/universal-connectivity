@@ -13,14 +13,9 @@ import (
 	"github.com/caddyserver/certmagic"
 	p2pforge "github.com/ipshipyard/p2p-forge/client"
 	"github.com/libp2p/go-libp2p"
-	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
-	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
-	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
@@ -28,80 +23,63 @@ import (
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
-	"github.com/multiformats/go-multiaddr"
 )
-
-// DiscoveryInterval is how often we re-publish our mDNS records.
-const DiscoveryInterval = time.Hour
-
-// DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
-const DiscoveryServiceTag = "universal-connectivity"
 
 var SysMsgChan chan *ChatMessage
 
 var logger = log.Logger("app")
 
-// Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
-// NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
-// If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
-func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Multiaddr) (*dht.IpfsDHT, error) {
-
-	kdht, err := dht.New(ctx, host,
-		dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...),
-		dht.Mode(dht.ModeAuto),
-	)
-	if err != nil {
-		return nil, err
+func logDetailf(format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	logger.Infof("🔍 %s", msg)
+	if SysMsgChan != nil {
+		select {
+		case SysMsgChan <- &ChatMessage{Message: fmt.Sprintf("🔍 %s", msg), SenderID: "system", SenderNick: "system"}:
+		default:
+		}
 	}
-
-	if err = kdht.Bootstrap(ctx); err != nil {
-		return nil, err
-	}
-
-	return kdht, nil
 }
 
-// Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
-// Only used by Go peer to find each other.
-// TODO: since this isn't implemented on the Rust or the JS side, can probably be removed
-func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT) {
-	routingDiscovery := routing.NewRoutingDiscovery(dht)
-
-	discovery.Advertise(ctx, routingDiscovery, DiscoveryServiceTag)
-
-	ticker := time.NewTicker(time.Second * 10)
-	defer ticker.Stop()
-
-	for {
+func logConnectionf(format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	logger.Infof("🔗 %s", msg)
+	if SysMsgChan != nil {
 		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
+		case SysMsgChan <- &ChatMessage{Message: fmt.Sprintf("🔗 %s", msg), SenderID: "system", SenderNick: "system"}:
+		default:
+		}
+	}
+}
 
-			peers, err := discovery.FindPeers(ctx, routingDiscovery, DiscoveryServiceTag)
-			if err != nil {
-				panic(err)
-			}
+func logPubSubf(format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	logger.Infof("📡 %s", msg)
+	if SysMsgChan != nil {
+		select {
+		case SysMsgChan <- &ChatMessage{Message: fmt.Sprintf("📡 %s", msg), SenderID: "system", SenderNick: "system"}:
+		default:
+		}
+	}
+}
 
-			for _, p := range peers {
-				if p.ID == h.ID() {
-					continue
-				}
-				if h.Network().Connectedness(p.ID) != network.Connected {
-					_, err = h.Network().DialPeer(ctx, p.ID)
-					if err != nil {
-						LogMsgf("Failed to connect to peer (%s): %s", p.ID, err.Error())
-						continue
-					}
-					LogMsgf("Connected to peer %s", p.ID.String())
-				}
-			}
+func logErrorf(format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	logger.Errorf("❌ %s", msg)
+	if SysMsgChan != nil {
+		select {
+		case SysMsgChan <- &ChatMessage{Message: fmt.Sprintf("❌ %s", msg), SenderID: "system", SenderNick: "system"}:
+		default:
 		}
 	}
 }
 
 func LogMsgf(f string, msg ...any) {
-	SysMsgChan <- &ChatMessage{Message: fmt.Sprintf(f, msg...), SenderID: "system", SenderNick: "system"}
+	if SysMsgChan != nil {
+		select {
+		case SysMsgChan <- &ChatMessage{Message: fmt.Sprintf(f, msg...), SenderID: "system", SenderNick: "system"}:
+		default:
+		}
+	}
 }
 
 func main() {
@@ -116,39 +94,56 @@ func main() {
 	flag.Parse()
 
 	log.SetLogLevel("app", "debug")
+	
+	logDetailf("Starting Universal Connectivity Go Peer...")
+	logDetailf("Flags - nick: %s, identity: %s, headless: %v", *nickFlag, *idPath, *headless)
+	logDetailf("Connect addresses: %v", []string(addrsToConnectTo))
 
 	ctx := context.Background()
 
 	// Create a channel to signal when the cert is loaded
 	certLoaded := make(chan bool, 1)
 
+	logDetailf("Initializing certificate manager...")
 	// Initialize the certificate manager
 	certManager, err := p2pforge.NewP2PForgeCertMgr(
 		p2pforge.WithCertificateStorage(&certmagic.FileStorage{Path: "p2p-forge-certs"}),
 		p2pforge.WithUserAgent("go-libp2p/example/autotls"),
 		p2pforge.WithCAEndpoint(p2pforge.DefaultCAEndpoint),
-		p2pforge.WithOnCertLoaded(func() { certLoaded <- true }), // Signal when cert is loaded
+		p2pforge.WithOnCertLoaded(func() { 
+			logDetailf("Certificate loaded successfully")
+			certLoaded <- true 
+		}), // Signal when cert is loaded
 		p2pforge.WithLogger(logger.Desugar().Sugar().Named("autotls")),
 	)
 	if err != nil {
+		logErrorf("Failed to create certificate manager: %v", err)
 		panic(err)
 	}
 
 	// Start the cert manager
-	logger.Info("Starting cert manager")
+	logDetailf("Starting certificate manager...")
 	err = certManager.Start()
 	if err != nil {
+		logErrorf("Failed to start certificate manager: %v", err)
 		panic(err)
 	}
 	defer certManager.Stop()
 
 	// Load identity key
+	logDetailf("Loading identity key from: %s", *idPath)
 	privk, err := LoadIdentity(*idPath)
 	if err != nil {
+		logErrorf("Failed to load identity key: %v", err)
 		panic(err)
 	}
+	
+	logDetailf("Identity key loaded successfully")
+
+	logDetailf("Identity key loaded successfully")
 
 	// Configure libp2p options with AutoTLS
+	logDetailf("Configuring libp2p host options...")
 	opts := []libp2p.Option{
 		libp2p.Identity(privk),
 		libp2p.NATPortMap(),
@@ -182,90 +177,147 @@ func main() {
 	}
 
 	// Create a new libp2p Host
+	logDetailf("Creating libp2p host...")
 	h, err := libp2p.New(opts...)
 	if err != nil {
+		logErrorf("Failed to create libp2p host: %v", err)
 		panic(err)
 	}
 
 	certManager.ProvideHost(h)
 
-	logger.Info("Host created with PeerID: ", h.ID())
+	logConnectionf("Host created with PeerID: %s", h.ID())
+	
+	// Setup connection event handlers
+	h.Network().Notify(&network.NotifyBundle{
+		ConnectedF: func(n network.Network, c network.Conn) {
+			logConnectionf("✅ Connected to peer: %s", c.RemotePeer())
+			logConnectionf("   Local addr: %s", c.LocalMultiaddr())
+			logConnectionf("   Remote addr: %s", c.RemoteMultiaddr())
+		},
+		DisconnectedF: func(n network.Network, c network.Conn) {
+			logConnectionf("❌ Disconnected from peer: %s", c.RemotePeer())
+		},
+	})
 
 	resources := relayv2.DefaultResources()
 	resources.MaxReservations = 256
 	_, err = relayv2.New(h, relayv2.WithResources(resources))
 	if err != nil {
+		logErrorf("Failed to create relay service: %v", err)
 		panic(err)
 	}
+	logDetailf("Relay service initialized")
 
 	// create a new PubSub service using the GossipSub router
+	logPubSubf("Initializing PubSub with GossipSub...")
 	ps, err := pubsub.NewGossipSub(ctx, h)
 	if err != nil {
+		logErrorf("Failed to create GossipSub: %v", err)
 		panic(err)
 	}
+	logPubSubf("GossipSub initialized successfully")
 
 	// use the nickname from the cli flag, or a default if blank
 	nick := *nickFlag
 	if len(nick) == 0 {
 		nick = defaultNick(h.ID())
 	}
+	logDetailf("Using nickname: %s", nick)
 
 	// join the chat room
+	logPubSubf("Joining chat room...")
 	cr, err := JoinChatRoom(ctx, h, ps, nick)
 	if err != nil {
+		logErrorf("Failed to join chat room: %v", err)
 		panic(err)
 	}
 	SysMsgChan = cr.SysMessages
+	logPubSubf("Successfully joined chat room as '%s'", nick)
 
-	// setup DHT with empty discovery peers
-	// so this will be a discovery peer for others
-	// this peer should run on cloud(with public ip address)
-	dht, err := NewDHT(ctx, h, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	// setup peer discovery
-	go Discover(ctx, h, dht)
-
-	// setup local mDNS discovery
-	if err := setupDiscovery(h); err != nil {
-		panic(err)
-	}
-
+	// Connect to specified peers
 	if len(addrsToConnectTo) > 0 {
-		for _, addr := range addrsToConnectTo {
+		logConnectionf("Connecting to %d specified peer(s)...", len(addrsToConnectTo))
+		for i, addr := range addrsToConnectTo {
+			logConnectionf("Connecting to peer %d/%d: %s", i+1, len(addrsToConnectTo), addr)
 			// convert to a peer.AddrInfo struct
 			peerinfo, err := peer.AddrInfoFromString(addr)
 			if err != nil {
-				LogMsgf("Failed to parse multiaddr: %s", err.Error())
+				logErrorf("Failed to parse multiaddr '%s': %v", addr, err)
 				continue
 			}
+			logConnectionf("Parsed peer info: ID=%s, Addrs=%v", peerinfo.ID, peerinfo.Addrs)
 
 			// connect to the peer
+			logConnectionf("Attempting connection to peer: %s", peerinfo.ID)
 			if err := h.Connect(ctx, *peerinfo); err != nil {
-				LogMsgf("Failed to connect to peer: %s", err.Error())
+				logErrorf("Failed to connect to peer %s: %v", peerinfo.ID, err)
 				continue
 			}
+			logConnectionf("✅ Successfully connected to peer: %s", peerinfo.ID)
 		}
+	} else {
+		logDetailf("No peers specified to connect to")
 	}
 
-	// Start a background ticker to periodically log connected peers
+	// Start background monitoring
 	go func() {
-		ticker := time.NewTicker(time.Second * 10)
+		ticker := time.NewTicker(time.Second * 30)
 		defer ticker.Stop()
+		
+		// Initial status
+		time.Sleep(2 * time.Second) // Give time for initial setup
+		logDetailf("=== Initial Status Report ===")
+		connectedPeers := h.Network().Peers()
+		logDetailf("Connected peers: %d", len(connectedPeers))
+		for _, peerID := range connectedPeers {
+			conns := h.Network().ConnsToPeer(peerID)
+			logDetailf("  - Peer %s (%d connections)", shortID(peerID), len(conns))
+			for i, conn := range conns {
+				logDetailf("    Conn %d: %s -> %s", i+1, conn.LocalMultiaddr(), conn.RemoteMultiaddr())
+			}
+		}
+		
+		// Initial PubSub status
+		allPubsubPeers := ps.ListPeers("") 
+		logPubSubf("Initial total PubSub peers: %d", len(allPubsubPeers))
+		for _, peerID := range allPubsubPeers {
+			logPubSubf("  - Initial PubSub peer ID: %s (short: %s)", peerID, shortID(peerID))
+		}
+		
+		// Periodic status updates
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
+				logDetailf("=== Periodic Status Report ===")
+				connectedPeers := h.Network().Peers()
+				logDetailf("Connected peers: %d", len(connectedPeers))
+				
+				// Get all PubSub peers (total)
+				allPubsubPeers := ps.ListPeers("") 
+				logPubSubf("Total PubSub peers: %d", len(allPubsubPeers))
+				for _, peerID := range allPubsubPeers {
+					logPubSubf("  - PubSub peer ID: %s (short: %s)", peerID, shortID(peerID))
+				}
+				
+				// Get PubSub peers on specific topic
+				pubsubPeers := ps.ListPeers("universal-connectivity")
+				logPubSubf("PubSub peers on topic 'universal-connectivity': %d", len(pubsubPeers))
+				for _, peerID := range pubsubPeers {
+					logPubSubf("  - Topic peer: %s", shortID(peerID))
+				}
+				
+				// Resource manager stats
 				rm := h.Network().ResourceManager()
 				rm.ViewSystem(
 					func(rs network.ResourceScope) error {
-						fmt.Printf("Stats: %+v\n", rs.Stat())
-						if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
-							fmt.Printf("Limits: %+v\n", r.Limit())
-						}
+						stat := rs.Stat()
+						logDetailf("Resource stats - Conns: %d, Streams: %d, Memory: %d", 
+							stat.NumConnsInbound+stat.NumConnsOutbound,
+							stat.NumStreamsInbound+stat.NumStreamsOutbound,
+							stat.Memory)
 						return nil
 					},
 				)
@@ -273,25 +325,35 @@ func main() {
 		}
 	}()
 
-	LogMsgf("PeerID: %s", h.ID().String())
-	for _, addr := range h.Addrs() {
+	logDetailf("PeerID: %s", h.ID().String())
+	logDetailf("Short ID: %s", shortID(h.ID()))
+	
+	logDetailf("=== Listening Addresses ===")
+	for i, addr := range h.Addrs() {
+		fullAddr := fmt.Sprintf("%s/p2p/%s", addr.String(), h.ID())
 		if *headless {
-			logger.Infof("Listening on: %s/p2p/%s", addr.String(), h.ID())
+			logger.Infof("Address %d: %s", i+1, fullAddr)
 		} else {
-			LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
+			LogMsgf("Address %d: %s", i+1, fullAddr)
 		}
+		logDetailf("  %d: %s", i+1, fullAddr)
 	}
 
 	go func() {
 		<-certLoaded
-		for _, addr := range h.Addrs() {
+		logDetailf("=== Additional Addresses After Cert Load ===")
+		for i, addr := range h.Addrs() {
+			fullAddr := fmt.Sprintf("%s/p2p/%s", addr.String(), h.ID())
 			if *headless {
-				logger.Infof("Listening on: %s/p2p/%s", addr.String(), h.ID())
+				logger.Infof("Post-cert Address %d: %s", i+1, fullAddr)
 			} else {
-				LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
+				LogMsgf("Post-cert Address %d: %s", i+1, fullAddr)
 			}
+			logDetailf("  Post-cert %d: %s", i+1, fullAddr)
 		}
 	}()
+
+	logDetailf("✅ Go peer initialization complete - ready for connections")
 
 	if *headless {
 		select {}
@@ -319,30 +381,6 @@ func defaultNick(p peer.ID) string {
 func shortID(p peer.ID) string {
 	str := p.String()
 	return str[len(str)-8:]
-}
-
-// discoveryNotifee gets notified when we find a new peer via mDNS discovery
-type discoveryNotifee struct {
-	h host.Host
-}
-
-// HandlePeerFound connects to peers discovered via mDNS. Once they're connected,
-// the PubSub system will automatically start interacting with them if they also
-// support PubSub.
-func (n *discoveryNotifee) HandlePeerFound(pi peer.AddrInfo) {
-	LogMsgf("discovered new peer %s", pi.ID.String())
-	err := n.h.Connect(context.Background(), pi)
-	if err != nil {
-		LogMsgf("error connecting to peer %s: %s", pi.ID.String(), err)
-	}
-}
-
-// setupDiscovery creates an mDNS discovery service and attaches it to the libp2p Host.
-// This lets us automatically discover peers on the same LAN and connect to them.
-func setupDiscovery(h host.Host) error {
-	// setup mDNS discovery to find local peers
-	s := mdns.NewMdnsService(h, DiscoveryServiceTag, &discoveryNotifee{h: h})
-	return s.Start()
 }
 
 // creates and returns a libp2p resource manager with very permissive limits.
