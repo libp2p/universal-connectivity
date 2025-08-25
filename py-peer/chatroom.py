@@ -128,60 +128,71 @@ class ChatRoom:
             raise
     
     async def publish_message(self, message: str):
-        """Publish a chat message."""
-        chat_msg = ChatMessage(
-            message=message,
-            sender_id=self.peer_id,
-            sender_nick=self.nickname
-        )
-        
+        """Publish a chat message in Go-compatible format (raw string)."""
         try:
             # Check if we have any peers connected
             peer_count = len(self.pubsub.peers)
-            logger.info(f"Total pubsub peers are: {self.pubsub.peers.keys()}")
-            logger.debug(f"Publishing message to {peer_count} peers: {message}")
+            logger.info(f"📤 Publishing message to {peer_count} peers: {message}")
+            logger.info(f"Total pubsub peers: {list(self.pubsub.peers.keys())}")
             
-            await self.pubsub.publish(CHAT_TOPIC, chat_msg.to_json().encode())
+            # Send raw message string like Go peer (compatible format)
+            await self.pubsub.publish(CHAT_TOPIC, message.encode())
+            logger.info(f"✅ Message published successfully to topic '{CHAT_TOPIC}'")
             
-         
             if peer_count == 0:
                 print(f"⚠️  No peers connected - message sent to topic but no one will receive it")
             else:
                 print(f"✓ Message sent to {peer_count} peer(s)")
                 
         except Exception as e:
+            logger.error(f"❌ Failed to publish message: {e}")
+            print(f"❌ Error sending message: {e}")
+                
+        except Exception as e:
             logger.error(f"Failed to publish message: {e}")
             self._log_system_message(f"ERROR: Failed to publish message: {e}")
     
     async def _handle_chat_messages(self):
-        """Handle incoming chat messages."""
-        logger.debug("Starting chat message handler")
+        """Handle incoming chat messages in Go-compatible format."""
+        logger.debug("📨 Starting chat message handler")
         
         try:
             async for message in self._message_stream(self.chat_subscription):
                 try:
-                    # Process all messages including our own (to show them in UI)
-                    # Note: In pubsub, we receive our own messages back through the network
+                    # Handle raw string messages like Go peer
+                    raw_message = message.data.decode()
+                    sender_id = str(message.from_id) if message.from_id else "unknown"
                     
-                    chat_msg = ChatMessage.from_json(message.data.decode())
+                    logger.info(f"📨 Received message from {sender_id}: {raw_message}")
+                    
+                    # Skip our own messages
+                    if message.from_id and str(message.from_id) == self.peer_id:
+                        logger.info("📨 Ignoring own message")
+                        continue
+                    
+                    # Create ChatMessage object for handlers
+                    chat_msg = ChatMessage(
+                        message=raw_message,
+                        sender_id=sender_id,
+                        sender_nick=sender_id[-8:] if len(sender_id) > 8 else sender_id  # Use last 8 chars like Go
+                    )
                     
                     # Call message handlers
                     for handler in self.message_handlers:
                         try:
                             await handler(chat_msg)
                         except Exception as e:
-                            logger.error(f"Error in message handler: {e}")
+                            logger.error(f"❌ Error in message handler: {e}")
                     
                     # Default console output if no handlers
                     if not self.message_handlers:
-                        sender_short = chat_msg.sender_id[:8] if len(chat_msg.sender_id) > 8 else chat_msg.sender_id
-                        print(f"[{chat_msg.sender_nick}({sender_short})]: {chat_msg.message}")
+                        print(f"[{chat_msg.sender_nick}]: {chat_msg.message}")
                 
                 except Exception as e:
-                    logger.error(f"Error processing chat message: {e}")
+                    logger.error(f"❌ Error processing chat message: {e}")
         
         except Exception as e:
-            logger.error(f"Error in chat message handler: {e}")
+            logger.error(f"❌ Error in chat message handler: {e}")
     
     async def _handle_discovery_messages(self):
         """Handle incoming discovery messages."""

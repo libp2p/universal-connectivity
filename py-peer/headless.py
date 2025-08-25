@@ -30,8 +30,7 @@ logger = logging.getLogger("headless")
 
 # Constants
 DISCOVERY_SERVICE_TAG = "universal-connectivity"
-# GOSSIPSUB_PROTOCOL_ID = TProtocol("/meshsub/1.0.0")
-GOSSIPSUB_PROTOCOL_ID = [PROTOCOL_ID, PROTOCOL_ID_V11]
+GOSSIPSUB_PROTOCOL_ID = TProtocol("/meshsub/1.0.0")
 DEFAULT_PORT = 9095
 
 
@@ -114,26 +113,39 @@ class HeadlessService:
         logger.info(f"Listening on: {listen_addr}")
         logger.info(f"Full multiaddr: {self.full_multiaddr}")
         
-        # Create GossipSub with optimized parameters
+        # Log GossipSub protocol configuration
+        logger.info(f"📋 Configuring GossipSub with protocols: ['{GOSSIPSUB_PROTOCOL_ID}']")
+        logger.info(f"  Protocol 1: {GOSSIPSUB_PROTOCOL_ID}")
+        
+        # Create GossipSub with optimized parameters (matching working pubsub.py)
         self.gossipsub = GossipSub(
-            protocols=GOSSIPSUB_PROTOCOL_ID,
+            protocols=[GOSSIPSUB_PROTOCOL_ID],
             degree=3,
             degree_low=2,
             degree_high=4,
+            gossip_window=2,  # Smaller window for faster gossip
+            gossip_history=5,  # Keep more history
+            heartbeat_initial_delay=2.0,  # Start heartbeats sooner
+            heartbeat_interval=5,  # More frequent heartbeats for testing
         )
+        logger.info("✅ GossipSub router created successfully")
         
         # Create PubSub
         self.pubsub = Pubsub(self.host, self.gossipsub)
+        logger.info("✅ PubSub service created successfully")
         
         # Start host and pubsub services
         async with self.host.run(listen_addrs=[listen_addr]):
-            logger.info("Initializing PubSub and GossipSub...")
+            logger.info("📡 Initializing PubSub and GossipSub services...")
             
             async with background_trio_service(self.pubsub):
                 async with background_trio_service(self.gossipsub):
-                    logger.info("Pubsub and GossipSub services started.")
+                    logger.info("✅ Pubsub and GossipSub services started.")
                     await self.pubsub.wait_until_ready()
-                    logger.info("Pubsub ready.")
+                    logger.info("✅ Pubsub ready and operational.")
+                    
+                    # Log active protocols
+                    logger.info(f"📋 Active GossipSub protocols: {self.gossipsub.protocols}")
                     
                     # Setup connections and chat room
                     await self._setup_connections()
@@ -151,32 +163,125 @@ class HeadlessService:
                         nursery.start_soon(self._wait_for_stop)
     
     async def _setup_connections(self):
-        """Setup connections to specified peers."""
+        """Setup connections to specified peers with detailed protocol logging."""
         if not self.connect_addrs:
             return
         
         for addr_str in self.connect_addrs:
             try:
-                logger.info(f"Attempting to connect to: {addr_str}")
+                logger.info(f"🔗 Attempting to connect to: {addr_str}")
                 maddr = multiaddr.Multiaddr(addr_str)
                 info = info_from_p2p_addr(maddr)
-                logger.info(f"Connecting to peer: {info.peer_id}")
+                logger.info(f"🔗 Parsed peer info - ID: {info.peer_id}, Addrs: {info.addrs}")
+                
+                # Log connection attempt
+                logger.info(f"🔗 Initiating connection to peer: {info.peer_id}")
                 await self.host.connect(info)
-                logger.info(f"✅ Successfully connected to peer: {info.peer_id}")
+                logger.info(f"✅ TCP connection established to peer: {info.peer_id}")
                 
-                # Wait for connection to stabilize
-                await trio.sleep(2)
+                # Wait for initial protocol negotiation
+                await trio.sleep(1)
                 
-                # Check pubsub peers
-                connected_peers = list(self.pubsub.peers.keys())
-                logger.info(f"PubSub peers after connection: {[str(p)[:8] for p in connected_peers]}")
+                # Detailed protocol inspection
+                logger.info(f"🔍 Starting protocol inspection for peer: {info.peer_id}")
+                await self._inspect_peer_protocols(info.peer_id)
                 
-                # Send system message to queue
+                # Check connection status
+                try:
+                    # In py-libp2p, we can check if peer is connected via the swarm
+                    swarm = self.host.get_network()
+                    if hasattr(swarm, 'connections') and info.peer_id in swarm.connections:
+                        connections = [swarm.connections[info.peer_id]]
+                        logger.info(f"📊 Active connections to peer {info.peer_id}: {len(connections)}")
+                    else:
+                        logger.info(f"📊 No direct connection info available for peer {info.peer_id}")
+                except Exception as conn_err:
+                    logger.warning(f"⚠️  Could not check connection status: {conn_err}")
+                
+                # Wait for PubSub protocol negotiation
+                logger.info(f"⏳ Waiting for PubSub protocol negotiation...")
+                await trio.sleep(3)
+                
+                # Check final PubSub status
+                await self._check_pubsub_status(info.peer_id)
+                
                 await self._send_system_message(f"Connected to peer: {str(info.peer_id)[:8]}")
                 
             except Exception as e:
                 logger.error(f"❌ Failed to connect to {addr_str}: {e}")
                 await self._send_system_message(f"Failed to connect to {addr_str}: {e}")
+    
+    async def _inspect_peer_protocols(self, peer_id):
+        """Inspect and log all protocols supported by a peer."""
+        try:
+            logger.info(f"🔍 Checking peerstore for peer: {peer_id}")
+            
+            # Get peer's protocols from peerstore (simplified approach)
+            peerstore = self.host.get_peerstore()
+            
+            # Check if we can access protocols - different py-libp2p versions have different APIs
+            try:
+                if hasattr(peerstore, 'get_protocols'):
+                    protocols = peerstore.get_protocols(peer_id)
+                elif hasattr(peerstore, 'protocols'):
+                    protocols = peerstore.protocols(peer_id)
+                else:
+                    # Fallback - just log that we connected successfully
+                    logger.info(f"✅ Successfully connected to peer {peer_id}")
+                    logger.info(f"🔍 Protocol inspection not available in this py-libp2p version")
+                    return
+                    
+                if protocols:
+                    logger.info(f"📋 Peer {peer_id} supports {len(protocols)} protocols:")
+                    for i, protocol in enumerate(protocols, 1):
+                        logger.info(f"  {i}: {protocol}")
+                        if "meshsub" in str(protocol) or "gossipsub" in str(protocol):
+                            logger.info(f"  🎯 Found PubSub protocol: {protocol}")
+                else:
+                    logger.info(f"📋 No protocols found for peer {peer_id} yet (may still be negotiating)")
+                    
+            except Exception as proto_err:
+                logger.info(f"🔍 Protocol details not accessible: {proto_err}")
+                logger.info(f"✅ Peer {peer_id} connected successfully")
+                    
+        except Exception as e:
+            logger.warning(f"⚠️  Error inspecting peer protocols: {e}")
+            logger.info(f"✅ Peer {peer_id} connected successfully")
+    
+    async def _check_pubsub_status(self, peer_id):
+        """Check the PubSub connection status with a specific peer."""
+        try:
+            logger.info(f"🔍 Checking PubSub status for peer: {peer_id}")
+            
+            # Check if peer is in pubsub.peers
+            pubsub_peers = list(self.pubsub.peers.keys())
+            logger.info(f"📡 Total PubSub peers: {len(pubsub_peers)}")
+            for i, p in enumerate(pubsub_peers, 1):
+                logger.info(f"  PubSub peer {i}: {p}")
+            
+            if peer_id in self.pubsub.peers:
+                logger.info(f"✅ Peer {peer_id} is in PubSub mesh")
+                
+                # Check GossipSub specific status
+                if hasattr(self.pubsub, 'router') and hasattr(self.pubsub.router, 'mesh'):
+                    mesh = self.pubsub.router.mesh
+                    logger.info(f"🕸️  GossipSub mesh status:")
+                    logger.info(f"    Mesh topics: {list(mesh.keys())}")
+                    for topic, topic_peers in mesh.items():
+                        logger.info(f"    Topic '{topic}': {len(topic_peers)} peers")
+                        if peer_id in topic_peers:
+                            logger.info(f"    ✅ Peer {peer_id} is in mesh for topic '{topic}'")
+                        else:
+                            logger.warning(f"    ❌ Peer {peer_id} is NOT in mesh for topic '{topic}'")
+            else:
+                logger.warning(f"❌ Peer {peer_id} is NOT in PubSub mesh")
+                logger.info("🔧 Possible reasons:")
+                logger.info("  1. PubSub protocol negotiation failed")
+                logger.info("  2. Peer doesn't support compatible GossipSub version")
+                logger.info("  3. Network issues preventing PubSub handshake")
+                
+        except Exception as e:
+            logger.error(f"❌ Error checking PubSub status: {e}")
     
     async def _setup_chat_room(self):
         """Setup the chat room."""

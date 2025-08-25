@@ -196,8 +196,8 @@ func (cr *ChatRoom) readChatLoop() {
 		
 		cm := new(ChatMessage)
 		cm.Message = string(msg.Data)
-		cm.SenderID = msg.ID
-		cm.SenderNick = string(msg.ID[len(msg.ID)-8])
+		cm.SenderID = string(msg.ReceivedFrom)
+		cm.SenderNick = shortID(msg.ReceivedFrom)  // Use the shortID function for consistency
 		
 		chatLogger.Infof("📨 Forwarding message to UI: sender=%s, content=%s", cm.SenderNick, cm.Message)
 		// send valid messages onto the Messages channel

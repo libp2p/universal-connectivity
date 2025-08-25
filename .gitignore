@@ -11,3 +11,5 @@ go-peer/go-peer
 **/.idea
 .venv
 __pycache__
+venv
+venv2

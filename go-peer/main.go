@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ipfs/go-log/v2"
@@ -14,6 +15,7 @@ import (
 	p2pforge "github.com/ipshipyard/p2p-forge/client"
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
@@ -188,18 +190,6 @@ func main() {
 
 	logConnectionf("Host created with PeerID: %s", h.ID())
 	
-	// Setup connection event handlers
-	h.Network().Notify(&network.NotifyBundle{
-		ConnectedF: func(n network.Network, c network.Conn) {
-			logConnectionf("✅ Connected to peer: %s", c.RemotePeer())
-			logConnectionf("   Local addr: %s", c.LocalMultiaddr())
-			logConnectionf("   Remote addr: %s", c.RemoteMultiaddr())
-		},
-		DisconnectedF: func(n network.Network, c network.Conn) {
-			logConnectionf("❌ Disconnected from peer: %s", c.RemotePeer())
-		},
-	})
-
 	resources := relayv2.DefaultResources()
 	resources.MaxReservations = 256
 	_, err = relayv2.New(h, relayv2.WithResources(resources))
@@ -210,13 +200,66 @@ func main() {
 	logDetailf("Relay service initialized")
 
 	// create a new PubSub service using the GossipSub router
-	logPubSubf("Initializing PubSub with GossipSub...")
+	logPubSubf("📡 Initializing PubSub with GossipSub...")
+	logPubSubf("📋 Default GossipSub protocols: /meshsub/1.0.0, /meshsub/1.1.0")
 	ps, err := pubsub.NewGossipSub(ctx, h)
 	if err != nil {
 		logErrorf("Failed to create GossipSub: %v", err)
 		panic(err)
 	}
-	logPubSubf("GossipSub initialized successfully")
+	logPubSubf("✅ GossipSub initialized successfully")
+	
+	// Log GossipSub configuration
+	logPubSubf("📊 GossipSub router ready for protocol negotiation")
+
+	// Setup detailed connection event handlers with protocol inspection (now that ps is available)
+	h.Network().Notify(&network.NotifyBundle{
+		ConnectedF: func(n network.Network, c network.Conn) {
+			logConnectionf("✅ Connected to peer: %s", c.RemotePeer())
+			logConnectionf("   Local addr: %s", c.LocalMultiaddr())
+			logConnectionf("   Remote addr: %s", c.RemoteMultiaddr())
+			
+			// Log protocol negotiation details
+			go func() {
+				// Give a moment for protocol negotiation to start
+				time.Sleep(100 * time.Millisecond)
+				
+				// Check supported protocols on this connection
+				logConnectionf("🔍 Inspecting protocols for peer: %s", c.RemotePeer())
+				
+				// Get the peer's supported protocols
+				protocols, err := h.Peerstore().GetProtocols(c.RemotePeer())
+				if err != nil {
+					logConnectionf("❌ Failed to get protocols for peer %s: %v", c.RemotePeer(), err)
+				} else {
+					logConnectionf("📋 Peer %s supports %d protocols:", c.RemotePeer(), len(protocols))
+					for i, protocol := range protocols {
+						logConnectionf("   %d: %s", i+1, protocol)
+						if strings.Contains(string(protocol), "meshsub") || strings.Contains(string(protocol), "gossipsub") {
+							logPubSubf("🎯 Found PubSub protocol: %s", protocol)
+						}
+					}
+				}
+				
+				// Check streams on this connection
+				streams := c.GetStreams()
+				logConnectionf("📊 Connection has %d active streams:", len(streams))
+				for i, stream := range streams {
+					protocol := stream.Protocol()
+					logConnectionf("   Stream %d: Protocol=%s", i+1, protocol)
+					if strings.Contains(string(protocol), "meshsub") || strings.Contains(string(protocol), "gossipsub") {
+						logPubSubf("🎯 PubSub stream found: %s", protocol)
+					}
+				}
+				
+				// Start monitoring GossipSub handshake
+				go monitorGossipSubHandshake(ctx, h, ps, c.RemotePeer())
+			}()
+		},
+		DisconnectedF: func(n network.Network, c network.Conn) {
+			logConnectionf("❌ Disconnected from peer: %s", c.RemotePeer())
+		},
+	})
 
 	// use the nickname from the cli flag, or a default if blank
 	nick := *nickFlag
@@ -417,4 +460,76 @@ func getResourceManager() network.ResourceManager {
 		panic(err)
 	}
 	return rcmgr
+}
+
+// checkGossipSubMeshStatus checks the GossipSub mesh status for a specific peer
+func checkGossipSubMeshStatus(ps *pubsub.PubSub, peerID peer.ID, topic string) {
+	logPubSubf("🔍 Checking GossipSub mesh status for peer: %s", peerID)
+	logPubSubf("🔍 Checking topic: %s", topic)
+	
+	// Get all peers in the pubsub network
+	peers := ps.ListPeers("")
+	logPubSubf("📡 Total PubSub peers in network: %d", len(peers))
+	
+	for i, p := range peers {
+		logPubSubf("  Peer %d: %s", i+1, p)
+		if p == peerID {
+			logPubSubf("  ✅ Found target peer in PubSub network")
+		}
+	}
+	
+	// Get peers for the specific topic
+	topicPeers := ps.ListPeers(topic)
+	logPubSubf("📡 Peers subscribed to topic '%s': %d", topic, len(topicPeers))
+	
+	foundInTopic := false
+	for i, p := range topicPeers {
+		logPubSubf("  Topic peer %d: %s", i+1, p)
+		if p == peerID {
+			logPubSubf("  ✅ Target peer is subscribed to topic!")
+			foundInTopic = true
+		}
+	}
+	
+	if !foundInTopic {
+		logPubSubf("  ❌ Target peer is NOT subscribed to topic")
+		logPubSubf("  🔧 Possible reasons:")
+		logPubSubf("     1. Peer hasn't completed GossipSub handshake")
+		logPubSubf("     2. Peer hasn't subscribed to the topic yet")  
+		logPubSubf("     3. GossipSub mesh formation still in progress")
+	}
+}
+
+// monitorGossipSubHandshake monitors the GossipSub handshake process
+func monitorGossipSubHandshake(ctx context.Context, h host.Host, ps *pubsub.PubSub, peerID peer.ID) {
+	logPubSubf("🤝 Starting GossipSub handshake monitor for peer: %s", peerID)
+	
+	// Monitor for up to 30 seconds
+	timeout := time.After(30 * time.Second)
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	
+	for {
+		select {
+		case <-timeout:
+			logPubSubf("⏰ GossipSub handshake monitor timeout for peer: %s", peerID)
+			return
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// Check if peer appears in PubSub mesh
+			peers := ps.ListPeers("")
+			for _, p := range peers {
+				if p == peerID {
+					logPubSubf("🎉 Peer %s successfully joined PubSub mesh!", peerID)
+					
+					// Check topic subscription
+					time.Sleep(1 * time.Second)
+					checkGossipSubMeshStatus(ps, peerID, "universal-connectivity")
+					return
+				}
+			}
+			logPubSubf("⏳ Still waiting for peer %s to join PubSub mesh...", peerID)
+		}
+	}
 }
