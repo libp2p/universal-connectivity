@@ -138,6 +138,7 @@ class ChatRoom:
         try:
             # Check if we have any peers connected
             peer_count = len(self.pubsub.peers)
+            logger.info(f"Total pubsub peers are: {self.pubsub.peers.keys()}")
             logger.debug(f"Publishing message to {peer_count} peers: {message}")
             
             await self.pubsub.publish(CHAT_TOPIC, chat_msg.to_json().encode())

@@ -22,6 +22,7 @@ from libp2p.pubsub.pubsub import Pubsub
 from libp2p.tools.async_service.trio_service import background_trio_service
 from libp2p.peer.peerinfo import info_from_p2p_addr
 from libp2p.custom_types import TProtocol
+from libp2p.pubsub.gossipsub import PROTOCOL_ID, PROTOCOL_ID_V11
 
 from chatroom import ChatRoom, ChatMessage
 
@@ -29,7 +30,8 @@ logger = logging.getLogger("headless")
 
 # Constants
 DISCOVERY_SERVICE_TAG = "universal-connectivity"
-GOSSIPSUB_PROTOCOL_ID = TProtocol("/meshsub/1.0.0")
+# GOSSIPSUB_PROTOCOL_ID = TProtocol("/meshsub/1.0.0")
+GOSSIPSUB_PROTOCOL_ID = [PROTOCOL_ID, PROTOCOL_ID_V11]
 DEFAULT_PORT = 9095
 
 
@@ -80,12 +82,16 @@ class HeadlessService:
         
         try:
             # Create queues for communication with UI
+            logger.debug("Creating message queues...")
             self.message_queue = janus.Queue()      # Messages from headless to UI
             self.system_queue = janus.Queue()       # System messages from headless to UI  
             self.outgoing_queue = janus.Queue()     # Messages from UI to headless
+            logger.debug("Message queues created successfully")
             
             # Enable trio-asyncio mode
             async with trio_asyncio.open_loop():
+                # Send initial system message to test queue inside trio context
+                await self._send_system_message("Headless service starting...")
                 await self._run_service()
                     
         except Exception as e:
@@ -110,7 +116,7 @@ class HeadlessService:
         
         # Create GossipSub with optimized parameters
         self.gossipsub = GossipSub(
-            protocols=[GOSSIPSUB_PROTOCOL_ID],
+            protocols=GOSSIPSUB_PROTOCOL_ID,
             degree=3,
             degree_low=2,
             degree_high=4,
@@ -214,15 +220,21 @@ class HeadlessService:
     
     async def _send_system_message(self, message: str):
         """Send system message to UI queue."""
+        logger.debug(f"_send_system_message called with: {message}")
         try:
             if self.system_queue:
+                logger.debug(f"System queue available, sending message: {message}")
                 await self.system_queue.async_q.put({
                     'type': 'system_message',
                     'message': message,
                     'timestamp': trio.current_time()
                 })
+                logger.debug(f"System message sent successfully: {message}")
+            else:
+                logger.warning(f"System queue not available, cannot send message: {message}")
         except Exception as e:
             logger.error(f"Error sending system message: {e}")
+            logger.exception("Full traceback:")
     
     async def _process_messages(self):
         """Process messages from chat room."""

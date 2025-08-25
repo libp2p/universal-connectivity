@@ -30,14 +30,19 @@ def setup_logging(ui_mode=False):
         handlers.append(logging.NullHandler())
     
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="%(asctime)s - %(name)s - %(message)s",
         handlers=handlers,
         force=True  # Force reconfiguration
     )
 
 logger = logging.getLogger("main")
-
+logging.getLogger("headless").setLevel(logging.DEBUG)  # Enable debug for headless service
+logging.getLogger("chatroom").setLevel(logging.DEBUG)  # Enable debug for chatroom
+logging.getLogger("libp2p.transport").setLevel(logging.DEBUG)
+logging.getLogger("libp2p.security").setLevel(logging.DEBUG)
+logging.getLogger("libp2p.mux").setLevel(logging.DEBUG)
+logging.getLogger("libp2p.stream").setLevel(logging.DEBUG)
 
 def run_headless_in_thread(headless_service, ready_event):
     """Run headless service in a separate thread."""
@@ -130,8 +135,13 @@ async def run_simple_interactive(headless_service):
 
 async def monitor_message_queues(headless_service):
     """Monitor message queues and display incoming messages."""
+    logger.debug("monitor_message_queues function started")
+    
     message_queue = headless_service.get_message_queue()
     system_queue = headless_service.get_system_queue()
+    
+    logger.debug(f"Message queue: {message_queue}")
+    logger.debug(f"System queue: {system_queue}")
     
     if not message_queue or not system_queue:
         logger.warning("Message queues not available")
@@ -155,8 +165,8 @@ async def monitor_message_queues(headless_service):
                     sender_short = sender_id[:8] if len(sender_id) > 8 else sender_id
                     print(f"[{sender_nick}({sender_short})]: {msg}")
                     
-            except Exception as e:
-                logger.debug(f"No message in queue: {e}")
+            except:
+                pass  # Empty queue is normal, no need to log
             
             # Check system queue
             try:
@@ -166,8 +176,8 @@ async def monitor_message_queues(headless_service):
                 if system_data.get('type') == 'system_message':
                     print(f"📡 {system_data['message']}")
                     
-            except Exception as e:
-                logger.debug(f"No system message in queue: {e}")
+            except:
+                pass  # Empty queue is normal, no need to log
             
             await trio.sleep(0.1)  # Small delay to prevent busy waiting
             
