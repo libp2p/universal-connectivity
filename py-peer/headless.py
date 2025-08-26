@@ -131,7 +131,7 @@ class HeadlessService:
         logger.info("✅ GossipSub router created successfully")
         
         # Create PubSub
-        self.pubsub = Pubsub(self.host, self.gossipsub)
+        self.pubsub = Pubsub(self.host, self.gossipsub, strict_signing=False)
         logger.info("✅ PubSub service created successfully")
         
         # Start host and pubsub services
