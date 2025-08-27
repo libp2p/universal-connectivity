@@ -6,14 +6,11 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
-
-var chatLogger = log.Logger("chatroom")
 
 // ChatRoomBufSize is the number of incoming messages to buffer for each topic.
 const ChatRoomBufSize = 128
@@ -56,63 +53,41 @@ type ChatMessage struct {
 // JoinChatRoom tries to subscribe to the PubSub topic for the room name, returning
 // a ChatRoom on success.
 func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname string) (*ChatRoom, error) {
-	chatLogger.Infof("📡 Joining chat room with nickname: %s", nickname)
-	
 	// join the pubsub chatTopic
-	chatLogger.Infof("📡 Joining chat topic: %s", ChatTopic)
 	chatTopic, err := ps.Join(ChatTopic)
 	if err != nil {
-		chatLogger.Errorf("❌ Failed to join chat topic: %v", err)
 		return nil, err
 	}
-	chatLogger.Infof("✅ Successfully joined chat topic: %s", ChatTopic)
 
 	// and subscribe to it
-	chatLogger.Infof("📡 Subscribing to chat topic...")
 	chatSub, err := chatTopic.Subscribe()
 	if err != nil {
-		chatLogger.Errorf("❌ Failed to subscribe to chat topic: %v", err)
 		return nil, err
 	}
-	chatLogger.Infof("✅ Successfully subscribed to chat topic")
 
 	// join the pubsub fileTopic
-	chatLogger.Infof("📡 Joining file topic: %s", ChatFileTopic)
 	fileTopic, err := ps.Join(ChatFileTopic)
 	if err != nil {
-		chatLogger.Errorf("❌ Failed to join file topic: %v", err)
 		return nil, err
 	}
-	chatLogger.Infof("✅ Successfully joined file topic: %s", ChatFileTopic)
 
 	// and subscribe to it
-	chatLogger.Infof("📡 Subscribing to file topic...")
 	fileSub, err := fileTopic.Subscribe()
 	if err != nil {
-		chatLogger.Errorf("❌ Failed to subscribe to file topic: %v", err)
 		return nil, err
 	}
-	chatLogger.Infof("✅ Successfully subscribed to file topic")
 
 	// join the pubsub peer disovery topic
-	chatLogger.Infof("📡 Joining peer discovery topic: %s", PubSubDiscoveryTopic)
 	peerDiscoveryTopic, err := ps.Join(PubSubDiscoveryTopic)
 	if err != nil {
-		chatLogger.Errorf("❌ Failed to join peer discovery topic: %v", err)
 		return nil, err
 	}
-	chatLogger.Infof("✅ Successfully joined peer discovery topic: %s", PubSubDiscoveryTopic)
 
 	// and subscribe to it
-	chatLogger.Infof("📡 Subscribing to peer discovery topic...")
 	peerDiscoverySub, err := peerDiscoveryTopic.Subscribe()
 	if err != nil {
-		chatLogger.Errorf("❌ Failed to subscribe to peer discovery topic: %v", err)
 		return nil, err
 	}
-	chatLogger.Infof("✅ Successfully subscribed to peer discovery topic")
-
-	chatLogger.Infof("✅ Successfully subscribed to peer discovery topic")
 
 	cr := &ChatRoom{
 		ctx:                ctx,
@@ -129,77 +104,42 @@ func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname 
 		SysMessages:        make(chan *ChatMessage, ChatRoomBufSize),
 	}
 
-	chatLogger.Infof("📡 Starting message read loops...")
 	// start reading messages from the subscription in a loop
 	go cr.readLoop()
-	
-	chatLogger.Infof("✅ ChatRoom initialization complete for nickname: %s", nickname)
 	return cr, nil
 }
 
 // Publish sends a message to the pubsub topic.
 func (cr *ChatRoom) Publish(message string) error {
-	chatLogger.Infof("📤 Publishing message to chat topic: %s", message)
-	peers := cr.ps.ListPeers(ChatTopic)
-	chatLogger.Infof("📡 Publishing to %d peers on topic '%s'", len(peers), ChatTopic)
-	for i, peerID := range peers {
-		chatLogger.Infof("  📡 Peer %d: %s", i+1, peerID)
-	}
-	
-	err := cr.chatTopic.Publish(cr.ctx, []byte(message))
-	if err != nil {
-		chatLogger.Errorf("❌ Failed to publish message: %v", err)
-		return err
-	}
-	chatLogger.Infof("✅ Message published successfully")
-	return nil
+	return cr.chatTopic.Publish(cr.ctx, []byte(message))
 }
 
 func (cr *ChatRoom) ListPeers() []peer.ID {
-	peers := cr.ps.ListPeers(ChatTopic)
-	chatLogger.Infof("📡 Current peers on topic '%s': %d", ChatTopic, len(peers))
-	for i, peerID := range peers {
-		chatLogger.Infof("  📡 Peer %d: %s", i+1, peerID)
-	}
-	return peers
+	return cr.ps.ListPeers(ChatTopic)
 }
 
 // readLoop pulls messages from the pubsub chat/file topic and handles them.
 func (cr *ChatRoom) readLoop() {
-	chatLogger.Infof("📡 Starting chat message read loop...")
 	go cr.readChatLoop()
-	chatLogger.Infof("📡 Starting file message read loop...")
 	go cr.readFileLoop()
 }
 
 // readChatLoop pulls messages from the pubsub chat topic and pushes them onto the Messages channel.
 func (cr *ChatRoom) readChatLoop() {
-	chatLogger.Infof("📡 Chat message read loop started")
 	for {
-		chatLogger.Debugf("📡 Waiting for next chat message...")
 		msg, err := cr.chatSub.Next(cr.ctx)
 		if err != nil {
-			chatLogger.Errorf("❌ Error reading chat message: %v", err)
 			close(cr.Messages)
 			return
 		}
-		
-		chatLogger.Infof("📨 Received chat message from peer %s", msg.ReceivedFrom)
-		chatLogger.Infof("📨 Message content: %s", string(msg.Data))
-		chatLogger.Infof("📨 Message ID: %s", msg.ID)
-		
 		// only forward messages delivered by others
 		if msg.ReceivedFrom == cr.h.ID() {
-			chatLogger.Infof("📨 Ignoring own message")
 			continue
 		}
-		
 		cm := new(ChatMessage)
 		cm.Message = string(msg.Data)
-		cm.SenderID = string(msg.ReceivedFrom)
-		cm.SenderNick = shortID(msg.ReceivedFrom)  // Use the shortID function for consistency
-		
-		chatLogger.Infof("📨 Forwarding message to UI: sender=%s, content=%s", cm.SenderNick, cm.Message)
+		cm.SenderID = msg.ID
+		cm.SenderNick = string(msg.ID[len(msg.ID)-8])
 		// send valid messages onto the Messages channel
 		cr.Messages <- cm
 	}
