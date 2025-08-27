@@ -6,7 +6,6 @@ pubsub subscriptions, and peer discovery.
 """
 
 import base58
-import json
 import logging
 import time
 import trio
@@ -46,26 +45,6 @@ class ChatMessage:
     def __post_init__(self):
         if self.timestamp is None:
             self.timestamp = time.time()
-    
-    def to_json(self) -> str:
-        """Convert message to JSON string."""
-        return json.dumps({
-            "message": self.message,
-            "sender_id": self.sender_id,
-            "sender_nick": self.sender_nick,
-            "timestamp": self.timestamp
-        })
-    
-    @classmethod
-    def from_json(cls, json_str: str) -> "ChatMessage":
-        """Create ChatMessage from JSON string."""
-        data = json.loads(json_str)
-        return cls(
-            message=data["message"],
-            sender_id=data["sender_id"],
-            sender_nick=data["sender_nick"],
-            timestamp=data.get("timestamp")
-        )
 
 
 class ChatRoom:
@@ -128,23 +107,16 @@ class ChatRoom:
             raise
     
     async def publish_message(self, message: str):
-        """Publish a chat message in JSON format with nickname."""
+        """Publish a chat message in plain text format (Go-compatible)."""
         try:
             # Check if we have any peers connected
             peer_count = len(self.pubsub.peers)
             logger.info(f"📤 Publishing message to {peer_count} peers: {message}")
             logger.info(f"Total pubsub peers: {list(self.pubsub.peers.keys())}")
             
-            # Create ChatMessage with nickname and serialize to JSON
-            chat_msg = {
-                "Message": message,
-                "SenderID": self.peer_id,
-                "SenderNick": self.nickname
-            }
-            message_json = json.dumps(chat_msg)
-            
-            # Send JSON message (Go-compatible format)
-            await self.pubsub.publish(CHAT_TOPIC, message_json.encode())
+            # Send plain text message (Go-compatible format)
+            print(f"Sending message {message}")
+            await self.pubsub.publish(CHAT_TOPIC, message.encode())
             logger.info(f"✅ Message published successfully to topic '{CHAT_TOPIC}'")
             
             if peer_count == 0:
@@ -164,22 +136,13 @@ class ChatRoom:
         try:
             async for message in self._message_stream(self.chat_subscription):
                 try:
-                    # Handle messages - try JSON first, fall back to raw string
+                    # Handle plain text messages (common format with Go peer)
                     raw_data = message.data.decode()
                     sender_id = base58.b58encode(message.from_id).decode() if message.from_id else "unknown"
                     
-                    # Try to parse as JSON to extract nickname
-                    sender_nick = sender_id[-8:] if len(sender_id) > 8 else sender_id  # Default fallback
+                    # Use simple format - plain text messages with short sender ID as nickname
+                    sender_nick = sender_id[-8:] if len(sender_id) > 8 else sender_id
                     actual_message = raw_data
-                    
-                    try:
-                        parsed_data = json.loads(raw_data)
-                        if isinstance(parsed_data, dict) and "SenderNick" in parsed_data:
-                            sender_nick = parsed_data["SenderNick"]
-                            actual_message = parsed_data.get("Message", raw_data)
-                    except (json.JSONDecodeError, TypeError):
-                        # Not JSON, use raw message and fallback nickname
-                        pass
                     
                     logger.info(f"📨 Received message from {sender_id} ({sender_nick}): {actual_message}")
                     
