@@ -34,7 +34,8 @@ func ReadIdentity(path string) (crypto.PrivKey, error) {
 
 // GenerateIdentity writes a new random private key to the given path.
 func GenerateIdentity(path string) (crypto.PrivKey, error) {
-	privk, _, err := crypto.GenerateKeyPair(crypto.Ed25519, 0)
+	// privk, _, err := crypto.GenerateKeyPair(crypto.Ed25519, 0)
+	privk, _, err := crypto.GenerateKeyPair(crypto.RSA, 2048)
 	if err != nil {
 		return nil, err
 	}
