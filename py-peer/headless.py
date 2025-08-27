@@ -46,11 +46,12 @@ class HeadlessService:
     Headless service that manages libp2p components and provides data to UI through queues.
     """
     
-    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False):
+    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False, strict_signing: bool = True):
         self.nickname = nickname
         self.port = port if port != 0 else find_free_port()
         self.connect_addrs = connect_addrs or []
         self.ui_mode = ui_mode  # Flag to control logging behavior
+        self.strict_signing = strict_signing  # Flag to control message signing
         
         # libp2p components
         self.host = None
@@ -73,7 +74,7 @@ class HeadlessService:
         self.stop_event = trio.Event()
         
         if not ui_mode:  # Only log initialization if not in UI mode
-            logger.info(f"HeadlessService initialized - nickname: {nickname}, port: {self.port}")
+            logger.info(f"HeadlessService initialized - nickname: {nickname}, port: {self.port}, strict_signing: {strict_signing}")
     
     async def start(self):
         """Start the headless service."""
@@ -131,7 +132,8 @@ class HeadlessService:
         logger.info("✅ GossipSub router created successfully")
         
         # Create PubSub
-        self.pubsub = Pubsub(self.host, self.gossipsub, strict_signing=False)
+        logger.info(f"🔐 Creating PubSub with strict_signing={self.strict_signing}")
+        self.pubsub = Pubsub(self.host, self.gossipsub, strict_signing=self.strict_signing)
         logger.info("✅ PubSub service created successfully")
         
         # Start host and pubsub services

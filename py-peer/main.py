@@ -79,10 +79,12 @@ async def main_async(args):
     nickname = args.nick or f"peer-{time.time():.0f}"
     
     # Create headless service
+    strict_signing = not args.no_strict_signing  # Default True, False if --no-strict-signing is used
     headless_service = HeadlessService(
         nickname=nickname,
         port=args.port,
-        connect_addrs=args.connect
+        connect_addrs=args.connect,
+        strict_signing=strict_signing
     )
     
     try:
@@ -161,7 +163,7 @@ async def monitor_message_queues(headless_service):
                     sender_nick = message_data['sender_nick']
                     sender_id = message_data['sender_id']
                     msg = message_data['message']
-                    
+
                     # Display incoming message
                     sender_short = sender_id[:8] if len(sender_id) > 8 else sender_id
                     print(f"[{sender_nick}({sender_short})]: {msg}")
@@ -277,6 +279,12 @@ def main():
         help="Enable debug logging"
     )
     
+    parser.add_argument(
+        "--no-strict-signing",
+        action="store_true",
+        help="Disable strict message signing (allows unsigned messages)"
+    )
+    
     args = parser.parse_args()
     
     # Default logging setup (will be reconfigured based on mode)
@@ -301,10 +309,12 @@ def main():
             nickname = args.nick or f"peer-{time.time():.0f}"
             
             # Create headless service
+            strict_signing = not args.no_strict_signing  # Default True, False if --no-strict-signing is used
             headless_service = HeadlessService(
                 nickname=nickname,
                 port=args.port,
-                connect_addrs=args.connect
+                connect_addrs=args.connect,
+                strict_signing=strict_signing
             )
             
             # Start headless service in background thread

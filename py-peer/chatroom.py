@@ -128,15 +128,23 @@ class ChatRoom:
             raise
     
     async def publish_message(self, message: str):
-        """Publish a chat message in Go-compatible format (raw string)."""
+        """Publish a chat message in JSON format with nickname."""
         try:
             # Check if we have any peers connected
             peer_count = len(self.pubsub.peers)
             logger.info(f"📤 Publishing message to {peer_count} peers: {message}")
             logger.info(f"Total pubsub peers: {list(self.pubsub.peers.keys())}")
             
-            # Send raw message string like Go peer (compatible format)
-            await self.pubsub.publish(CHAT_TOPIC, message.encode())
+            # Create ChatMessage with nickname and serialize to JSON
+            chat_msg = {
+                "Message": message,
+                "SenderID": self.peer_id,
+                "SenderNick": self.nickname
+            }
+            message_json = json.dumps(chat_msg)
+            
+            # Send JSON message (Go-compatible format)
+            await self.pubsub.publish(CHAT_TOPIC, message_json.encode())
             logger.info(f"✅ Message published successfully to topic '{CHAT_TOPIC}'")
             
             if peer_count == 0:
@@ -147,9 +155,6 @@ class ChatRoom:
         except Exception as e:
             logger.error(f"❌ Failed to publish message: {e}")
             print(f"❌ Error sending message: {e}")
-                
-        except Exception as e:
-            logger.error(f"Failed to publish message: {e}")
             self._log_system_message(f"ERROR: Failed to publish message: {e}")
     
     async def _handle_chat_messages(self):
@@ -159,22 +164,30 @@ class ChatRoom:
         try:
             async for message in self._message_stream(self.chat_subscription):
                 try:
-                    # Handle raw string messages like Go peer
-                    raw_message = message.data.decode()
-                    sender_id = str(message.from_id) if message.from_id else "unknown"
+                    # Handle messages - try JSON first, fall back to raw string
+                    raw_data = message.data.decode()
+                    sender_id = base58.b58encode(message.from_id).decode() if message.from_id else "unknown"
                     
-                    logger.info(f"📨 Received message from {sender_id}: {raw_message}")
+                    # Try to parse as JSON to extract nickname
+                    sender_nick = sender_id[-8:] if len(sender_id) > 8 else sender_id  # Default fallback
+                    actual_message = raw_data
                     
-                    # Skip our own messages
-                    if message.from_id and str(message.from_id) == self.peer_id:
-                        logger.info("📨 Ignoring own message")
-                        continue
+                    try:
+                        parsed_data = json.loads(raw_data)
+                        if isinstance(parsed_data, dict) and "SenderNick" in parsed_data:
+                            sender_nick = parsed_data["SenderNick"]
+                            actual_message = parsed_data.get("Message", raw_data)
+                    except (json.JSONDecodeError, TypeError):
+                        # Not JSON, use raw message and fallback nickname
+                        pass
+                    
+                    logger.info(f"📨 Received message from {sender_id} ({sender_nick}): {actual_message}")
                     
                     # Create ChatMessage object for handlers
                     chat_msg = ChatMessage(
-                        message=raw_message,
+                        message=actual_message,
                         sender_id=sender_id,
-                        sender_nick=sender_id[-8:] if len(sender_id) > 8 else sender_id  # Use last 8 chars like Go
+                        sender_nick=sender_nick
                     )
                     
                     # Call message handlers
@@ -201,12 +214,13 @@ class ChatRoom:
         try:
             async for message in self._message_stream(self.discovery_subscription):
                 try:
+                    # Handle discovery message (simplified - just log for now)
+                    sender_id = base58.b58encode(message.from_id).decode() if message.from_id else "unknown"
+                    
                     # Skip our own messages
-                    if str(message.from_id) == self.peer_id:
+                    if sender_id == self.peer_id:
                         continue
                     
-                    # Handle discovery message (simplified - just log for now)
-                    sender_id = base58.b58encode(message.from_id).decode()
                     logger.info(f"Discovery message from peer: {sender_id}")
                 
                 except Exception as e:
