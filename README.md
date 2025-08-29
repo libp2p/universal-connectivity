@@ -26,6 +26,7 @@ Some of the cool and cutting-edge [transport protocols](https://connectivity.lib
 | [`node-js-peer`](./node-js-peer/) | Node.js Chat Peer in TypeScript | ✅           | ✅     | ✅            | ✅   | ✅  |
 | [`go-peer`](./go-peer/)           | Chat peer implemented in Go     | ✅           | ❌     | ✅            | ✅   | ✅  |
 | [`rust-peer`](./rust-peer/)       | Chat peer implemented in Rust   | ❌           | ❌     | ✅            | ✅   | ✅  |
+| [`nim-peer`](./nim-peer/)         | Chat peer implemented in Nim    | ❌           | ❌     | ❌            | ❌   | ✅  |
 
 ✅ - Protocol supported
 ❌ - Protocol not supported
@@ -96,4 +97,16 @@ cargo run -- --help
 ```
 cd go-peer
 go run .
+```
+
+## Getting started: Nim
+```
+cd nim-peer
+nimble build
+
+# Wait for connections in tcp/9093
+./nim_peer
+
+# Connect to another node (e.g. in localhost tcp/9092)
+./nim_peer --connect /ip4/127.0.0.1/tcp/9092/p2p/12D3KooSomePeerId
 ```
