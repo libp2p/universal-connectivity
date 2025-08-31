@@ -6,6 +6,7 @@ without any UI. It communicates with the UI through queues and events.
 """
 
 import logging
+import random
 import socket
 import time
 import multiaddr
@@ -14,6 +15,7 @@ import trio
 import trio_asyncio
 from queue import Empty
 from typing import List, Dict, Any
+from libp2p.discovery.bootstrap import BootstrapDiscovery
 
 from libp2p import new_host
 from libp2p.crypto.rsa import create_new_key_pair
@@ -31,7 +33,23 @@ logger = logging.getLogger("headless")
 # Constants
 DISCOVERY_SERVICE_TAG = "universal-connectivity"
 GOSSIPSUB_PROTOCOL_ID = TProtocol("/meshsub/1.0.0")
+GOSSIPSUB_PROTOCOL_ID_V11 = TProtocol("/meshsub/1.1.0")
+PROTOCOL_ID = [GOSSIPSUB_PROTOCOL_ID, GOSSIPSUB_PROTOCOL_ID_V11]
 DEFAULT_PORT = 9095
+
+# Bootstrap nodes for peer discovery
+BOOTSTRAP_PEERS = [
+    # "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+    # "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    # "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
+    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
+    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+    # "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
+    # "/ip4/0.0.0.0/tcp/52972/p2p/QmVZZrUGuyicD5eig2a5yhi2dLDH5uMS3mXfxnR6uYuFZz"
+    "/ip4/127.0.0.1/tcp/9095/p2p/QmbXUUZ4LoDE59Hx9zjiH88S9YY77ft9b3pFtPsyH2xeZJ"
+]
 
 
 def find_free_port() -> int:
@@ -106,8 +124,12 @@ class HeadlessService:
         # Create listen address
         listen_addr = multiaddr.Multiaddr(f"/ip4/0.0.0.0/tcp/{self.port}")
         
-        # Create libp2p host
-        self.host = new_host(key_pair=key_pair)
+        # Create libp2p host WITHOUT bootstrap nodes initially
+        # We'll connect to bootstrap nodes after pubsub is running
+        self.host = new_host(
+            key_pair=key_pair
+            # bootstrap = BOOTSTRAP_PEERS
+        )
         
         self.full_multiaddr = f"{listen_addr}/p2p/{self.host.get_id()}"
         logger.info(f"Host created with PeerID: {self.host.get_id()}")
@@ -120,7 +142,7 @@ class HeadlessService:
         
         # Create GossipSub with optimized parameters (matching working pubsub.py)
         self.gossipsub = GossipSub(
-            protocols=[GOSSIPSUB_PROTOCOL_ID],
+            protocols=PROTOCOL_ID,
             degree=3,
             degree_low=2,
             degree_high=4,
@@ -145,10 +167,10 @@ class HeadlessService:
                     logger.info("✅ Pubsub and GossipSub services started.")
                     await self.pubsub.wait_until_ready()
                     logger.info("✅ Pubsub ready and operational.")
-                    
-                    # Log active protocols
-                    logger.info(f"📋 Active GossipSub protocols: {self.gossipsub.protocols}")
-                    
+                    bootstrap = None
+                    if BOOTSTRAP_PEERS:
+                        bootstrap = BootstrapDiscovery(self.host.get_network(), BOOTSTRAP_PEERS)
+                        await bootstrap.start()
                     # Setup connections and chat room
                     await self._setup_connections()
                     await self._setup_chat_room()
