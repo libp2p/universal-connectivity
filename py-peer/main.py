@@ -44,6 +44,7 @@ logging.getLogger("libp2p.security").setLevel(logging.DEBUG)
 logging.getLogger("libp2p.mux").setLevel(logging.DEBUG)
 logging.getLogger("libp2p.stream").setLevel(logging.DEBUG)
 logging.getLogger("libp2p.pubsub").setLevel(logging.DEBUG)
+logging.getLogger("libp2p.discovery").setLevel(logging.DEBUG)
 
 def run_headless_in_thread(headless_service, ready_event):
     """Run headless service in a separate thread."""

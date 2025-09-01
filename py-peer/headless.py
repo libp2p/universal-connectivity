@@ -16,16 +16,25 @@ import trio_asyncio
 from queue import Empty
 from typing import List, Dict, Any
 from libp2p.discovery.bootstrap import BootstrapDiscovery
-
+from libp2p.kad_dht.kad_dht import (
+    DHTMode,
+    KadDHT,
+)
 from libp2p import new_host
 from libp2p.crypto.rsa import create_new_key_pair
 from libp2p.pubsub.gossipsub import GossipSub
 from libp2p.pubsub.pubsub import Pubsub
 from libp2p.tools.async_service.trio_service import background_trio_service
 from libp2p.peer.peerinfo import info_from_p2p_addr
+from libp2p.peer.peerinfo import PeerInfo
 from libp2p.custom_types import TProtocol
 from libp2p.pubsub.gossipsub import PROTOCOL_ID, PROTOCOL_ID_V11
-
+from libp2p.protocol_muxer.exceptions import (
+    MultiselectClientError,
+)
+from libp2p.host.exceptions import (
+    StreamFailure,
+)
 from chatroom import ChatRoom, ChatMessage
 
 logger = logging.getLogger("headless")
@@ -58,6 +67,56 @@ def find_free_port() -> int:
         s.bind(("", 0))  # Bind to a free port provided by the OS
         return s.getsockname()[1]
 
+def filter_compatible_peer_info(peer_info) -> bool:
+    """Filter peer info to check if it has compatible addresses (TCP + IPv4)."""
+    if not hasattr(peer_info, "addrs") or not peer_info.addrs:
+        return False
+
+    for addr in peer_info.addrs:
+        addr_str = str(addr)
+        if "/tcp/" in addr_str and "/ip4/" in addr_str and "/quic" not in addr_str:
+            return True
+    return False
+
+async def maintain_connections(host) -> None:
+    """Maintain connections to ensure the host remains connected to healthy peers."""
+    while True:
+        try:
+            connected_peers = host.get_connected_peers()
+            list_peers = host.get_peerstore().peers_with_addrs()
+
+            if len(connected_peers) < 20:
+                logger.debug("Reconnecting to maintain peer connections...")
+
+                # Find compatible peers
+                compatible_peers = []
+                for peer_id in list_peers:
+                    try:
+                        peer_info = host.get_peerstore().peer_info(peer_id)
+                        if filter_compatible_peer_info(peer_info):
+                            compatible_peers.append(peer_id)
+                    except Exception:
+                        continue
+
+                # Connect to random subset of compatible peers
+                if compatible_peers:
+                    random_peers = random.sample(
+                        compatible_peers, min(50, len(compatible_peers))
+                    )
+                    for peer_id in random_peers:
+                        if peer_id not in connected_peers:
+                            try:
+                                with trio.move_on_after(5):
+                                    peer_info = host.get_peerstore().peer_info(peer_id)
+                                    await host.connect(peer_info)
+                                    logger.debug(f"Connected to peer: {peer_id}")
+                            except Exception as e:
+                                logger.debug(f"Failed to connect to {peer_id}: {e}")
+
+            await trio.sleep(15)
+        except Exception as e:
+            logger.error(f"Error maintaining connections: {e}")
+
 
 class HeadlessService:
     """
@@ -75,6 +134,7 @@ class HeadlessService:
         self.host = None
         self.pubsub = None
         self.gossipsub = None
+        self.dht = None
         self.chat_room = None
         
         # Service state
@@ -94,6 +154,14 @@ class HeadlessService:
         if not ui_mode:  # Only log initialization if not in UI mode
             logger.info(f"HeadlessService initialized - nickname: {nickname}, port: {self.port}, strict_signing: {strict_signing}")
     
+    async def monitor_peers(self):
+        while True:
+            print("testing print")
+            logger.info("testing status")
+            logger.info(f"Connected peers are: len{self.host.get_connected_peers()}")
+            logger.info(f"peers in peer store are: len{self.host.get_peerstore().peers_with_addrs()}")
+            await trio.sleep(5)
+
     async def start(self):
         """Start the headless service."""
         logger.info("Starting headless service...")
@@ -130,6 +198,10 @@ class HeadlessService:
             key_pair=key_pair
             # bootstrap = BOOTSTRAP_PEERS
         )
+
+        # Create DHT with random walk enabled
+        self.dht = KadDHT(self.host, DHTMode.SERVER, enable_random_walk=True)
+        logger.info("✅ DHT created with random walk enabled")
         
         self.full_multiaddr = f"{listen_addr}/p2p/{self.host.get_id()}"
         logger.info(f"Host created with PeerID: {self.host.get_id()}")
@@ -160,31 +232,42 @@ class HeadlessService:
         
         # Start host and pubsub services
         async with self.host.run(listen_addrs=[listen_addr]):
-            logger.info("📡 Initializing PubSub and GossipSub services...")
-            
-            async with background_trio_service(self.pubsub):
-                async with background_trio_service(self.gossipsub):
-                    logger.info("✅ Pubsub and GossipSub services started.")
-                    await self.pubsub.wait_until_ready()
-                    logger.info("✅ Pubsub ready and operational.")
-                    bootstrap = None
-                    if BOOTSTRAP_PEERS:
-                        bootstrap = BootstrapDiscovery(self.host.get_network(), BOOTSTRAP_PEERS)
-                        await bootstrap.start()
-                    # Setup connections and chat room
-                    await self._setup_connections()
-                    await self._setup_chat_room()
-                    
-                    # Mark service as ready
-                    self.ready = True
-                    self.ready_event.set()
-                    logger.info("✅ Headless service is ready")
-                    
-                    # Start message processing and wait for stop
-                    async with trio.open_nursery() as nursery:
-                        nursery.start_soon(self._process_messages)
-                        nursery.start_soon(self._process_outgoing_messages)
-                        nursery.start_soon(self._wait_for_stop)
+            logger.info("📡 Initializing PubSub, GossipSub, and DHT services...")
+            try:
+                async with background_trio_service(self.pubsub):
+                    async with background_trio_service(self.gossipsub):
+                        async with background_trio_service(self.dht):
+                            logger.info("✅ Pubsub, GossipSub, and DHT services started.")
+                            await self.pubsub.wait_until_ready()
+                            logger.info("✅ Pubsub ready and operational.")
+                            logger.info("✅ DHT service started with random walk enabled.")
+                            bootstrap = None
+                            if BOOTSTRAP_PEERS:
+                                bootstrap = BootstrapDiscovery(self.host.get_network(), BOOTSTRAP_PEERS)
+                                await bootstrap.start()
+                            # Setup connections and chat room
+                            await self._setup_connections()
+                            await self._setup_chat_room()
+                            
+                            # Setup connection event handlers for DHT
+                            await self._setup_dht_connection_handlers()
+                            
+                            # Mark service as ready
+                            self.ready = True
+                            self.ready_event.set()
+                            logger.info("✅ Headless service is ready")
+                            
+                            # Start message processing and wait for stop
+                            async with trio.open_nursery() as nursery:
+                                nursery.start_soon(self._process_messages)
+                                nursery.start_soon(self._process_outgoing_messages)
+                                nursery.start_soon(self._wait_for_stop)
+                                nursery.start_soon(self.monitor_peers)
+                                nursery.start_soon(maintain_connections, self.host)
+
+            except (MultiselectClientError, StreamFailure) as e:
+                logger.log(f"The protocol negotitaion failed: {e}")
+                pass
     
     async def _setup_connections(self):
         """Setup connections to specified peers with detailed protocol logging."""
