@@ -45,7 +45,6 @@ var logger = log.Logger("app")
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
 // If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
 func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Multiaddr) (*dht.IpfsDHT, error) {
-
 	kdht, err := dht.New(ctx, host,
 		dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...),
 		dht.Mode(dht.ModeAuto),
@@ -202,18 +201,21 @@ func main() {
 		panic(err)
 	}
 
-	gossipSubOpts := []pubsub.Option{}
+	gossipSubOpts := []pubsub.Option{
+		pubsub.WithFloodPublish(true),
+	}
 
 	if *bootstrapper {
 		gossipSubOpts = append(gossipSubOpts, pubsub.WithPeerExchange(true))
 
 		if len(directPeers) > 0 {
 			dp := peerStrSliceToAddrInfoSlice(directPeers)
-			gossipSubOpts = append(gossipSubOpts, pubsub.WithDirectPeers(dp))
-			pubsub.WithDirectConnectTicks(60) // attempt to reconnect to direct peers every 60 ticks (seconds)
+			gossipSubOpts = append(
+				gossipSubOpts,
+				pubsub.WithDirectPeers(dp),
+				pubsub.WithDirectConnectTicks(60), // attempt to reconnect to direct peers every 60 ticks (seconds)
+			)
 		}
-
-		pubsub.WithFloodPublish(true)
 
 		// See https://github.com/libp2p/specs/blob/master/pubsub/gossipsub/gossipsub-v1.1.md#recommendations-for-network-operators
 		pubsub.GossipSubD = 0
@@ -331,23 +333,21 @@ func main() {
 func peerStrSliceToAddrInfoSlice(peerStrs []string) []peer.AddrInfo {
 	var addrInfos []peer.AddrInfo
 
-	if len(peerStrs) > 0 {
-		for _, addr := range peerStrs {
-			peerInfo, err := peer.AddrInfoFromString(addr)
-			if err != nil {
-				LogMsgf("Failed to parse multiaddr: %s", err.Error())
-				continue
-			}
-
-			addrInfos = append(addrInfos, *peerInfo)
+	for _, addr := range peerStrs {
+		peerInfo, err := peer.AddrInfoFromString(addr)
+		if err != nil {
+			LogMsgf("Failed to parse multiaddr: %s", err.Error())
+			continue
 		}
+
+		addrInfos = append(addrInfos, *peerInfo)
 	}
 
 	return addrInfos
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
-func printErr(m string, args ...interface{}) {
+func printErr(m string, args ...any) {
 	fmt.Fprintf(os.Stderr, m, args...)
 }
 
