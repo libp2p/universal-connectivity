@@ -57,7 +57,7 @@ async fn read_or_create_certificate(path: &Path) -> Result<Certificate> {
         return Ok(Certificate::from_pem(&pem)?);
     }
 
-    let cert = Certificate::generate(&mut rand::thread_rng())?;
+    let cert = Certificate::generate(&mut rand_core::OsRng)?;
     fs::write(&path, &cert.serialize_pem().as_bytes()).await?;
 
     info!(
