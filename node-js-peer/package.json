@@ -30,7 +30,7 @@
     "multiformats": "^13.3.2",
     "protons-runtime": "^5.5.0",
     "react": "^18.3.1",
-    "react-curse": "^1.0.0",
+    "react-curse": "1.0.15",
     "uint8arraylist": "^2.4.8"
   },
   "devDependencies": {
