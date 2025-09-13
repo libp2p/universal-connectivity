@@ -148,7 +148,6 @@ func (ui *ChatUI) refreshPeers() {
 // displayChatMessage writes a ChatMessage from the room to the message window,
 // with the sender's nick highlighted in green.
 func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
-	// p := peer.ID(cm.SenderID)
 	prompt := withColor("green", fmt.Sprintf("<%s>:", cm.SenderNick))
 	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
 	ui.msgBox.ScrollToEnd()
