@@ -1,8 +1,6 @@
 module github.com/libp2p/universal-connectivity/go-peer
 
-go 1.24.0
-
-toolchain go1.24.4
+go 1.25.1
 
 require (
 	github.com/caddyserver/certmagic v0.25.0
