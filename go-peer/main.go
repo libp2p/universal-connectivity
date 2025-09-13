@@ -217,11 +217,12 @@ func main() {
 			)
 		}
 
-		// See https://github.com/libp2p/specs/blob/master/pubsub/gossipsub/gossipsub-v1.1.md#recommendations-for-network-operators
+		// // See https://github.com/libp2p/specs/blob/master/pubsub/gossipsub/gossipsub-v1.1.md#recommendations-for-network-operators
 		pubsub.GossipSubD = 0
 		pubsub.GossipSubDlo = 0
 		pubsub.GossipSubDhi = 0
 		pubsub.GossipSubDout = 0
+		pubsub.GossipSubDscore = 0
 	}
 
 	// create a new PubSub service using the GossipSub router
