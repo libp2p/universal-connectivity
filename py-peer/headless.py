@@ -13,6 +13,7 @@ import multiaddr
 import janus
 import trio
 import trio_asyncio
+import hashlib
 from queue import Empty
 from typing import List, Dict, Any
 from libp2p.discovery.bootstrap import BootstrapDiscovery
@@ -21,7 +22,7 @@ from libp2p.kad_dht.kad_dht import (
     KadDHT,
 )
 from libp2p import new_host
-from libp2p.crypto.rsa import create_new_key_pair
+from libp2p.crypto import ed25519
 from libp2p.pubsub.gossipsub import GossipSub
 from libp2p.pubsub.pubsub import Pubsub
 from libp2p.tools.async_service.trio_service import background_trio_service
@@ -51,13 +52,13 @@ BOOTSTRAP_PEERS = [
     # "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
     # "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
     # "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
     # "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
     # "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
     # "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
     # "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
     # "/ip4/0.0.0.0/tcp/52972/p2p/QmVZZrUGuyicD5eig2a5yhi2dLDH5uMS3mXfxnR6uYuFZz"
-    "/ip4/127.0.0.1/tcp/9095/p2p/QmbXUUZ4LoDE59Hx9zjiH88S9YY77ft9b3pFtPsyH2xeZJ"
+    # "/ip4/127.0.0.1/tcp/9095/p2p/QmbXUUZ4LoDE59Hx9zjiH88S9YY77ft9b3pFtPsyH2xeZJ"
 ]
 
 
@@ -122,14 +123,15 @@ class HeadlessService:
     """
     Headless service that manages libp2p components and provides data to UI through queues.
     """
-    
-    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False, strict_signing: bool = True):
+
+    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False, strict_signing: bool = True, seed: int = None):
         self.nickname = nickname
         self.port = port if port != 0 else find_free_port()
         self.connect_addrs = connect_addrs or []
         self.ui_mode = ui_mode  # Flag to control logging behavior
         self.strict_signing = strict_signing  # Flag to control message signing
-        
+        self.seed = seed
+
         # libp2p components
         self.host = None
         self.pubsub = None
@@ -186,8 +188,16 @@ class HeadlessService:
     
     async def _run_service(self):
         """Run the main service loop."""
-        # Create key pair
-        key_pair = create_new_key_pair()
+        if self.seed:
+            # Create deterministic seed from the provided seed string
+            seed_bytes = hashlib.sha256(self.seed.encode('utf-8')).digest()
+            
+            # Create deterministic Ed25519 key pair for consistent peer ID
+            key_pair = ed25519.create_new_key_pair(seed=seed_bytes)
+            logger.info(f"🔑 Using deterministic Ed25519 key pair with seed: {self.seed}")
+        else:
+            key_pair = ed25519.create_new_key_pair()
+            logger.info("🔑 Using random Ed25519 key pair")
         
         # Create listen address
         listen_addr = multiaddr.Multiaddr(f"/ip4/0.0.0.0/tcp/{self.port}")
@@ -250,7 +260,6 @@ class HeadlessService:
                             await self._setup_chat_room()
                             
                             # Setup connection event handlers for DHT
-                            await self._setup_dht_connection_handlers()
                             
                             # Mark service as ready
                             self.ready = True

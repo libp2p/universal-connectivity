@@ -16,6 +16,8 @@ import threading
 from headless import HeadlessService
 from ui import ChatUI
 
+DEFAULT_SEED = "py-peer"
+
 # Configure logging
 def setup_logging(ui_mode=False):
     """Setup logging configuration based on whether UI is active."""
@@ -85,7 +87,8 @@ async def main_async(args):
         nickname=nickname,
         port=args.port,
         connect_addrs=args.connect,
-        strict_signing=strict_signing
+        strict_signing=strict_signing,
+        seed=args.seed
     )
     
     try:
@@ -285,6 +288,13 @@ def main():
         action="store_true",
         help="Disable strict message signing (allows unsigned messages)"
     )
+    parser.add_argument(
+        "-s",
+        "--seed",
+        type=str,
+        default=DEFAULT_SEED,
+        help="seed for deterministic peer ID generation",
+    )
     
     args = parser.parse_args()
     
@@ -315,7 +325,8 @@ def main():
                 nickname=nickname,
                 port=args.port,
                 connect_addrs=args.connect,
-                strict_signing=strict_signing
+                strict_signing=strict_signing,
+                seed=args.seed
             )
             
             # Start headless service in background thread
