@@ -6,11 +6,13 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "textual>=0.47.0",
-    "libp2p>=0.2.0",
+    "libp2p>=0.3.0",
     "trio>=0.22.0",
-    "base58>=2.1.0",
-    "protobuf>=4.25.0",
+    "base58",
+    "protobuf",
     "janus>=1.0.0",
+    "trio_asyncio",
+    
 ]
 
 [project.scripts]
