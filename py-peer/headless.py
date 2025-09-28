@@ -22,7 +22,7 @@ from libp2p.kad_dht.kad_dht import (
     KadDHT,
 )
 from libp2p import new_host
-from libp2p.crypto import ed25519
+from libp2p.crypto.rsa import create_new_key_pair
 from libp2p.pubsub.gossipsub import GossipSub
 from libp2p.pubsub.pubsub import Pubsub
 from libp2p.tools.async_service.trio_service import background_trio_service
@@ -188,16 +188,7 @@ class HeadlessService:
     
     async def _run_service(self):
         """Run the main service loop."""
-        if self.seed:
-            # Create deterministic seed from the provided seed string
-            seed_bytes = hashlib.sha256(self.seed.encode('utf-8')).digest()
-            
-            # Create deterministic Ed25519 key pair for consistent peer ID
-            key_pair = ed25519.create_new_key_pair(seed=seed_bytes)
-            logger.info(f"🔑 Using deterministic Ed25519 key pair with seed: {self.seed}")
-        else:
-            key_pair = ed25519.create_new_key_pair()
-            logger.info("🔑 Using random Ed25519 key pair")
+        key_pair = create_new_key_pair()
         
         # Create listen address
         listen_addr = multiaddr.Multiaddr(f"/ip4/0.0.0.0/tcp/{self.port}")
