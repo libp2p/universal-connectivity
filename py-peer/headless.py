@@ -28,6 +28,9 @@ from libp2p.pubsub.pubsub import Pubsub
 from libp2p.tools.async_service.trio_service import background_trio_service
 from libp2p.peer.peerinfo import info_from_p2p_addr
 from libp2p.peer.peerinfo import PeerInfo
+from libp2p.identity.identify.identify import identify_handler_for, parse_identify_response, ID as IDENTIFY_PROTOCOL_ID
+from libp2p.utils.varint import read_length_prefixed_protobuf
+from libp2p.peer.id import ID
 from libp2p.custom_types import TProtocol
 from libp2p.pubsub.gossipsub import PROTOCOL_ID, PROTOCOL_ID_V11
 from libp2p.protocol_muxer.exceptions import (
@@ -149,6 +152,9 @@ class HeadlessService:
         self.system_queue = None   # UI receives system messages from headless
         self.outgoing_queue = None # UI sends messages to headless
         
+        # Peer information storage for identify protocol
+        self.peer_info_cache = {}  # Store peer info retrieved through identify
+        
         # Events for synchronization
         self.ready_event = trio.Event()
         self.stop_event = trio.Event()
@@ -199,6 +205,12 @@ class HeadlessService:
             key_pair=key_pair
             # bootstrap = BOOTSTRAP_PEERS
         )
+
+        # Register identify protocol handler
+        logger.info("📋 Registering identify protocol handler")
+        identify_handler = identify_handler_for(self.host)
+        self.host.set_stream_handler(IDENTIFY_PROTOCOL_ID, identify_handler)
+        logger.info(f"✅ Identify protocol handler registered for {IDENTIFY_PROTOCOL_ID}")
 
         # Create DHT with random walk enabled
         self.dht = KadDHT(self.host, DHTMode.SERVER, enable_random_walk=True)
@@ -398,7 +410,8 @@ class HeadlessService:
             host=self.host,
             pubsub=self.pubsub,
             nickname=self.nickname,
-            multiaddr=self.full_multiaddr
+            multiaddr=self.full_multiaddr,
+            headless_service=self
         )
         
         # Add custom message handler to forward messages to UI
@@ -532,6 +545,85 @@ class HeadlessService:
     def get_outgoing_queue(self):
         """Get the outgoing queue for UI to send messages."""
         return self.outgoing_queue
+    
+    async def get_peer_info_via_identify(self, peer_id):
+        """Get peer information using official identify protocol implementation."""
+        try:
+            logger.info(f"🔍 Requesting identify info from peer: {peer_id}")
+            logger.info(f"address of peer {peer_id} is {self.host.get_peerstore().peer_info(peer_id).addrs} ")
+            
+            # Create a stream to the peer for identify protocol - use tuple format as in example
+            stream = await self.host.new_stream(peer_id, (IDENTIFY_PROTOCOL_ID,))
+            
+            try:
+                # Use official py-libp2p utilities to read the response
+                # Read response using the official utility (defaults to varint format)
+                response_bytes = await read_length_prefixed_protobuf(stream, use_varint_format=True)
+                
+                if not response_bytes:
+                    logger.warning(f"Empty identify response from peer: {peer_id}")
+                    return None
+                
+                # Parse the identify response using official parser
+                identify_info = parse_identify_response(response_bytes)
+                
+                logger.info(f"✅ Received identify info from {peer_id}")
+                logger.info(f"  - Protocol Version: {identify_info.protocol_version}")
+                logger.info(f"  - Agent Version: {identify_info.agent_version}")
+                logger.info(f"  - Public Key: {len(identify_info.public_key)} bytes")
+                logger.info(f"  - Listen Addresses: {len(identify_info.listen_addrs)} addresses")
+                logger.info(f"  - Protocols: {len(identify_info.protocols)} protocols")
+                
+                # Store the peer info in our cache
+                self.peer_info_cache[str(peer_id)] = {
+                    'public_key': identify_info.public_key,
+                    'protocol_version': identify_info.protocol_version,
+                    'agent_version': identify_info.agent_version,
+                    'listen_addrs': identify_info.listen_addrs,
+                    'protocols': identify_info.protocols,
+                    'timestamp': time.time()
+                }
+                
+                return identify_info
+                
+            finally:
+                await stream.close()
+                
+        except Exception as e:
+            logger.error(f"❌ Failed to get identify info from peer {peer_id}: {e}")
+            return None
+    
+    async def get_cached_peer_info(self, peer_id: str):
+        """Get cached peer info, or fetch it if not available."""
+        peer_id_str = str(peer_id)
+        
+        # Check if we have cached info
+        if peer_id_str in self.peer_info_cache:
+            cached_info = self.peer_info_cache[peer_id_str]
+            # Check if cache is not too old (5 minutes)
+            if time.time() - cached_info['timestamp'] < 300:
+                return cached_info
+            else:
+                logger.debug(f"Cached info for {peer_id_str} is stale, refreshing")
+        
+        # Fetch fresh info
+        try:
+            peer_id_obj = ID.from_base58(peer_id_str) if isinstance(peer_id, str) else peer_id
+            identify_info = await self.get_peer_info_via_identify(peer_id_obj)
+            
+            if identify_info:
+                return self.peer_info_cache[peer_id_str]
+        except Exception as e:
+            logger.error(f"❌ Failed to get peer info for {peer_id_str}: {e}")
+        
+        return None
+    
+    def get_public_key_for_peer(self, peer_id: str):
+        """Get public key for a peer (synchronous access to cache)."""
+        peer_id_str = str(peer_id)
+        if peer_id_str in self.peer_info_cache:
+            return self.peer_info_cache[peer_id_str]['public_key']
+        return None
     
     async def stop(self):
         """Stop the headless service."""

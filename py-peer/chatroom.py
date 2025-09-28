@@ -54,12 +54,13 @@ class ChatRoom:
     through callback functions.
     """
     
-    def __init__(self, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None):
+    def __init__(self, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None, headless_service=None):
         self.host = host
         self.pubsub = pubsub
         self.nickname = nickname
         self.peer_id = str(host.get_id())
         self.multiaddr = multiaddr or f"unknown/{self.peer_id}"
+        self.headless_service = headless_service  # Reference for identify protocol
         
         # Subscriptions
         self.chat_subscription = None
@@ -83,9 +84,9 @@ class ChatRoom:
         system_logger.info(message)
     
     @classmethod
-    async def join_chat_room(cls, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None) -> "ChatRoom":
+    async def join_chat_room(cls, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None, headless_service=None) -> "ChatRoom":
         """Create and join a chat room."""
-        chat_room = cls(host, pubsub, nickname, multiaddr)
+        chat_room = cls(host, pubsub, nickname, multiaddr, headless_service)
         await chat_room._subscribe_to_topics()
         chat_room._log_system_message(f"Joined chat room as '{nickname}'")
         return chat_room
@@ -129,6 +130,29 @@ class ChatRoom:
             print(f"❌ Error sending message: {e}")
             self._log_system_message(f"ERROR: Failed to publish message: {e}")
     
+    async def _validate_message_with_identify(self, message, sender_id):
+        """Validate message using identify protocol to get sender's public key."""
+        if not self.headless_service:
+            logger.warning("No headless service available for identify protocol")
+            return True  # Default to accepting message if no identify available
+        
+        try:
+            # Get peer info via identify protocol (this will cache it)
+            peer_info = await self.headless_service.get_cached_peer_info(sender_id)
+            
+            if peer_info and peer_info.get('public_key'):
+                logger.info(f"✅ Retrieved public key for {sender_id} via identify protocol")
+                # Here you could add actual message signature validation
+                # For now, we just log that we got the public key
+                return True
+            else:
+                logger.warning(f"⚠️  Could not get public key for {sender_id} via identify protocol")
+                return True  # Still accept message but log the issue
+                
+        except Exception as e:
+            logger.error(f"❌ Error validating message with identify: {e}")
+            return True  # Default to accepting message on error
+    
     async def _handle_chat_messages(self):
         """Handle incoming chat messages in Go-compatible format."""
         logger.debug("📨 Starting chat message handler")
@@ -139,6 +163,12 @@ class ChatRoom:
                     # Handle plain text messages (common format with Go peer)
                     raw_data = message.data.decode()
                     sender_id = base58.b58encode(message.from_id).decode() if message.from_id else "unknown"
+                    
+                    # Validate message using identify protocol if available
+                    is_valid = await self._validate_message_with_identify(message, sender_id)
+                    if not is_valid:
+                        logger.warning(f"⚠️  Message validation failed for {sender_id}, skipping")
+                        continue
                     
                     # Use simple format - plain text messages with short sender ID as nickname
                     sender_nick = sender_id[-8:] if len(sender_id) > 8 else sender_id
