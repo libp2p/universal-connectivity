@@ -52,14 +52,14 @@ DEFAULT_PORT = 9095
 
 # Bootstrap nodes for peer discovery
 BOOTSTRAP_PEERS = [
-    # "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-    # "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    # "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
-    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
-    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
-    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-    # "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
+    "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+    "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+    "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
     # "/ip4/0.0.0.0/tcp/52972/p2p/QmVZZrUGuyicD5eig2a5yhi2dLDH5uMS3mXfxnR6uYuFZz"
     # "/ip4/127.0.0.1/tcp/9095/p2p/QmbXUUZ4LoDE59Hx9zjiH88S9YY77ft9b3pFtPsyH2xeZJ"
 ]
@@ -168,6 +168,8 @@ class HeadlessService:
             logger.info("testing status")
             logger.info(f"Connected peers are: len{self.host.get_connected_peers()}")
             logger.info(f"peers in peer store are: len{self.host.get_peerstore().peers_with_addrs()}")
+            logger.info(f"peers in routing table are: len{self.dht.routing_table.get_peer_ids()}")
+            logger.info(f"peers in pubsub are: {len(self.pubsub.peers.keys())}")
             await trio.sleep(5)
 
     async def start(self):
@@ -207,10 +209,10 @@ class HeadlessService:
         )
 
         # Register identify protocol handler
-        logger.info("📋 Registering identify protocol handler")
-        identify_handler = identify_handler_for(self.host)
+        logger.info("📋 Registering identify protocol handler (raw protobuf format for go-libp2p compatibility)")
+        identify_handler = identify_handler_for(self.host, use_varint_format=False)
         self.host.set_stream_handler(IDENTIFY_PROTOCOL_ID, identify_handler)
-        logger.info(f"✅ Identify protocol handler registered for {IDENTIFY_PROTOCOL_ID}")
+        logger.info(f"✅ Identify protocol handler registered for {IDENTIFY_PROTOCOL_ID} (raw format)")
 
         # Create DHT with random walk enabled
         self.dht = KadDHT(self.host, DHTMode.SERVER, enable_random_walk=True)
@@ -557,8 +559,9 @@ class HeadlessService:
             
             try:
                 # Use official py-libp2p utilities to read the response
-                # Read response using the official utility (defaults to varint format)
-                response_bytes = await read_length_prefixed_protobuf(stream, use_varint_format=True)
+                # Use raw protobuf format (use_varint_format=False) for go-libp2p compatibility
+                # go-libp2p uses the old/raw format, not the newer varint length-prefixed format
+                response_bytes = await read_length_prefixed_protobuf(stream, use_varint_format=False)
                 
                 if not response_bytes:
                     logger.warning(f"Empty identify response from peer: {peer_id}")
