@@ -9,6 +9,7 @@ import logging
 import random
 import socket
 import time
+import traceback
 import multiaddr
 import janus
 import trio
@@ -45,21 +46,19 @@ logger = logging.getLogger("headless")
 
 # Constants
 DISCOVERY_SERVICE_TAG = "universal-connectivity"
-GOSSIPSUB_PROTOCOL_ID = TProtocol("/meshsub/1.0.0")
-GOSSIPSUB_PROTOCOL_ID_V11 = TProtocol("/meshsub/1.1.0")
-PROTOCOL_ID = [GOSSIPSUB_PROTOCOL_ID, GOSSIPSUB_PROTOCOL_ID_V11]
+PROTOCOL_ID_LIST = [PROTOCOL_ID, PROTOCOL_ID_V11]
 DEFAULT_PORT = 9095
 
 # Bootstrap nodes for peer discovery
 BOOTSTRAP_PEERS = [
-    "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-    "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-    "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
+    # "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+    # "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    # "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
+    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
+    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
+    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+    # "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
     # "/ip4/0.0.0.0/tcp/52972/p2p/QmVZZrUGuyicD5eig2a5yhi2dLDH5uMS3mXfxnR6uYuFZz"
     # "/ip4/127.0.0.1/tcp/9095/p2p/QmbXUUZ4LoDE59Hx9zjiH88S9YY77ft9b3pFtPsyH2xeZJ"
 ]
@@ -192,6 +191,7 @@ class HeadlessService:
                     
         except Exception as e:
             logger.error(f"Failed to start headless service: {e}")
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
             raise
     
     async def _run_service(self):
@@ -224,12 +224,13 @@ class HeadlessService:
         logger.info(f"Full multiaddr: {self.full_multiaddr}")
         
         # Log GossipSub protocol configuration
-        logger.info(f"📋 Configuring GossipSub with protocols: ['{GOSSIPSUB_PROTOCOL_ID}']")
-        logger.info(f"  Protocol 1: {GOSSIPSUB_PROTOCOL_ID}")
+        logger.info(f"📋 Configuring GossipSub with protocols: {PROTOCOL_ID_LIST}")
+        logger.info(f"  Protocol 1: {PROTOCOL_ID}")
+        logger.info(f"  Protocol 2: {PROTOCOL_ID_V11}")
         
         # Create GossipSub with optimized parameters (matching working pubsub.py)
         self.gossipsub = GossipSub(
-            protocols=PROTOCOL_ID,
+            protocols=PROTOCOL_ID_LIST,
             degree=3,
             degree_low=2,
             degree_high=4,

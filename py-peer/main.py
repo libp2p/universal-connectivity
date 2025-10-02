@@ -10,6 +10,7 @@ import argparse
 import logging
 import sys
 import time
+import traceback
 import trio
 import threading
 
@@ -56,6 +57,7 @@ def run_headless_in_thread(headless_service, ready_event):
             trio.run(headless_service.start)
         except Exception as e:
             logger.error(f"Error in headless service thread: {e}")
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
     
     # Start the service in a daemon thread
     thread = threading.Thread(target=run_service, daemon=True)
@@ -117,6 +119,7 @@ async def main_async(args):
                     
     except Exception as e:
         logger.error(f"Application error: {e}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
         await headless_service.stop()
         raise
     
@@ -358,6 +361,7 @@ def main():
         logger.info("Application terminated by user")
     except Exception as e:
         logger.error(f"Application error: {e}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
         sys.exit(1)
 
 
