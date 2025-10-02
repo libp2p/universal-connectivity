@@ -210,7 +210,7 @@ class HeadlessService:
 
         # Register identify protocol handler
         logger.info("📋 Registering identify protocol handler (raw protobuf format for go-libp2p compatibility)")
-        identify_handler = identify_handler_for(self.host, use_varint_format=False)
+        identify_handler = identify_handler_for(self.host, use_varint_format=True)
         self.host.set_stream_handler(IDENTIFY_PROTOCOL_ID, identify_handler)
         logger.info(f"✅ Identify protocol handler registered for {IDENTIFY_PROTOCOL_ID} (raw format)")
 
@@ -553,6 +553,7 @@ class HeadlessService:
         """Get peer information using official identify protocol implementation."""
         try:
             logger.info(f"🔍 Requesting identify info from peer: {peer_id}")
+            logger.info(f"peers in peer store are: {self.host.get_peerstore().peers_with_addrs()}")
             logger.info(f"address of peer {peer_id} is {self.host.get_peerstore().peer_info(peer_id).addrs} ")
             
             # Create a stream to the peer for identify protocol - use tuple format as in example
@@ -562,7 +563,7 @@ class HeadlessService:
                 # Use official py-libp2p utilities to read the response
                 # Use raw protobuf format (use_varint_format=False) for go-libp2p compatibility
                 # go-libp2p uses the old/raw format, not the newer varint length-prefixed format
-                response_bytes = await read_length_prefixed_protobuf(stream, use_varint_format=False)
+                response_bytes = await read_length_prefixed_protobuf(stream, use_varint_format=True)
                 
                 if not response_bytes:
                     logger.warning(f"Empty identify response from peer: {peer_id}")

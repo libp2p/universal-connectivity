@@ -131,7 +131,16 @@ class ChatRoom:
             self._log_system_message(f"ERROR: Failed to publish message: {e}")
     
     async def _validate_message_with_identify(self, message, sender_id):
-        """Validate message using identify protocol to get sender's public key."""
+        """Validate message using identify protocol to get sender's public key.
+        
+        This should only be called for messages from OTHER peers that don't include
+        a public key in the message data.
+        """
+        # Safety check: never try to identify ourselves
+        if sender_id == self.peer_id:
+            logger.debug(f"⏭️  Skipping identify for own peer ID {sender_id}")
+            return True
+            
         if not self.headless_service:
             logger.warning("No headless service available for identify protocol")
             return True  # Default to accepting message if no identify available
@@ -164,14 +173,30 @@ class ChatRoom:
                     raw_data = message.data.decode()
                     sender_id = base58.b58encode(message.from_id).decode() if message.from_id else "unknown"
                     
-                    # Validate message using identify protocol if available
-                    is_valid = await self._validate_message_with_identify(message, sender_id)
-                    if not is_valid:
-                        logger.warning(f"⚠️  Message validation failed for {sender_id}, skipping")
-                        continue
+                    # Check if this is our own message
+                    is_own_message = sender_id == self.peer_id
+                    
+                    # Only validate messages from other peers (skip validation for own messages)
+                    if not is_own_message:
+                        # Check if message has signature/key - if not, use identify protocol
+                        if not message.key:  # No public key in message
+                            logger.debug(f"🔍 Message from {sender_id} has no public key, using identify protocol")
+                            is_valid = await self._validate_message_with_identify(message, sender_id)
+                            if not is_valid:
+                                logger.warning(f"⚠️  Message validation failed for {sender_id}, skipping")
+                                continue
+                        else:
+                            logger.debug(f"✅ Message from {sender_id} includes public key")
+                    else:
+                        logger.debug(f"📝 Processing own message from {sender_id} (no validation needed)")
                     
                     # Use simple format - plain text messages with short sender ID as nickname
-                    sender_nick = sender_id[-8:] if len(sender_id) > 8 else sender_id
+                    # Add "(you)" suffix for own messages
+                    if is_own_message:
+                        sender_nick = f"{self.nickname}"
+                    else:
+                        sender_nick = sender_id[-8:] if len(sender_id) > 8 else sender_id
+                    
                     actual_message = raw_data
                     
                     logger.info(f"📨 Received message from {sender_id} ({sender_nick}): {actual_message}")
