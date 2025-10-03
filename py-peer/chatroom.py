@@ -40,6 +40,7 @@ class ChatMessage:
     message: str
     sender_id: str
     sender_nick: str
+    topic: str = None  # Topic the message was received on
     timestamp: Optional[float] = None
     
     def __post_init__(self):
@@ -244,7 +245,8 @@ class ChatRoom:
                     chat_msg = ChatMessage(
                         message=actual_message,
                         sender_id=sender_id,
-                        sender_nick=sender_nick
+                        sender_nick=sender_nick,
+                        topic=topic_name
                     )
                     
                     # Call message handlers

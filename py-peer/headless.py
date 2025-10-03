@@ -153,6 +153,10 @@ class HeadlessService:
         self.outgoing_queue = None # UI sends messages to headless
         self.topic_subscription_queue = None  # UI sends topic subscription requests
         
+        # Per-topic message storage
+        self.topic_messages = {}  # {topic: [{'message': msg, 'timestamp': ts, 'read': bool}]}
+        self.topic_unread_counts = {}  # {topic: int}
+        
         # Peer information storage for identify protocol
         self.peer_info_cache = {}  # Store peer info retrieved through identify
         
@@ -432,20 +436,35 @@ class HeadlessService:
         await self._send_system_message(f"Joined chat room as '{self.nickname}'")
     
     async def _handle_chat_message(self, message: ChatMessage):
-        """Handle incoming chat messages and forward to UI."""
+        """Handle incoming chat messages and store them per-topic."""
         try:
-            # Log in simplified format only if not in UI mode
-            if not self.ui_mode:
-                logger.info(f"{message.sender_nick}: {message.message}")
+            topic = message.topic or "default"
             
-            # Put message in queue for UI
-            await self.message_queue.async_q.put({
+            # Initialize topic storage if needed
+            if topic not in self.topic_messages:
+                self.topic_messages[topic] = []
+                self.topic_unread_counts[topic] = 0
+            
+            # Store message with unread flag
+            message_data = {
                 'type': 'chat_message',
                 'message': message.message,
                 'sender_nick': message.sender_nick,
                 'sender_id': message.sender_id,
-                'timestamp': message.timestamp
-            })
+                'timestamp': message.timestamp,
+                'topic': topic,
+                'read': False  # New messages are unread by default
+            }
+            
+            self.topic_messages[topic].append(message_data)
+            self.topic_unread_counts[topic] += 1
+            
+            # Log in simplified format only if not in UI mode
+            if not self.ui_mode:
+                logger.info(f"[{topic}] {message.sender_nick}: {message.message}")
+            
+            # Still put message in queue for UI updates
+            await self.message_queue.async_q.put(message_data)
             
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")
@@ -487,13 +506,20 @@ class HeadlessService:
                     outgoing_data = self.outgoing_queue.sync_q.get_nowait()
                     if outgoing_data and 'message' in outgoing_data:
                         message = outgoing_data['message']
+                        topic = outgoing_data.get('topic')  # Optional topic parameter
                         
                         # Send message through chat room
                         if self.chat_room and self.running:
-                            await self.chat_room.publish_message(message)
-                            # Log in simplified format only if not in UI mode
-                            if not self.ui_mode:
-                                logger.info(f"{self.nickname} (you): {message}")
+                            if topic:
+                                # Send to specific topic
+                                success = await self.chat_room.publish_to_topic(topic, message)
+                                if not self.ui_mode:
+                                    logger.info(f"{self.nickname} (you) to {topic}: {message}")
+                            else:
+                                # Send to default chat topic
+                                await self.chat_room.publish_message(message)
+                                if not self.ui_mode:
+                                    logger.info(f"{self.nickname} (you): {message}")
                         else:
                             logger.warning("Cannot send message: chat room not ready")
                             await self._send_system_message("Cannot send message: chat room not ready")
@@ -564,6 +590,21 @@ class HeadlessService:
         else:
             logger.warning("Cannot send message: outgoing queue not ready or service not running")
     
+    def send_message_to_topic(self, topic: str, message: str):
+        """Send a message to a specific topic (thread-safe)."""
+        if self.outgoing_queue and self.running:
+            try:
+                # Put message with topic in outgoing queue
+                self.outgoing_queue.sync_q.put({
+                    'message': message,
+                    'topic': topic,
+                    'timestamp': time.time()
+                })
+            except Exception as e:
+                logger.error(f"Failed to queue message to topic {topic}: {e}")
+        else:
+            logger.warning("Cannot send message: outgoing queue not ready or service not running")
+    
     def get_connection_info(self) -> Dict[str, Any]:
         """Get connection information for UI."""
         if not self.ready:
@@ -617,6 +658,69 @@ class HeadlessService:
     def get_system_queue(self):
         """Get the system queue for UI."""
         return self.system_queue
+    
+    def get_topic_messages(self, topic: str) -> List[Dict[str, Any]]:
+        """
+        Get all messages for a specific topic.
+        
+        Args:
+            topic: The topic name
+            
+        Returns:
+            List of message dictionaries
+        """
+        return self.topic_messages.get(topic, [])
+    
+    def get_all_topics_with_info(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Get all subscribed topics with their message counts and unread status.
+        
+        Returns:
+            Dict mapping topic names to info dicts containing:
+            - unread_count: Number of unread messages
+            - total_count: Total number of messages
+            - last_message: Most recent message (if any)
+        """
+        result = {}
+        subscribed_topics = self.get_subscribed_topics()
+        
+        for topic in subscribed_topics:
+            messages = self.topic_messages.get(topic, [])
+            unread_count = self.topic_unread_counts.get(topic, 0)
+            
+            info = {
+                'unread_count': unread_count,
+                'total_count': len(messages),
+                'last_message': messages[-1] if messages else None
+            }
+            result[topic] = info
+        
+        return result
+    
+    def mark_topic_as_read(self, topic: str):
+        """
+        Mark all messages in a topic as read.
+        
+        Args:
+            topic: The topic name
+        """
+        if topic in self.topic_messages:
+            for message in self.topic_messages[topic]:
+                message['read'] = True
+            self.topic_unread_counts[topic] = 0
+            logger.debug(f"Marked all messages in topic '{topic}' as read")
+    
+    def get_unread_count(self, topic: str) -> int:
+        """
+        Get the count of unread messages for a topic.
+        
+        Args:
+            topic: The topic name
+            
+        Returns:
+            Number of unread messages
+        """
+        return self.topic_unread_counts.get(topic, 0)
     
     def get_outgoing_queue(self):
         """Get the outgoing queue for UI to send messages."""
