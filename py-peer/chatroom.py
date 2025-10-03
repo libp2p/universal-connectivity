@@ -54,7 +54,7 @@ class ChatRoom:
     through callback functions.
     """
     
-    def __init__(self, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None, headless_service=None):
+    def __init__(self, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None, headless_service=None, topic: str = None):
         self.host = host
         self.pubsub = pubsub
         self.nickname = nickname
@@ -62,7 +62,11 @@ class ChatRoom:
         self.multiaddr = multiaddr or f"unknown/{self.peer_id}"
         self.headless_service = headless_service  # Reference for identify protocol
         
-        # Subscriptions
+        # Use custom topic if provided, otherwise use default
+        self.chat_topic = topic if topic else CHAT_TOPIC
+        
+        # Subscriptions - now a dictionary to track all subscriptions
+        self.subscriptions = {}  # topic_name -> subscription object
         self.chat_subscription = None
         self.discovery_subscription = None
         
@@ -70,12 +74,19 @@ class ChatRoom:
         self.message_handlers = []
         self.system_message_handlers = []
         
+        # Topic handlers - stores (topic_name, subscription) for dynamic topics
+        self.topic_handlers = []
+        self.active_topic_handlers = set()  # Track which topics already have handlers running
+        
         # Running state
         self.running = False
+        self.nursery = None  # Store nursery reference for spawning new handlers
         
         logger.info(f"ChatRoom initialized for peer {self.peer_id[:8]}... with nickname '{nickname}'")
+        logger.info(f"Chat topic: {self.chat_topic}")
         self._log_system_message("Universal Connectivity Chat Started")
         self._log_system_message(f"Nickname: {nickname}")
+        self._log_system_message(f"Topic: {self.chat_topic}")
         self._log_system_message(f"Multiaddr: {self.multiaddr}")
         self._log_system_message("Commands: /quit, /peers, /status, /multiaddr")
     
@@ -84,9 +95,9 @@ class ChatRoom:
         system_logger.info(message)
     
     @classmethod
-    async def join_chat_room(cls, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None, headless_service=None) -> "ChatRoom":
+    async def join_chat_room(cls, host: BasicHost, pubsub: Pubsub, nickname: str, multiaddr: str = None, headless_service=None, topic: str = None) -> "ChatRoom":
         """Create and join a chat room."""
-        chat_room = cls(host, pubsub, nickname, multiaddr, headless_service)
+        chat_room = cls(host, pubsub, nickname, multiaddr, headless_service, topic)
         await chat_room._subscribe_to_topics()
         chat_room._log_system_message(f"Joined chat room as '{nickname}'")
         return chat_room
@@ -94,13 +105,21 @@ class ChatRoom:
     async def _subscribe_to_topics(self):
         """Subscribe to all necessary topics."""
         try:
-            # Subscribe to chat topic
-            self.chat_subscription = await self.pubsub.subscribe(CHAT_TOPIC)
-            logger.info(f"Subscribed to chat topic: {CHAT_TOPIC}")
+            # Subscribe to chat topic (either custom or default)
+            self.chat_subscription = await self.pubsub.subscribe(self.chat_topic)
+            self.subscriptions[self.chat_topic] = self.chat_subscription
+            logger.info(f"Subscribed to chat topic: {self.chat_topic}")
+            
+            # Add chat topic to handlers list
+            self.topic_handlers.append((self.chat_topic, self.chat_subscription))
             
             # Subscribe to discovery topic
             self.discovery_subscription = await self.pubsub.subscribe(PUBSUB_DISCOVERY_TOPIC)
+            self.subscriptions[PUBSUB_DISCOVERY_TOPIC] = self.discovery_subscription
             logger.info(f"Subscribed to discovery topic: {PUBSUB_DISCOVERY_TOPIC}")
+            
+            # Add discovery topic to handlers list
+            self.topic_handlers.append((PUBSUB_DISCOVERY_TOPIC, self.discovery_subscription))
             
         except Exception as e:
             logger.error(f"Failed to subscribe to topics: {e}")
@@ -115,10 +134,10 @@ class ChatRoom:
             logger.info(f"📤 Publishing message to {peer_count} peers: {message}")
             logger.info(f"Total pubsub peers: {list(self.pubsub.peers.keys())}")
             
-            # Send plain text message (Go-compatible format)
+            # Send plain text message (Go-compatible format) to the custom topic
             print(f"Sending message {message}")
-            await self.pubsub.publish(CHAT_TOPIC, message.encode())
-            logger.info(f"✅ Message published successfully to topic '{CHAT_TOPIC}'")
+            await self.pubsub.publish(self.chat_topic, message.encode())
+            logger.info(f"✅ Message published successfully to topic '{self.chat_topic}'")
             
             if peer_count == 0:
                 print(f"⚠️  No peers connected - message sent to topic but no one will receive it")
@@ -129,6 +148,28 @@ class ChatRoom:
             logger.error(f"❌ Failed to publish message: {e}")
             print(f"❌ Error sending message: {e}")
             self._log_system_message(f"ERROR: Failed to publish message: {e}")
+    
+    async def publish_to_topic(self, topic: str, message: str):
+        """Publish a message to a specific topic."""
+        try:
+            # Check if we're subscribed to this topic
+            if topic not in self.subscriptions:
+                logger.warning(f"Not subscribed to topic: {topic}")
+                return False
+            
+            peer_count = len(self.pubsub.peers)
+            logger.info(f"📤 Publishing message to topic '{topic}' with {peer_count} peers: {message}")
+            
+            # Send plain text message
+            await self.pubsub.publish(topic, message.encode())
+            logger.info(f"✅ Message published successfully to topic '{topic}'")
+            
+            return True
+                
+        except Exception as e:
+            logger.error(f"❌ Failed to publish message to topic '{topic}': {e}")
+            self._log_system_message(f"ERROR: Failed to publish message to topic '{topic}': {e}")
+            return False
     
     async def _validate_message_with_identify(self, message, sender_id):
         """Validate message using identify protocol to get sender's public key.
@@ -162,24 +203,23 @@ class ChatRoom:
             logger.error(f"❌ Error validating message with identify: {e}")
             return True  # Default to accepting message on error
     
-    async def _handle_chat_messages(self):
-        """Handle incoming chat messages in Go-compatible format."""
-        logger.debug("📨 Starting chat message handler")
+    async def _handle_topic_messages(self, topic_name: str, subscription):
+        """Handle incoming messages for any subscribed topic (including chat and discovery)."""
+        logger.debug(f"📨 Starting message handler for topic: {topic_name}")
         
         try:
-            async for message in self._message_stream(self.chat_subscription):
+            async for message in self._message_stream(subscription):
                 try:
-                    # Handle plain text messages (common format with Go peer)
+                    # Handle messages in the same way as chat messages
                     raw_data = message.data.decode()
                     sender_id = base58.b58encode(message.from_id).decode() if message.from_id else "unknown"
                     
                     # Check if this is our own message
                     is_own_message = sender_id == self.peer_id
                     
-                    # Only validate messages from other peers (skip validation for own messages)
+                    # Only validate messages from other peers
                     if not is_own_message:
-                        # Check if message has signature/key - if not, use identify protocol
-                        if not message.key:  # No public key in message
+                        if not message.key:
                             logger.debug(f"🔍 Message from {sender_id} has no public key, using identify protocol")
                             is_valid = await self._validate_message_with_identify(message, sender_id)
                             if not is_valid:
@@ -190,8 +230,7 @@ class ChatRoom:
                     else:
                         logger.debug(f"📝 Processing own message from {sender_id} (no validation needed)")
                     
-                    # Use simple format - plain text messages with short sender ID as nickname
-                    # Add "(you)" suffix for own messages
+                    # Format sender nickname
                     if is_own_message:
                         sender_nick = f"{self.nickname}"
                     else:
@@ -199,7 +238,7 @@ class ChatRoom:
                     
                     actual_message = raw_data
                     
-                    logger.info(f"📨 Received message from {sender_id} ({sender_nick}): {actual_message}")
+                    logger.info(f"📨 Received message on topic '{topic_name}' from {sender_id} ({sender_nick}): {actual_message}")
                     
                     # Create ChatMessage object for handlers
                     chat_msg = ChatMessage(
@@ -217,35 +256,13 @@ class ChatRoom:
                     
                     # Default console output if no handlers
                     if not self.message_handlers:
-                        print(f"[{chat_msg.sender_nick}]: {chat_msg.message}")
+                        print(f"[{topic_name}][{chat_msg.sender_nick}]: {chat_msg.message}")
                 
                 except Exception as e:
-                    logger.error(f"❌ Error processing chat message: {e}")
+                    logger.error(f"❌ Error processing message on topic '{topic_name}': {e}")
         
         except Exception as e:
-            logger.error(f"❌ Error in chat message handler: {e}")
-    
-    async def _handle_discovery_messages(self):
-        """Handle incoming discovery messages."""
-        logger.debug("Starting discovery message handler")
-        
-        try:
-            async for message in self._message_stream(self.discovery_subscription):
-                try:
-                    # Handle discovery message (simplified - just log for now)
-                    sender_id = base58.b58encode(message.from_id).decode() if message.from_id else "unknown"
-                    
-                    # Skip our own messages
-                    if sender_id == self.peer_id:
-                        continue
-                    
-                    logger.info(f"Discovery message from peer: {sender_id}")
-                
-                except Exception as e:
-                    logger.error(f"Error processing discovery message: {e}")
-        
-        except Exception as e:
-            logger.error(f"Error in discovery message handler: {e}")
+            logger.error(f"❌ Error in message handler for topic '{topic_name}': {e}")
     
     async def _message_stream(self, subscription) -> AsyncIterator[Message]:
         """Create an async iterator for subscription messages."""
@@ -262,8 +279,31 @@ class ChatRoom:
         self.running = True
         
         async with trio.open_nursery() as nursery:
-            nursery.start_soon(self._handle_chat_messages)
-            nursery.start_soon(self._handle_discovery_messages)
+            # Store nursery reference for dynamic task spawning
+            self.nursery = nursery
+            
+            # Start background task to monitor for new topic subscriptions
+            nursery.start_soon(self._monitor_new_topics)
+    
+    async def _monitor_new_topics(self):
+        """Monitor for new topic subscriptions and start handlers for them."""
+        while self.running:
+            try:
+                # Check if there are any new topics that need handlers
+                for topic_name, subscription in self.topic_handlers:
+                    if topic_name not in self.active_topic_handlers:
+                        logger.info(f"Starting message handler for topic: {topic_name}")
+                        
+                        # Use generic handler for all topics (including chat and discovery)
+                        self.nursery.start_soon(self._handle_topic_messages, topic_name, subscription)
+                        self.active_topic_handlers.add(topic_name)
+                
+                # Check periodically (every 0.5 seconds)
+                await trio.sleep(0.5)
+                
+            except Exception as e:
+                logger.error(f"Error in topic monitor: {e}")
+                await trio.sleep(1)
     
     def add_message_handler(self, handler):
         """Add a custom message handler."""
@@ -321,11 +361,13 @@ class ChatRoom:
                     
                     elif message.strip() == "/status":
                         peer_count = self.get_peer_count()
+                        subscribed_topics = ", ".join(sorted(self.get_subscribed_topics()))
                         print(f"📊 Status:")
                         print(f"  - Multiaddr: {self.multiaddr}")
                         print(f"  - Nickname: {self.nickname}")
                         print(f"  - Connected peers: {peer_count}")
-                        print(f"  - Subscribed topics: chat, discovery")
+                        print(f"  - Chat topic: {self.chat_topic}")
+                        print(f"  - Subscribed topics: {subscribed_topics}")
                         continue
                     
                     if message.strip():
@@ -355,3 +397,39 @@ class ChatRoom:
     def get_peer_count(self) -> int:
         """Get number of connected peers."""
         return len(self.pubsub.peers)
+    
+    def get_subscribed_topics(self) -> Set[str]:
+        """Get list of all subscribed topics."""
+        return set(self.subscriptions.keys())
+    
+    async def subscribe_to_topic(self, topic_name: str) -> bool:
+        """
+        Subscribe to a new topic dynamically.
+        
+        Args:
+            topic_name: The name of the topic to subscribe to
+            
+        Returns:
+            True if subscription was successful, False otherwise
+        """
+        try:
+            if topic_name in self.subscriptions:
+                logger.warning(f"Already subscribed to topic: {topic_name}")
+                return False
+            
+            logger.info(f"Subscribing to new topic: {topic_name}")
+            subscription = await self.pubsub.subscribe(topic_name)
+            self.subscriptions[topic_name] = subscription
+            logger.info(f"Successfully subscribed to topic: {topic_name}")
+            self._log_system_message(f"Subscribed to topic: {topic_name}")
+            
+            # Add to topic_handlers list - will be started in start_message_handlers
+            self.topic_handlers.append((topic_name, subscription))
+            logger.info(f"Added handler for topic: {topic_name}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to subscribe to topic {topic_name}: {e}")
+            self._log_system_message(f"ERROR: Failed to subscribe to topic {topic_name}: {e}")
+            return False

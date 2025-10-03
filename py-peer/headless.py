@@ -16,7 +16,7 @@ import trio
 import trio_asyncio
 import hashlib
 from queue import Empty
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Set
 from libp2p.discovery.bootstrap import BootstrapDiscovery
 from libp2p.kad_dht.kad_dht import (
     DHTMode,
@@ -126,13 +126,14 @@ class HeadlessService:
     Headless service that manages libp2p components and provides data to UI through queues.
     """
 
-    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False, strict_signing: bool = True, seed: int = None):
+    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False, strict_signing: bool = True, seed: int = None, topic: str = None):
         self.nickname = nickname
         self.port = port if port != 0 else find_free_port()
         self.connect_addrs = connect_addrs or []
         self.ui_mode = ui_mode  # Flag to control logging behavior
         self.strict_signing = strict_signing  # Flag to control message signing
         self.seed = seed
+        self.topic = topic  # Custom topic to use instead of default
 
         # libp2p components
         self.host = None
@@ -150,6 +151,7 @@ class HeadlessService:
         self.message_queue = None  # UI receives messages from headless
         self.system_queue = None   # UI receives system messages from headless
         self.outgoing_queue = None # UI sends messages to headless
+        self.topic_subscription_queue = None  # UI sends topic subscription requests
         
         # Peer information storage for identify protocol
         self.peer_info_cache = {}  # Store peer info retrieved through identify
@@ -181,6 +183,7 @@ class HeadlessService:
             self.message_queue = janus.Queue()      # Messages from headless to UI
             self.system_queue = janus.Queue()       # System messages from headless to UI  
             self.outgoing_queue = janus.Queue()     # Messages from UI to headless
+            self.topic_subscription_queue = janus.Queue()  # Topic subscription requests from UI
             logger.debug("Message queues created successfully")
             
             # Enable trio-asyncio mode
@@ -276,6 +279,7 @@ class HeadlessService:
                             async with trio.open_nursery() as nursery:
                                 nursery.start_soon(self._process_messages)
                                 nursery.start_soon(self._process_outgoing_messages)
+                                nursery.start_soon(self._process_topic_subscriptions)
                                 nursery.start_soon(self._wait_for_stop)
                                 nursery.start_soon(self.monitor_peers)
                                 nursery.start_soon(maintain_connections, self.host)
@@ -414,7 +418,8 @@ class HeadlessService:
             pubsub=self.pubsub,
             nickname=self.nickname,
             multiaddr=self.full_multiaddr,
-            headless_service=self
+            headless_service=self,
+            topic=self.topic
         )
         
         # Add custom message handler to forward messages to UI
@@ -503,6 +508,41 @@ class HeadlessService:
             except Exception as e:
                 logger.error(f"Error in outgoing message processing: {e}")
                 await trio.sleep(0.1)
+    
+    async def _process_topic_subscriptions(self):
+        """Process topic subscription requests from UI."""
+        
+        while self.running:
+            try:
+                # Check for subscription requests from UI (non-blocking)
+                try:
+                    subscription_data = self.topic_subscription_queue.sync_q.get_nowait()
+                    if subscription_data and 'topic' in subscription_data:
+                        topic_name = subscription_data['topic']
+                        
+                        # Subscribe to the topic through chat room
+                        if self.chat_room and self.running:
+                            success = await self.chat_room.subscribe_to_topic(topic_name)
+                            if success:
+                                logger.info(f"Successfully subscribed to topic: {topic_name}")
+                                await self._send_system_message(f"Subscribed to topic: {topic_name}")
+                            else:
+                                logger.warning(f"Failed to subscribe to topic: {topic_name}")
+                                await self._send_system_message(f"Failed to subscribe to topic: {topic_name}")
+                        else:
+                            logger.warning("Cannot subscribe to topic: chat room not ready")
+                            await self._send_system_message("Cannot subscribe to topic: chat room not ready")
+                            
+                except Empty:
+                    # No request available, that's fine
+                    await trio.sleep(0.1)  # Brief pause to avoid busy loop
+                except Exception as e:
+                    logger.error(f"Error processing topic subscription: {e}")
+                    await trio.sleep(0.1)
+                    
+            except Exception as e:
+                logger.error(f"Error in topic subscription processing: {e}")
+                await trio.sleep(0.1)
 
     async def _wait_for_stop(self):
         """Wait for stop signal."""
@@ -536,6 +576,39 @@ class HeadlessService:
             'connected_peers': self.chat_room.get_connected_peers() if self.chat_room else set(),
             'peer_count': self.chat_room.get_peer_count() if self.chat_room else 0
         }
+    
+    def get_subscribed_topics(self) -> Set[str]:
+        """Get list of all subscribed topics."""
+        if not self.chat_room:
+            return set()
+        return self.chat_room.get_subscribed_topics()
+    
+    def subscribe_to_topic(self, topic_name: str) -> bool:
+        """
+        Subscribe to a new topic (thread-safe wrapper).
+        
+        Args:
+            topic_name: The name of the topic to subscribe to
+            
+        Returns:
+            True if subscription request was queued, False otherwise
+        """
+        if not self.chat_room or not self.running:
+            logger.warning("Cannot subscribe to topic: chat room not ready or service not running")
+            return False
+        
+        try:
+            # Put subscription request in queue (sync call, safe from UI thread)
+            self.topic_subscription_queue.sync_q.put({
+                'topic': topic_name,
+                'timestamp': time.time()
+            })
+            logger.info(f"Queued subscription request for topic: {topic_name}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to queue topic subscription: {e}")
+            return False
     
     def get_message_queue(self):
         """Get the message queue for UI."""
@@ -645,5 +718,7 @@ class HeadlessService:
             self.system_queue.close()
         if self.outgoing_queue:
             self.outgoing_queue.close()
+        if self.topic_subscription_queue:
+            self.topic_subscription_queue.close()
         
         logger.info("Headless service stopped")

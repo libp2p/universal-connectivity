@@ -110,6 +110,7 @@ class ChatScreen(Screen):
             title="Universal Chat",
             left_action_items=[["menu", lambda x: self.toggle_nav_drawer()]],
             right_action_items=[
+                ["pound", lambda x: self.show_topics()],
                 ["account-group", lambda x: self.show_peers()],
                 ["information", lambda x: self.show_info()]
             ],
@@ -168,6 +169,10 @@ class ChatScreen(Screen):
         app = MDApp.get_running_app()
         if hasattr(app, 'nav_drawer'):
             app.nav_drawer.set_state("toggle")
+    
+    def show_topics(self):
+        """Switch to topics screen."""
+        self.manager.current = 'topics'
     
     def send_message(self, *args):
         """Send a message."""
@@ -305,12 +310,14 @@ class ChatScreen(Screen):
     def show_info(self, *args):
         """Show connection info dialog."""
         info = self.headless_service.get_connection_info()
+        topics = self.headless_service.get_subscribed_topics()
+        topics_list = ", ".join(sorted(topics)) if topics else "None"
         
         content = f"""
 Nickname: {info.get('nickname', 'Unknown')}
 Peer ID: {info.get('peer_id', 'Unknown')[:16]}...
 Connected Peers: {info.get('peer_count', 0)}
-Topics: chat, discovery
+Subscribed Topics: {topics_list}
 """
         
         dialog = MDDialog(
@@ -323,6 +330,7 @@ Topics: chat, discovery
                 )
             ]
         )
+        dialog.open()
         dialog.open()
     
     def show_multiaddr(self, *args):
@@ -420,6 +428,142 @@ class PeersScreen(Screen):
         dialog.open()
 
 
+class TopicsScreen(Screen):
+    """Screen showing list of subscribed topics with ability to add new ones."""
+    
+    def __init__(self, headless_service, **kwargs):
+        super().__init__(**kwargs)
+        self.headless_service = headless_service
+        self.new_topic_dialog = None
+        
+        layout = BoxLayout(orientation='vertical')
+        
+        # Top app bar
+        toolbar = MDTopAppBar(
+            title="Subscribed Topics",
+            left_action_items=[["arrow-left", lambda x: self.go_back()]],
+            right_action_items=[["plus", lambda x: self.show_add_topic_dialog()]],
+            elevation=2
+        )
+        layout.add_widget(toolbar)
+        
+        # Topics list
+        self.topics_layout = BoxLayout(
+            orientation='vertical',
+            spacing=dp(5),
+            padding=dp(10),
+            size_hint_y=None
+        )
+        self.topics_layout.bind(minimum_height=self.topics_layout.setter('height'))
+        
+        scroll = MDScrollView()
+        scroll.add_widget(self.topics_layout)
+        layout.add_widget(scroll)
+        
+        self.add_widget(layout)
+        
+        # Update topics periodically
+        Clock.schedule_interval(self.update_topics, 1.0)
+    
+    def go_back(self):
+        """Go back to chat screen."""
+        self.manager.current = 'chat'
+    
+    def update_topics(self, dt):
+        """Update the topics list."""
+        self.topics_layout.clear_widgets()
+        
+        topics = self.headless_service.get_subscribed_topics()
+        
+        if not topics:
+            label = MDLabel(
+                text="No topics subscribed",
+                halign='center',
+                theme_text_color='Hint'
+            )
+            self.topics_layout.add_widget(label)
+            return
+        
+        for topic in sorted(topics):
+            topic_item = OneLineAvatarIconListItem(
+                text=topic,
+                on_release=lambda x, t=topic: self.show_topic_info(t)
+            )
+            topic_item.add_widget(IconLeftWidget(icon="pound"))
+            self.topics_layout.add_widget(topic_item)
+    
+    def show_topic_info(self, topic):
+        """Show information about a specific topic."""
+        dialog = MDDialog(
+            title="Topic Information",
+            text=f"Topic: {topic}\n\nThis topic is currently subscribed for receiving messages.",
+            buttons=[
+                MDFlatButton(
+                    text="CLOSE",
+                    on_release=lambda x: dialog.dismiss()
+                )
+            ]
+        )
+        dialog.open()
+    
+    def show_add_topic_dialog(self):
+        """Show dialog to add a new topic."""
+        # Text field for topic name
+        self.topic_input = MDTextField(
+            hint_text="Enter topic name",
+            size_hint_x=0.9,
+            pos_hint={'center_x': 0.5}
+        )
+        
+        content = BoxLayout(
+            orientation='vertical',
+            spacing=dp(10),
+            padding=dp(20),
+            size_hint_y=None,
+            height=dp(100)
+        )
+        content.add_widget(self.topic_input)
+        
+        self.new_topic_dialog = MDDialog(
+            title="Subscribe to New Topic",
+            type="custom",
+            content_cls=content,
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release=lambda x: self.new_topic_dialog.dismiss()
+                ),
+                MDFlatButton(
+                    text="SUBSCRIBE",
+                    on_release=self.add_topic
+                )
+            ]
+        )
+        self.new_topic_dialog.open()
+    
+    def add_topic(self, *args):
+        """Add a new topic subscription."""
+        topic_name = self.topic_input.text.strip()
+        
+        if not topic_name:
+            return
+        
+        # Subscribe to the topic
+        success = self.headless_service.subscribe_to_topic(topic_name)
+        
+        if success:
+            logger.info(f"Successfully subscribed to topic: {topic_name}")
+        else:
+            logger.error(f"Failed to subscribe to topic: {topic_name}")
+        
+        # Close dialog
+        if self.new_topic_dialog:
+            self.new_topic_dialog.dismiss()
+        
+        # Update the topics list immediately
+        self.update_topics(0)
+
+
 class ChatApp(MDApp):
     """Main Kivy application for the chat."""
     
@@ -437,9 +581,11 @@ class ChatApp(MDApp):
         # Add screens
         chat_screen = ChatScreen(self.headless_service, name='chat')
         peers_screen = PeersScreen(self.headless_service, name='peers')
+        topics_screen = TopicsScreen(self.headless_service, name='topics')
         
         sm.add_widget(chat_screen)
         sm.add_widget(peers_screen)
+        sm.add_widget(topics_screen)
         
         # Set initial screen
         sm.current = 'chat'

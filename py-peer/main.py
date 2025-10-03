@@ -91,7 +91,8 @@ async def main_async(args):
         port=args.port,
         connect_addrs=args.connect,
         strict_signing=strict_signing,
-        seed=args.seed
+        seed=args.seed,
+        topic=args.topic
     )
     
     try:
@@ -305,6 +306,12 @@ def main():
         default=DEFAULT_SEED,
         help="seed for deterministic peer ID generation",
     )
+    parser.add_argument(
+        "-t",
+        "--topic",
+        type=str,
+        help="Custom topic to subscribe.",
+    )
     
     args = parser.parse_args()
     
@@ -336,7 +343,8 @@ def main():
                 port=args.port,
                 connect_addrs=args.connect,
                 strict_signing=strict_signing,
-                seed=args.seed
+                seed=args.seed,
+                topic=args.topic
             )
             
             # Start headless service in background thread
@@ -375,7 +383,8 @@ def main():
                 port=args.port,
                 connect_addrs=args.connect,
                 strict_signing=strict_signing,
-                seed=args.seed
+                seed=args.seed,
+                topic=args.topic
             )
             
             # Start headless service in background thread
