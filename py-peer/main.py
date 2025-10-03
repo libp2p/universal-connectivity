@@ -268,6 +268,12 @@ def main():
     )
     
     parser.add_argument(
+        "--kivy",
+        action="store_true",
+        help="Use Kivy UI (mobile-friendly interface)"
+    )
+    
+    parser.add_argument(
         "-c", "--connect",
         action="append",
         help="Address to connect to (can be used multiple times)",
@@ -313,7 +319,46 @@ def main():
         logger.debug("Debug logging enabled")
     
     try:
-        if args.ui:
+        if args.kivy:
+            # Configure logging for Kivy mode (no console output)
+            setup_logging(ui_mode=True)
+            
+            # Special handling for Kivy mode
+            logger.info("Starting in Kivy mode...")
+            
+            # Create nickname
+            nickname = args.nick or f"peer-{time.time():.0f}"
+            
+            # Create headless service
+            strict_signing = not args.no_strict_signing  # Default True, False if --no-strict-signing is used
+            headless_service = HeadlessService(
+                nickname=nickname,
+                port=args.port,
+                connect_addrs=args.connect,
+                strict_signing=strict_signing,
+                seed=args.seed
+            )
+            
+            # Start headless service in background thread
+            logger.info("Starting headless service in background thread...")
+            ready_event = threading.Event()
+            headless_thread = run_headless_in_thread(headless_service, ready_event)
+            
+            logger.info("Starting Kivy UI in main thread...")
+            
+            # Import kivy_ui here to avoid issues if kivy is not installed
+            try:
+                from kivy_ui import run_kivy_ui
+            except ImportError as e:
+                logger.error("Failed to import kivy_ui. Make sure Kivy and KivyMD are installed.")
+                logger.error(f"Error: {e}")
+                logger.error("Install with: pip install kivy kivymd")
+                sys.exit(1)
+            
+            # Run Kivy UI - this will block until UI exits
+            run_kivy_ui(headless_service)
+            
+        elif args.ui:
             # Configure logging for UI mode (no console output)
             setup_logging(ui_mode=True)
             

@@ -12,7 +12,8 @@ dependencies = [
     "protobuf",
     "janus>=1.0.0",
     "trio_asyncio",
-    
+    "kivy>=2.3.0",
+    "kivymd>=1.2.0",
 ]
 
 [project.scripts]
