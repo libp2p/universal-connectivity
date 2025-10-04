@@ -346,21 +346,97 @@ class ChatScreen(Screen):
         dialog.open()
     
     def show_info(self, *args):
-        """Show connection info dialog."""
+        """Show connection info dialog with clickable text to copy."""
         info = self.headless_service.get_connection_info()
+        peer_id = info.get('peer_id', 'Unknown')
+        multiaddr = info.get('multiaddr', 'Unknown')
         topics = self.headless_service.get_subscribed_topics()
         topics_list = ", ".join(sorted(topics)) if topics else "None"
         
-        content = f"""
-Nickname: {info.get('nickname', 'Unknown')}
-Peer ID: {info.get('peer_id', 'Unknown')[:16]}...
+        # Create content layout
+        content = BoxLayout(
+            orientation='vertical',
+            spacing=dp(10),
+            padding=dp(10),
+            size_hint_y=None,
+            height=dp(320)
+        )
+        
+        # Info text
+        info_label = MDLabel(
+            text=f"""Nickname: {info.get('nickname', 'Unknown')}
 Connected Peers: {info.get('peer_count', 0)}
 Subscribed Topics: {topics_list}
-"""
+""",
+            size_hint_y=None,
+            height=dp(100)
+        )
+        content.add_widget(info_label)
+        
+        # Peer ID section
+        peer_id_label = MDLabel(
+            text="Peer ID:",
+            font_style='Caption',
+            theme_text_color='Secondary',
+            size_hint_y=None,
+            height=dp(20)
+        )
+        content.add_widget(peer_id_label)
+        
+        # Clickable Peer ID card
+        peer_id_card = MDCard(
+            orientation='vertical',
+            size_hint_y=None,
+            height=dp(50),
+            padding=dp(10),
+            md_bg_color=(0.9, 0.95, 1, 1),  # Light blue tint
+            on_release=lambda x: self.copy_to_clipboard(peer_id, "Peer ID copied!")
+        )
+        
+        peer_id_text = MDLabel(
+            text=peer_id,
+            font_style='Body2',
+            halign='left',
+            valign='middle',
+            size_hint_y=1
+        )
+        peer_id_card.add_widget(peer_id_text)
+        content.add_widget(peer_id_card)
+        
+        # Multiaddr section
+        multiaddr_label = MDLabel(
+            text="Multiaddr:",
+            font_style='Caption',
+            theme_text_color='Secondary',
+            size_hint_y=None,
+            height=dp(20)
+        )
+        content.add_widget(multiaddr_label)
+        
+        # Clickable Multiaddr card
+        multiaddr_card = MDCard(
+            orientation='vertical',
+            size_hint_y=None,
+            height=dp(70),
+            padding=dp(10),
+            md_bg_color=(0.9, 0.95, 1, 1),  # Light blue tint
+            on_release=lambda x: self.copy_to_clipboard(multiaddr, "Multiaddr copied!")
+        )
+        
+        multiaddr_text = MDLabel(
+            text=multiaddr,
+            font_style='Body2',
+            halign='left',
+            valign='middle',
+            size_hint_y=1
+        )
+        multiaddr_card.add_widget(multiaddr_text)
+        content.add_widget(multiaddr_card)
         
         dialog = MDDialog(
             title="Connection Status",
-            text=content,
+            type="custom",
+            content_cls=content,
             buttons=[
                 MDFlatButton(
                     text="CLOSE",
@@ -369,15 +445,66 @@ Subscribed Topics: {topics_list}
             ]
         )
         dialog.open()
-        dialog.open()
+    
+    def copy_to_clipboard(self, text, success_message):
+        """Copy text to clipboard and show confirmation."""
+        try:
+            from kivy.core.clipboard import Clipboard
+            Clipboard.copy(text)
+            logger.info(f"Copied to clipboard: {text[:50]}...")
+            self.show_system_message(success_message)
+        except Exception as e:
+            logger.error(f"Failed to copy to clipboard: {e}")
+            self.show_system_message("Failed to copy to clipboard")
     
     def show_multiaddr(self, *args):
-        """Show multiaddr dialog."""
+        """Show multiaddr dialog with clickable text to copy."""
         info = self.headless_service.get_connection_info()
+        multiaddr = info.get('multiaddr', 'Unknown')
+        
+        # Create content layout
+        content = BoxLayout(
+            orientation='vertical',
+            spacing=dp(10),
+            padding=dp(10),
+            size_hint_y=None,
+            height=dp(100)
+        )
+        
+        # Hint text
+        hint_label = MDLabel(
+            text="Tap multiaddr to copy:",
+            font_style='Caption',
+            theme_text_color='Secondary',
+            size_hint_y=None,
+            height=dp(20)
+        )
+        content.add_widget(hint_label)
+        
+        # Clickable Multiaddr card
+        multiaddr_card = MDCard(
+            orientation='vertical',
+            size_hint_y=None,
+            height=dp(70),
+            padding=dp(10),
+            md_bg_color=(0.9, 0.95, 1, 1),  # Light blue tint
+            on_release=lambda x: self.copy_to_clipboard(multiaddr, "Multiaddr copied!")
+        )
+        
+        multiaddr_text = MDLabel(
+            text=multiaddr,
+            font_style='Body2',
+            halign='left',
+            valign='middle',
+            size_hint_y=1
+        )
+        multiaddr_card.add_widget(multiaddr_text)
+        content.add_widget(multiaddr_card)
         
         dialog = MDDialog(
             title="My Multiaddress",
-            text=info.get('multiaddr', 'Unknown'),
+            type="custom",
+            content_cls=content,
             buttons=[
                 MDFlatButton(
                     text="CLOSE",
@@ -626,14 +753,84 @@ class TopicsScreen(Screen):
         self.new_topic_dialog.open()
     
     def show_app_info(self):
-        """Show app connection information."""
+        """Show app connection information with clickable text to copy."""
         info = self.headless_service.get_connection_info()
         peer_id = info.get('peer_id', 'Unknown')
         multiaddr = info.get('multiaddr', 'Unknown')
         
+        # Create content layout
+        content = BoxLayout(
+            orientation='vertical',
+            spacing=dp(15),
+            padding=dp(10),
+            size_hint_y=None,
+            height=dp(200)
+        )
+        
+        # Peer ID section
+        peer_id_label = MDLabel(
+            text="Peer ID:",
+            font_style='Caption',
+            theme_text_color='Secondary',
+            size_hint_y=None,
+            height=dp(20)
+        )
+        content.add_widget(peer_id_label)
+        
+        # Clickable Peer ID card
+        peer_id_card = MDCard(
+            orientation='vertical',
+            size_hint_y=None,
+            height=dp(50),
+            padding=dp(10),
+            md_bg_color=(0.9, 0.95, 1, 1),  # Light blue tint
+            on_release=lambda x: self.copy_to_clipboard(peer_id, "Peer ID copied!")
+        )
+        
+        peer_id_text = MDLabel(
+            text=peer_id,
+            font_style='Body2',
+            halign='left',
+            valign='middle',
+            size_hint_y=1
+        )
+        peer_id_card.add_widget(peer_id_text)
+        content.add_widget(peer_id_card)
+        
+        # Multiaddr section
+        multiaddr_label = MDLabel(
+            text="Multiaddr:",
+            font_style='Caption',
+            theme_text_color='Secondary',
+            size_hint_y=None,
+            height=dp(20)
+        )
+        content.add_widget(multiaddr_label)
+        
+        # Clickable Multiaddr card
+        multiaddr_card = MDCard(
+            orientation='vertical',
+            size_hint_y=None,
+            height=dp(70),
+            padding=dp(10),
+            md_bg_color=(0.9, 0.95, 1, 1),  # Light blue tint
+            on_release=lambda x: self.copy_to_clipboard(multiaddr, "Multiaddr copied!")
+        )
+        
+        multiaddr_text = MDLabel(
+            text=multiaddr,
+            font_style='Body2',
+            halign='left',
+            valign='middle',
+            size_hint_y=1
+        )
+        multiaddr_card.add_widget(multiaddr_text)
+        content.add_widget(multiaddr_card)
+        
         dialog = MDDialog(
             title="Connection Info",
-            text=f"Peer ID: {peer_id}\n\nMultiaddr:\n{multiaddr}",
+            type="custom",
+            content_cls=content,
             buttons=[
                 MDFlatButton(
                     text="CLOSE",
@@ -642,6 +839,17 @@ class TopicsScreen(Screen):
             ]
         )
         dialog.open()
+    
+    def copy_to_clipboard(self, text, success_message):
+        """Copy text to clipboard and show confirmation."""
+        try:
+            from kivy.core.clipboard import Clipboard
+            Clipboard.copy(text)
+            logger.info(f"Copied to clipboard: {text[:50]}...")
+            self.show_status_dialog("Success", success_message)
+        except Exception as e:
+            logger.error(f"Failed to copy to clipboard: {e}")
+            self.show_status_dialog("Error", "Failed to copy to clipboard")
     
     def show_connect_dialog(self):
         """Show dialog to connect to a peer."""
