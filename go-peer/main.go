@@ -45,7 +45,6 @@ var logger = log.Logger("app")
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
 // If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
 func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Multiaddr) (*dht.IpfsDHT, error) {
-
 	kdht, err := dht.New(ctx, host,
 		dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...),
 		dht.Mode(dht.ModeAuto),
@@ -115,7 +114,19 @@ func main() {
 
 	flag.Parse()
 
-	log.SetLogLevel("app", "debug")
+	if !*headless {
+		err := log.SetLogLevel("*", "ERROR")
+		if err != nil {
+			fmt.Printf("failed to set log level: %s", err)
+			os.Exit(1)
+		}
+
+		err = log.SetLogLevel("app", "ERROR")
+		if err != nil {
+			fmt.Printf("failed to set log level: %s", err)
+			os.Exit(1)
+		}
+	}
 
 	ctx := context.Background()
 
@@ -206,7 +217,7 @@ func main() {
 
 	// use the nickname from the cli flag, or a default if blank
 	nick := *nickFlag
-	if len(nick) == 0 {
+	if nick == "" {
 		nick = defaultNick(h.ID())
 	}
 
@@ -220,16 +231,16 @@ func main() {
 	// setup DHT with empty discovery peers
 	// so this will be a discovery peer for others
 	// this peer should run on cloud(with public ip address)
-	dht, err := NewDHT(ctx, h, nil)
+	hDHT, err := NewDHT(ctx, h, nil)
 	if err != nil {
 		panic(err)
 	}
 
 	// setup peer discovery
-	go Discover(ctx, h, dht)
+	go Discover(ctx, h, hDHT)
 
 	// setup local mDNS discovery
-	if err := setupDiscovery(h); err != nil {
+	if err = setupDiscovery(h); err != nil {
 		panic(err)
 	}
 
@@ -260,15 +271,19 @@ func main() {
 				return
 			case <-ticker.C:
 				rm := h.Network().ResourceManager()
-				rm.ViewSystem(
+
+				err = rm.ViewSystem(
 					func(rs network.ResourceScope) error {
-						fmt.Printf("Stats: %+v\n", rs.Stat())
+						LogMsgf("System Stats: %+v", rs.Stat())
 						if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
-							fmt.Printf("Limits: %+v\n", r.Limit())
+							LogMsgf("System Limits: %+v", r.Limit())
 						}
 						return nil
 					},
 				)
+				if err != nil {
+					LogMsgf("ViewSystem error: %s", err)
+				}
 			}
 		}
 	}()
@@ -305,7 +320,7 @@ func main() {
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
-func printErr(m string, args ...interface{}) {
+func printErr(m string, args ...any) {
 	fmt.Fprintf(os.Stderr, m, args...)
 }
 
@@ -374,9 +389,11 @@ func getResourceManager() network.ResourceManager {
 		StreamBaseLimit:       baseLimits,
 	}
 	cl := scl.Scale(0, 0)
-	rcmgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
+
+	resourceMaanger, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
 	if err != nil {
 		panic(err)
 	}
-	return rcmgr
+
+	return resourceMaanger
 }
