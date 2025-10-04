@@ -13,6 +13,7 @@ import {
   ClipboardIcon,
   ClipboardDocumentCheckIcon,
 } from '@heroicons/react/24/outline'
+import { peerIdFromString } from '@libp2p/peer-id'
 
 export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { libp2p } = useLibp2pContext()
@@ -60,7 +61,14 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
       }
       setDialling(true)
       try {
-        await connectToMultiaddr(libp2p)(multiaddr(maddr))
+        if (maddr.startsWith('/')) {
+          await connectToMultiaddr(libp2p)(multiaddr(maddr))
+          setMultiaddr('')
+        } else {
+          const peerId = peerIdFromString(maddr.trim())
+          await libp2p.dial(peerId)
+          setMultiaddr('')
+        }
       } catch (e: any) {
         setErr(e?.message ?? 'Error connecting')
       } finally {
@@ -187,7 +195,7 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
 
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <label htmlFor="peer-id" className="block text-sm font-medium leading-6 text-gray-900">
-              Multiaddr to connect to
+              Multiaddr or PeerID to connect to
             </label>
             <div className="mt-2">
               <input
@@ -196,7 +204,7 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
                 name="peer-id"
                 id="peer-id"
                 className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="12D3Koo..."
+                placeholder="/ip4/.../ip6/...or...12D3Koo..."
                 aria-describedby="multiaddr-id-description"
                 onChange={handleMultiaddrChange}
               />
@@ -210,7 +218,7 @@ export default function ConnectionPanel({ isOpen, onClose }: { isOpen: boolean; 
               onClick={handleConnectToMultiaddr}
               disabled={dialling}
             >
-              {dialling && <Spinner />} Connect{dialling && 'ing'} to multiaddr
+              {dialling && <Spinner />} Connect{dialling && 'ing'}
             </button>
             {err && <p className="mt-2 text-sm text-red-500">{err}</p>}
           </div>
