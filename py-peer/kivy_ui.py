@@ -481,6 +481,7 @@ class TopicsScreen(Screen):
             title="Universal Chat",
             right_action_items=[
                 ["plus", lambda x: self.show_add_topic_dialog()],
+                ["connection", lambda x: self.show_connect_dialog()],
                 ["information", lambda x: self.show_app_info()]
             ],
             elevation=2
@@ -636,6 +637,81 @@ class TopicsScreen(Screen):
             buttons=[
                 MDFlatButton(
                     text="CLOSE",
+                    on_release=lambda x: dialog.dismiss()
+                )
+            ]
+        )
+        dialog.open()
+    
+    def show_connect_dialog(self):
+        """Show dialog to connect to a peer."""
+        # Text field for multiaddress
+        self.connect_input = MDTextField(
+            hint_text="Enter peer multiaddress",
+            helper_text="e.g., /ip4/127.0.0.1/tcp/9095/p2p/QmXXXXXXXXXX...",
+            helper_text_mode="persistent",
+            multiline=True,
+            size_hint_y=None,
+            height=dp(120)
+        )
+        
+        content = BoxLayout(
+            orientation='vertical',
+            spacing=dp(10),
+            padding=dp(20),
+            size_hint_y=None,
+            height=dp(140)
+        )
+        content.add_widget(self.connect_input)
+        
+        self.connect_dialog = MDDialog(
+            title="Connect to Peer",
+            type="custom",
+            content_cls=content,
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release=lambda x: self.connect_dialog.dismiss()
+                ),
+                MDFlatButton(
+                    text="CONNECT",
+                    on_release=self.connect_to_peer
+                )
+            ]
+        )
+        self.connect_dialog.open()
+    
+    def connect_to_peer(self, *args):
+        """Connect to a peer using the provided multiaddress."""
+        multiaddr = self.connect_input.text.strip()
+        
+        if not multiaddr:
+            self.show_status_dialog("Error", "Please enter a multiaddress")
+            return
+        
+        # Close the dialog
+        if self.connect_dialog:
+            self.connect_dialog.dismiss()
+        
+        try:
+            # Call the headless service to connect
+            success = self.headless_service.connect_to_peer(multiaddr)
+            if success:
+                self.show_status_dialog("Success", f"Connection request sent!\n\n{multiaddr[:60]}...")
+            else:
+                self.show_status_dialog("Error", "Failed to queue connection request")
+        except Exception as e:
+            logger.error(f"Error connecting to peer: {e}")
+            self.show_status_dialog("Error", f"Connection failed: {str(e)}")
+    
+    def show_status_dialog(self, title, text):
+        """Show a status/error dialog."""
+        dialog = MDDialog(
+            title=title,
+            text=text,
+            buttons=[
+                MDFlatButton(
+                    text="OK",
                     on_release=lambda x: dialog.dismiss()
                 )
             ]

@@ -152,6 +152,7 @@ class HeadlessService:
         self.system_queue = None   # UI receives system messages from headless
         self.outgoing_queue = None # UI sends messages to headless
         self.topic_subscription_queue = None  # UI sends topic subscription requests
+        self.peer_connection_queue = None  # UI sends peer connection requests
         
         # Per-topic message storage
         self.topic_messages = {}  # {topic: [{'message': msg, 'timestamp': ts, 'read': bool}]}
@@ -188,6 +189,7 @@ class HeadlessService:
             self.system_queue = janus.Queue()       # System messages from headless to UI  
             self.outgoing_queue = janus.Queue()     # Messages from UI to headless
             self.topic_subscription_queue = janus.Queue()  # Topic subscription requests from UI
+            self.peer_connection_queue = janus.Queue()  # Peer connection requests from UI
             logger.debug("Message queues created successfully")
             
             # Enable trio-asyncio mode
@@ -284,6 +286,7 @@ class HeadlessService:
                                 nursery.start_soon(self._process_messages)
                                 nursery.start_soon(self._process_outgoing_messages)
                                 nursery.start_soon(self._process_topic_subscriptions)
+                                nursery.start_soon(self._process_peer_connections)
                                 nursery.start_soon(self._wait_for_stop)
                                 nursery.start_soon(self.monitor_peers)
                                 nursery.start_soon(maintain_connections, self.host)
@@ -569,6 +572,50 @@ class HeadlessService:
             except Exception as e:
                 logger.error(f"Error in topic subscription processing: {e}")
                 await trio.sleep(0.1)
+    
+    async def _process_peer_connections(self):
+        """Process peer connection requests from UI."""
+        
+        while self.running:
+            try:
+                # Check for connection requests from UI (non-blocking)
+                try:
+                    multiaddr_str = self.peer_connection_queue.sync_q.get_nowait()
+                    if multiaddr_str:
+                        logger.info(f"Processing peer connection request: {multiaddr_str}")
+                        
+                        # Parse and connect to the peer
+                        try:
+                            # Parse the multiaddress
+                            maddr = multiaddr.Multiaddr(multiaddr_str)
+                            
+                            # Try to get peer info from the multiaddress
+                            peer_info = info_from_p2p_addr(maddr)
+                            
+                            if peer_info:
+                                # Connect to the peer
+                                logger.info(f"Attempting to connect to peer: {peer_info.peer_id}")
+                                await self.host.connect(peer_info)
+                                logger.info(f"✅ Successfully connected to peer: {peer_info.peer_id}")
+                                await self._send_system_message(f"Connected to peer: {peer_info.peer_id}")
+                            else:
+                                logger.error(f"Could not extract peer info from multiaddress: {multiaddr_str}")
+                                await self._send_system_message(f"Invalid multiaddress format")
+                                
+                        except Exception as e:
+                            logger.error(f"Failed to connect to peer {multiaddr_str}: {e}")
+                            await self._send_system_message(f"Connection failed: {str(e)}")
+                            
+                except Empty:
+                    # No request available, that's fine
+                    await trio.sleep(0.1)  # Brief pause to avoid busy loop
+                except Exception as e:
+                    logger.error(f"Error processing peer connection: {e}")
+                    await trio.sleep(0.1)
+                    
+            except Exception as e:
+                logger.error(f"Error in peer connection processing: {e}")
+                await trio.sleep(0.1)
 
     async def _wait_for_stop(self):
         """Wait for stop signal."""
@@ -649,6 +696,30 @@ class HeadlessService:
             
         except Exception as e:
             logger.error(f"Failed to queue topic subscription: {e}")
+            return False
+    
+    def connect_to_peer(self, multiaddr: str) -> bool:
+        """
+        Connect to a peer using multiaddress (thread-safe wrapper).
+        
+        Args:
+            multiaddr: The multiaddress of the peer to connect to
+            
+        Returns:
+            True if connection request was queued, False otherwise
+        """
+        if not self.host or not self.running:
+            logger.warning("Cannot connect to peer: host not ready or service not running")
+            return False
+        
+        try:
+            # Put connection request in queue (sync call, safe from UI thread)
+            self.peer_connection_queue.sync_q.put(multiaddr)
+            logger.info(f"Queued peer connection request: {multiaddr}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to queue peer connection: {e}")
             return False
     
     def get_message_queue(self):
@@ -824,5 +895,7 @@ class HeadlessService:
             self.outgoing_queue.close()
         if self.topic_subscription_queue:
             self.topic_subscription_queue.close()
+        if self.peer_connection_queue:
+            self.peer_connection_queue.close()
         
         logger.info("Headless service stopped")
