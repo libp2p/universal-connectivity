@@ -9,5 +9,3 @@ yarn.lock
 .DS_Store
 go-peer/go-peer
 **/.idea
-.venv
-__pycache__
