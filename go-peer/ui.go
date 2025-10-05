@@ -29,17 +29,20 @@ type ChatUI struct {
 // It won't actually do anything until you call Run().
 func NewChatUI(cr *ChatRoom) *ChatUI {
 	app := tview.NewApplication()
+	app.EnableMouse(true) // Enable mouse support
 
 	// make a text view to contain our chat messages
 	msgBox := tview.NewTextView()
 	msgBox.SetDynamicColors(true)
 	msgBox.SetBorder(true)
 	msgBox.SetTitle(fmt.Sprintf("Room: %s", cr.roomName))
+	msgBox.SetScrollable(true)
 
 	// text views are io.Writers, but they don't automatically refresh.
 	// this sets a change handler to force the app to redraw when we get
 	// new messages to display.
 	msgBox.SetChangedFunc(func() {
+		msgBox.ScrollToEnd()
 		app.Draw()
 	})
 
@@ -48,11 +51,13 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 	sysBox.SetDynamicColors(true)
 	sysBox.SetBorder(true)
 	sysBox.SetTitle("System")
+	sysBox.SetScrollable(true)
 
 	// text views are io.Writers, but they don't automatically refresh.
 	// this sets a change handler to force the app to redraw when we get
 	// new messages to display.
 	sysBox.SetChangedFunc(func() {
+		sysBox.ScrollToEnd()
 		app.Draw()
 	})
 
@@ -156,11 +161,9 @@ func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
 }
 
-// displayChatMessage writes a ChatMessage from the room to the message window,
-// with the sender's nick highlighted in green.
+// displaySysMessage writes a system message to the system message window.
 func (ui *ChatUI) displaySysMessage(cm *ChatMessage) {
 	fmt.Fprintf(ui.sysW, "%s\n", cm.Message)
-	logger.Info(cm.Message)
 }
 
 // displaySelfMessage writes a message from ourself to the message window,
