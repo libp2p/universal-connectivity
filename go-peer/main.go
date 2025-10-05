@@ -115,12 +115,12 @@ func main() {
 
 	flag.Parse()
 
-// Only enable debug logging in headless mode, otherwise it interferes with the TUI
+	// Only enable debug logging in headless mode, otherwise it interferes with the TUI
 	if *headless {
-	log.SetLogLevel("app", "debug")
-} else {
+		log.SetLogLevel("app", "debug")
+	} else {
 		// Suppress all logging to avoid TUI interference
-				log.SetLogLevel("app", "fatal")
+		log.SetLogLevel("app", "fatal")
 	}
 
 	ctx := context.Background()
@@ -268,11 +268,11 @@ func main() {
 				rm := h.Network().ResourceManager()
 				rm.ViewSystem(
 					func(rs network.ResourceScope) error {
-if *headless {
-						fmt.Printf("Stats: %+v\n", rs.Stat())
-						if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
-							fmt.Printf("Limits: %+v\n", r.Limit())
-}
+						if *headless {
+							fmt.Printf("Stats: %+v\n", rs.Stat())
+							if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
+								fmt.Printf("Limits: %+v\n", r.Limit())
+							}
 						} else {
 							LogMsgf("Stats: %+v", rs.Stat())
 							if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
