@@ -108,6 +108,7 @@ func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
+roomFlag := flag.String("room", "", "The room to join")
 	headless := flag.Bool("headless", false, "run without chat UI")
 
 	var addrsToConnectTo stringSlice
@@ -210,8 +211,13 @@ func main() {
 		nick = defaultNick(h.ID())
 	}
 
+	roomName := *roomFlag
+	if len(roomName) == 0 {
+		roomName = defaultRoom()
+	}
+
 	// join the chat room
-	cr, err := JoinChatRoom(ctx, h, ps, nick)
+	cr, err := JoinChatRoom(ctx, h, ps, nick, roomName)
 	if err != nil {
 		panic(err)
 	}
@@ -313,6 +319,10 @@ func printErr(m string, args ...interface{}) {
 // the last 8 chars of a peer ID.
 func defaultNick(p peer.ID) string {
 	return fmt.Sprintf("%s-%s", os.Getenv("USER"), shortID(p))
+}
+
+func defaultRoom() string {
+	return "default"
 }
 
 // shortID returns the last 8 chars of a base58-encoded peer id.
