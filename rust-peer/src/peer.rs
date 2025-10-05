@@ -44,7 +44,7 @@ use libp2p::{
 use libp2p_webrtc as webrtc;
 use libp2p_webrtc::tokio::Certificate;
 use quick_protobuf::{BytesReader, MessageRead};
-use rand::rngs::OsRng;
+use rand_core::OsRng;
 use std::{
     collections::{hash_map::DefaultHasher, HashSet},
     fmt::{self, Write},
@@ -869,13 +869,13 @@ impl Peer {
                         RelayServerEvent::ReservationReqAccepted { src_peer_id, renewed } => {
                             self.msg(format!("Relay reservation request accepted:\n\tfrom: {src_peer_id}\n\trenewed: {renewed}")).await?;
                         }
-                        RelayServerEvent::ReservationReqDenied { src_peer_id } => {
+                        RelayServerEvent::ReservationReqDenied { src_peer_id, .. } => {
                             self.msg(format!("Relay reservation request denied: {src_peer_id}")).await?;
                         }
                         RelayServerEvent::ReservationTimedOut { src_peer_id } => {
                             self.msg(format!("Relay reservation timed out: {src_peer_id}")).await?;
                         }
-                        RelayServerEvent::CircuitReqDenied { src_peer_id, dst_peer_id } => {
+                        RelayServerEvent::CircuitReqDenied { src_peer_id, dst_peer_id, .. } => {
                             self.msg(format!("Relay circuit request denied:\n\tfrom: {src_peer_id}\n\tto: {dst_peer_id}")).await?;
                         }
                         RelayServerEvent::CircuitReqAccepted { src_peer_id, dst_peer_id } => {
