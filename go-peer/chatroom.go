@@ -52,7 +52,7 @@ type ChatMessage struct {
 
 // JoinChatRoom tries to subscribe to the PubSub topic for the room name, returning
 // a ChatRoom on success.
-func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname string) (*ChatRoom, error) {
+func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname string, roomName string) (*ChatRoom, error) {
 	// join the pubsub chatTopic
 	chatTopic, err := ps.Join(ChatTopic)
 	if err != nil {
@@ -100,6 +100,7 @@ func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname 
 		peerDiscoveryTopic: peerDiscoveryTopic,
 		peerDiscoverySub:   peerDiscoverySub,
 		nick:               nickname,
+		roomName:           roomName,
 		Messages:           make(chan *ChatMessage, ChatRoomBufSize),
 		SysMessages:        make(chan *ChatMessage, ChatRoomBufSize),
 	}
