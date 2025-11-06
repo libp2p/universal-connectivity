@@ -31,6 +31,7 @@ type ChatUI struct {
 // It won't actually do anything until you call Run().
 func NewChatUI(cr *ChatRoom) *ChatUI {
 	app := tview.NewApplication()
+	app.EnableMouse(true)
 
 	// make a text view to contain our chat messages
 	msgBox := tview.NewTextView()
