@@ -1,5 +1,5 @@
 # Use a specific version of golang alpine for better reproducibility
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /usr/src/app
 
