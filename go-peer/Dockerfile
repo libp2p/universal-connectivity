@@ -1,5 +1,5 @@
 # Use a specific version of golang alpine for better reproducibility
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /usr/src/app
 
@@ -18,11 +18,11 @@ FROM alpine:latest
 
 # Add CA certificates for HTTPS and create non-root user
 RUN apk --no-cache add ca-certificates && \
-    adduser -D appuser
+  adduser -D appuser
 
 # Create a directory for the application and set proper permissions
 RUN mkdir -p /app/data && \
-    chown -R appuser:appuser /app
+  chown -R appuser:appuser /app
 
 # Copy the binary from builder
 COPY --from=builder /usr/local/bin/universal-chat-go /usr/local/bin/universal-chat-go
