@@ -45,7 +45,6 @@ var logger = log.Logger("app")
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
 // If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
 func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Multiaddr) (*dht.IpfsDHT, error) {
-
 	kdht, err := dht.New(ctx, host,
 		dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...),
 		dht.Mode(dht.ModeAuto),
@@ -109,13 +108,32 @@ func main() {
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
 	headless := flag.Bool("headless", false, "run without chat UI")
+	port := flag.String("port", "9095", "port to listen on")
 
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
 
 	flag.Parse()
 
-	log.SetLogLevel("app", "debug")
+	err := log.SetLogLevel("*", "ERROR")
+	if err != nil {
+		fmt.Printf("failed to set log level: %s", err)
+		os.Exit(1)
+	}
+
+	if !*headless {
+		err = log.SetLogLevel("app", "ERROR")
+		if err != nil {
+			fmt.Printf("failed to set log level: %s", err)
+			os.Exit(1)
+		}
+	} else {
+		err = log.SetLogLevel("app", "INFO")
+		if err != nil {
+			fmt.Printf("failed to set log level: %s", err)
+			os.Exit(1)
+		}
+	}
 
 	ctx := context.Background()
 
@@ -153,16 +171,16 @@ func main() {
 		libp2p.Identity(privk),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
-			"/ip4/0.0.0.0/tcp/9095",
-			"/ip4/0.0.0.0/udp/9095/quic-v1",
-			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
-			"/ip4/0.0.0.0/udp/9095/webrtc-direct",
-			"/ip6/::/tcp/9095",
-			"/ip6/::/udp/9095/quic-v1",
-			"/ip6/::/udp/9095/quic-v1/webtransport",
-			"/ip6/::/udp/9095/webrtc-direct",
-			fmt.Sprintf("/ip4/0.0.0.0/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
-			fmt.Sprintf("/ip6/::/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+			"/ip4/0.0.0.0/tcp/"+*port,
+			"/ip4/0.0.0.0/udp/"+*port+"/quic-v1",
+			"/ip4/0.0.0.0/udp/"+*port+"/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/"+*port+"/webrtc-direct",
+			"/ip6/::/tcp/"+*port,
+			"/ip6/::/udp/"+*port+"/quic-v1",
+			"/ip6/::/udp/"+*port+"/quic-v1/webtransport",
+			"/ip6/::/udp/"+*port+"/webrtc-direct",
+			fmt.Sprintf("/ip4/0.0.0.0/tcp/"+*port+"/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+			fmt.Sprintf("/ip6/::/tcp/"+*port+"/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
 		),
 		libp2p.ResourceManager(getResourceManager()),
 		libp2p.Transport(webtransport.New),
@@ -206,7 +224,7 @@ func main() {
 
 	// use the nickname from the cli flag, or a default if blank
 	nick := *nickFlag
-	if len(nick) == 0 {
+	if nick == "" {
 		nick = defaultNick(h.ID())
 	}
 
@@ -220,16 +238,16 @@ func main() {
 	// setup DHT with empty discovery peers
 	// so this will be a discovery peer for others
 	// this peer should run on cloud(with public ip address)
-	dht, err := NewDHT(ctx, h, nil)
+	hDHT, err := NewDHT(ctx, h, nil)
 	if err != nil {
 		panic(err)
 	}
 
 	// setup peer discovery
-	go Discover(ctx, h, dht)
+	go Discover(ctx, h, hDHT)
 
 	// setup local mDNS discovery
-	if err := setupDiscovery(h); err != nil {
+	if err = setupDiscovery(h); err != nil {
 		panic(err)
 	}
 
@@ -260,15 +278,19 @@ func main() {
 				return
 			case <-ticker.C:
 				rm := h.Network().ResourceManager()
-				rm.ViewSystem(
+
+				err = rm.ViewSystem(
 					func(rs network.ResourceScope) error {
-						fmt.Printf("Stats: %+v\n", rs.Stat())
+						LogMsgf("System Stats: %+v", rs.Stat())
 						if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
-							fmt.Printf("Limits: %+v\n", r.Limit())
+							LogMsgf("System Limits: %+v", r.Limit())
 						}
 						return nil
 					},
 				)
+				if err != nil {
+					LogMsgf("ViewSystem error: %s", err)
+				}
 			}
 		}
 	}()
@@ -305,7 +327,7 @@ func main() {
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
-func printErr(m string, args ...interface{}) {
+func printErr(m string, args ...any) {
 	fmt.Fprintf(os.Stderr, m, args...)
 }
 
@@ -374,9 +396,11 @@ func getResourceManager() network.ResourceManager {
 		StreamBaseLimit:       baseLimits,
 	}
 	cl := scl.Scale(0, 0)
-	rcmgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
+
+	resourceMaanger, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
 	if err != nil {
 		panic(err)
 	}
-	return rcmgr
+
+	return resourceMaanger
 }

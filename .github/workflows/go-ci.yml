@@ -1,9 +1,9 @@
 name: go-peer ci
 
-on: 
+on:
   pull_request:
     paths:
-      - 'go-peer/**'
+      - "go-peer/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,10 +11,10 @@ concurrency:
 
 jobs:
   go-check:
-    uses: libp2p/uci/.github/workflows/go-check.yml@v0.0
+    uses: ipdxco/unified-github-workflows/.github/workflows/go-check.yml@v0.0
     with:
-      go-version: '1.23.x'
+      go-version: "1.25.x"
   go-test:
-    uses: libp2p/uci/.github/workflows/go-test.yml@v0.0
+    uses: ipdxco/unified-github-workflows/.github/workflows/go-test.yml@v0.0
     with:
-      go-versions: '["1.23.x"]'
+      go-versions: '["1.25.x"]'
