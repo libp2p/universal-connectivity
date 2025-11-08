@@ -108,6 +108,7 @@ func main() {
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
 	headless := flag.Bool("headless", false, "run without chat UI")
+	port := flag.String("port", "9095", "port to listen on")
 
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
@@ -170,16 +171,16 @@ func main() {
 		libp2p.Identity(privk),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
-			"/ip4/0.0.0.0/tcp/9095",
-			"/ip4/0.0.0.0/udp/9095/quic-v1",
-			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
-			"/ip4/0.0.0.0/udp/9095/webrtc-direct",
-			"/ip6/::/tcp/9095",
-			"/ip6/::/udp/9095/quic-v1",
-			"/ip6/::/udp/9095/quic-v1/webtransport",
-			"/ip6/::/udp/9095/webrtc-direct",
-			fmt.Sprintf("/ip4/0.0.0.0/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
-			fmt.Sprintf("/ip6/::/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+			"/ip4/0.0.0.0/tcp/"+*port,
+			"/ip4/0.0.0.0/udp/"+*port+"/quic-v1",
+			"/ip4/0.0.0.0/udp/"+*port+"/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/"+*port+"/webrtc-direct",
+			"/ip6/::/tcp/"+*port,
+			"/ip6/::/udp/"+*port+"/quic-v1",
+			"/ip6/::/udp/"+*port+"/quic-v1/webtransport",
+			"/ip6/::/udp/"+*port+"/webrtc-direct",
+			fmt.Sprintf("/ip4/0.0.0.0/tcp/"+*port+"/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+			fmt.Sprintf("/ip6/::/tcp/"+*port+"/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
 		),
 		libp2p.ResourceManager(getResourceManager()),
 		libp2p.Transport(webtransport.New),
