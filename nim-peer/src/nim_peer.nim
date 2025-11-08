@@ -82,6 +82,24 @@ proc start(
   # Handle Ctrl+C
   setControlCHook(cleanup)
 
+  # Pick the correct string type for your Chronicles version
+  when declared(OutStr):
+    type WriterStr = OutStr
+  else:
+    type WriterStr = LogOutputStr
+
+  # Early (bootstrap) writer: mirror logs to stdout so nothing is dropped
+  defaultChroniclesStream.output.writer =
+    proc (lvl: LogLevel, rec: WriterStr) {.closure, gcsafe, raises: [].} =
+      let s = cast[string](rec)
+      try:
+        for line in s.splitLines():
+          stdout.writeLine(line)
+        stdout.flushFile()
+      except IOError:
+        discard
+
+
   var rng = newRng()
 
   let switch =
