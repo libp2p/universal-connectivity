@@ -114,14 +114,20 @@ func main() {
 
 	flag.Parse()
 
+	err := log.SetLogLevel("*", "ERROR")
+	if err != nil {
+		fmt.Printf("failed to set log level: %s", err)
+		os.Exit(1)
+	}
+
 	if !*headless {
-		err := log.SetLogLevel("*", "ERROR")
+		err = log.SetLogLevel("app", "ERROR")
 		if err != nil {
 			fmt.Printf("failed to set log level: %s", err)
 			os.Exit(1)
 		}
-
-		err = log.SetLogLevel("app", "ERROR")
+	} else {
+		err = log.SetLogLevel("app", "INFO")
 		if err != nil {
 			fmt.Printf("failed to set log level: %s", err)
 			os.Exit(1)
