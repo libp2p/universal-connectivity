@@ -18,9 +18,6 @@ const ChatRoomBufSize = 128
 // Topic used to broadcast browser WebRTC addresses
 const PubSubDiscoveryTopic string = "universal-connectivity-browser-peer-discovery"
 
-const ChatTopic string = "universal-connectivity"
-const ChatFileTopic string = "universal-connectivity-file"
-
 // ChatRoom represents a subscription to a single PubSub topic. Messages
 // can be published to the topic with ChatRoom.Publish, and received
 // messages are pushed to the Messages channel.
@@ -46,7 +43,7 @@ type ChatRoom struct {
 // ChatMessage gets converted to/from JSON and sent in the body of pubsub messages.
 type ChatMessage struct {
 	Message    string
-	SenderID   string
+	SenderID   peer.ID
 	SenderNick string
 }
 
@@ -54,7 +51,7 @@ type ChatMessage struct {
 // a ChatRoom on success.
 func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname string, roomName string) (*ChatRoom, error) {
 	// join the pubsub chatTopic
-	chatTopic, err := ps.Join(ChatTopic)
+	chatTopic, err := ps.Join(roomName)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +63,8 @@ func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname 
 	}
 
 	// join the pubsub fileTopic
-	fileTopic, err := ps.Join(ChatFileTopic)
+	fileTopicName := roomName + "-file"
+	fileTopic, err := ps.Join(fileTopicName)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +114,7 @@ func (cr *ChatRoom) Publish(message string) error {
 }
 
 func (cr *ChatRoom) ListPeers() []peer.ID {
-	return cr.ps.ListPeers(ChatTopic)
+	return cr.ps.ListPeers(cr.roomName)
 }
 
 // readLoop pulls messages from the pubsub chat/file topic and handles them.
@@ -139,8 +137,9 @@ func (cr *ChatRoom) readChatLoop() {
 		}
 		cm := new(ChatMessage)
 		cm.Message = string(msg.Data)
-		cm.SenderID = msg.ID
-		cm.SenderNick = string(msg.ID[len(msg.ID)-8])
+		cm.SenderID = msg.GetFrom()
+		senderStr := cm.SenderID.String()
+		cm.SenderNick = senderStr[len(senderStr)-8:]
 		// send valid messages onto the Messages channel
 		cr.Messages <- cm
 	}
@@ -168,8 +167,9 @@ func (cr *ChatRoom) readFileLoop() {
 
 		cm := new(ChatMessage)
 		cm.Message = fmt.Sprintf("File: %s (%v bytes) from %s", string(fileID), len(fileBody), msg.GetFrom().String())
-		cm.SenderID = msg.ID
-		cm.SenderNick = string(msg.ID[len(msg.ID)-8])
+		cm.SenderID = msg.GetFrom()
+		senderStr := cm.SenderID.String()
+		cm.SenderNick = senderStr[len(senderStr)-8:]
 		// send valid messages onto the Messages channel
 		cr.Messages <- cm
 	}
@@ -184,13 +184,13 @@ func (cr *ChatRoom) requestFile(toPeer peer.ID, fileID []byte) ([]byte, error) {
 	defer stream.Close()
 
 	reqLen := binary.AppendUvarint([]byte{}, uint64(len(fileID)))
-	if _, err := stream.Write(reqLen); err != nil {
+	if _, err = stream.Write(reqLen); err != nil {
 		return nil, fmt.Errorf("failed to write fileID to the stream: %w", err)
 	}
-	if _, err := stream.Write(fileID); err != nil {
+	if _, err = stream.Write(fileID); err != nil {
 		return nil, fmt.Errorf("failed to write fileID to the stream: %w", err)
 	}
-	if err := stream.CloseWrite(); err != nil {
+	if err = stream.CloseWrite(); err != nil {
 		return nil, fmt.Errorf("failed to close write stream: %w", err)
 	}
 
