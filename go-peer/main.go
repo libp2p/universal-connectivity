@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"math/rand"
 	"os"
 	"time"
 
@@ -34,8 +35,9 @@ import (
 // DiscoveryInterval is how often we re-publish our mDNS records.
 const DiscoveryInterval = time.Hour
 
-// DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
-const DiscoveryServiceTag = "universal-connectivity"
+// DefaultRoom is used as the gossipsub topic to join and the DiscoveryServiceTag in mDNS advertisements.
+// It can be overridden by the -room flag. The concept of different rooms is only supported by mDNS in Go.
+const DefaultRoom = "universal-connectivity"
 
 var SysMsgChan chan *ChatMessage
 
@@ -63,10 +65,10 @@ func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Mult
 // Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
 // Only used by Go peer to find each other.
 // TODO: since this isn't implemented on the Rust or the JS side, can probably be removed
-func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT) {
+func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, tag string) {
 	routingDiscovery := routing.NewRoutingDiscovery(dht)
 
-	discovery.Advertise(ctx, routingDiscovery, DiscoveryServiceTag)
+	discovery.Advertise(ctx, routingDiscovery, tag)
 
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
@@ -77,7 +79,7 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT) {
 			return
 		case <-ticker.C:
 
-			peers, err := discovery.FindPeers(ctx, routingDiscovery, DiscoveryServiceTag)
+			peers, err := discovery.FindPeers(ctx, routingDiscovery, tag)
 			if err != nil {
 				panic(err)
 			}
@@ -107,6 +109,7 @@ func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
+	roomFlag := flag.String("room", DefaultRoom, "the gossipsub topic / room to join (mDNS only)")
 	headless := flag.Bool("headless", false, "run without chat UI")
 	port := flag.String("port", "9095", "port to listen on")
 
@@ -229,7 +232,7 @@ func main() {
 	}
 
 	// join the chat room
-	cr, err := JoinChatRoom(ctx, h, ps, nick)
+	cr, err := JoinChatRoom(ctx, h, ps, nick, *roomFlag)
 	if err != nil {
 		panic(err)
 	}
@@ -244,10 +247,10 @@ func main() {
 	}
 
 	// setup peer discovery
-	go Discover(ctx, h, hDHT)
+	go Discover(ctx, h, hDHT, *roomFlag)
 
 	// setup local mDNS discovery
-	if err = setupDiscovery(h); err != nil {
+	if err := setupDiscovery(h, *roomFlag); err != nil {
 		panic(err)
 	}
 
@@ -352,18 +355,27 @@ type discoveryNotifee struct {
 // the PubSub system will automatically start interacting with them if they also
 // support PubSub.
 func (n *discoveryNotifee) HandlePeerFound(pi peer.AddrInfo) {
-	LogMsgf("discovered new peer %s", pi.ID.String())
-	err := n.h.Connect(context.Background(), pi)
-	if err != nil {
-		LogMsgf("error connecting to peer %s: %s", pi.ID.String(), err)
-	}
+	LogMsgf("mDNS discovered new peer %s", pi.ID.String())
+
+	go func(pi peer.AddrInfo) {
+		// add 1 second jitter to avoid all peers connecting at the same time
+		time.Sleep(time.Duration(1+rand.Intn(999)) * time.Millisecond)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		err := n.h.Connect(ctx, pi)
+		if err != nil {
+			LogMsgf("error connecting to mDNS peer %s: %s", pi.ID.String(), err)
+		}
+	}(pi)
 }
 
 // setupDiscovery creates an mDNS discovery service and attaches it to the libp2p Host.
 // This lets us automatically discover peers on the same LAN and connect to them.
-func setupDiscovery(h host.Host) error {
+func setupDiscovery(h host.Host, serviceName string) error {
 	// setup mDNS discovery to find local peers
-	s := mdns.NewMdnsService(h, DiscoveryServiceTag, &discoveryNotifee{h: h})
+	s := mdns.NewMdnsService(h, serviceName, &discoveryNotifee{h: h})
 	return s.Start()
 }
 
