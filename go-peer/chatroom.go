@@ -18,11 +18,6 @@ const ChatRoomBufSize = 128
 // Topic used to broadcast browser WebRTC addresses
 const PubSubDiscoveryTopic string = "universal-connectivity-browser-peer-discovery"
 
-const (
-	ChatTopic     string = "universal-connectivity"
-	ChatFileTopic string = "universal-connectivity-file"
-)
-
 // ChatRoom represents a subscription to a single PubSub topic. Messages
 // can be published to the topic with ChatRoom.Publish, and received
 // messages are pushed to the Messages channel.
@@ -54,9 +49,9 @@ type ChatMessage struct {
 
 // JoinChatRoom tries to subscribe to the PubSub topic for the room name, returning
 // a ChatRoom on success.
-func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname string) (*ChatRoom, error) {
+func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname string, roomName string) (*ChatRoom, error) {
 	// join the pubsub chatTopic
-	chatTopic, err := ps.Join(ChatTopic)
+	chatTopic, err := ps.Join(roomName)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +63,8 @@ func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname 
 	}
 
 	// join the pubsub fileTopic
-	fileTopic, err := ps.Join(ChatFileTopic)
+	fileTopicName := roomName + "-file"
+	fileTopic, err := ps.Join(fileTopicName)
 	if err != nil {
 		return nil, err
 	}
@@ -102,6 +98,7 @@ func JoinChatRoom(ctx context.Context, h host.Host, ps *pubsub.PubSub, nickname 
 		peerDiscoveryTopic: peerDiscoveryTopic,
 		peerDiscoverySub:   peerDiscoverySub,
 		nick:               nickname,
+		roomName:           roomName,
 		Messages:           make(chan *ChatMessage, ChatRoomBufSize),
 		SysMessages:        make(chan *ChatMessage, ChatRoomBufSize),
 	}
@@ -117,7 +114,7 @@ func (cr *ChatRoom) Publish(message string) error {
 }
 
 func (cr *ChatRoom) ListPeers() []peer.ID {
-	return cr.ps.ListPeers(ChatTopic)
+	return cr.ps.ListPeers(cr.roomName)
 }
 
 // readLoop pulls messages from the pubsub chat/file topic and handles them.
