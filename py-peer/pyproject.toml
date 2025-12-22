@@ -4,22 +4,24 @@ version = "0.1.0"
 description = "Python implementation of the Universal Connectivity peer and p2p chat experience."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
-
-[tool.uv]
-dev-dependencies = [
-    "pytest>=8.0",
-    "ruff>=0.5"
+dependencies = [
+    "textual>=0.47.0",
+    "libp2p @ git+https://github.com/sumanjeet0012/py-libp2p.git@611a6213327fddca5a753b7cfa3ca900ac01d4d8",
+    "trio>=0.22.0",
+    "base58",
+    "protobuf",
+    "janus>=1.0.0",
+    "trio_asyncio",
+    "kivy>=2.3.0",
+    "kivymd>=1.2.0",
 ]
 
-[tool.ruff]
-line-length = 100
-select = ["E", "F", "I", "W", "Q"] 
-# E = Errors
-# F = Pyflakes
-# I = Imports
-# W = Warnings
-# Q = Quality
-ignore = [
-    "E501",  # Line too long
-]
+[project.scripts]
+py-peer = "main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
