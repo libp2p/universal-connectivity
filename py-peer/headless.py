@@ -51,16 +51,14 @@ DEFAULT_PORT = 9095
 
 # Bootstrap nodes for peer discovery
 BOOTSTRAP_PEERS = [
-    # "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-    # "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    # "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
-    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
-    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
-    # "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-    # "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
-    # "/ip4/0.0.0.0/tcp/52972/p2p/QmVZZrUGuyicD5eig2a5yhi2dLDH5uMS3mXfxnR6uYuFZz"
-    # "/ip4/127.0.0.1/tcp/9095/p2p/QmbXUUZ4LoDE59Hx9zjiH88S9YY77ft9b3pFtPsyH2xeZJ"
+    "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+    "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+    "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
 ]
 
 
@@ -175,7 +173,7 @@ class HeadlessService:
             logger.info(f"Connected peers are: len{self.host.get_connected_peers()}")
             logger.info(f"peers in peer store are: len{self.host.get_peerstore().peers_with_addrs()}")
             logger.info(f"peers in routing table are: len{self.dht.routing_table.get_peer_ids()}")
-            logger.info(f"peers in pubsub are: {len(self.pubsub.peers.keys())}")
+            logger.info(f"peers in pubsub are: {(self.pubsub.peers.keys())}")
             await trio.sleep(5)
 
     async def start(self):
@@ -270,9 +268,11 @@ class HeadlessService:
                             if BOOTSTRAP_PEERS:
                                 bootstrap = BootstrapDiscovery(self.host.get_network(), BOOTSTRAP_PEERS)
                                 await bootstrap.start()
-                            # Setup connections and chat room
-                            await self._setup_connections()
+                            # Setup chat room BEFORE connections so topics are subscribed
+                            # This ensures GossipSub protocol negotiation succeeds when connecting
                             await self._setup_chat_room()
+                            # Now setup connections after we're subscribed to topics
+                            await self._setup_connections()
                             
                             # Setup connection event handlers for DHT
                             
@@ -307,13 +307,19 @@ class HeadlessService:
                 info = info_from_p2p_addr(maddr)
                 logger.info(f"🔗 Parsed peer info - ID: {info.peer_id}, Addrs: {info.addrs}")
                 
+                # Check if already connected
+                existing_conns = self.host.get_network().connections.get(info.peer_id)
+                if existing_conns:
+                    logger.info(f"✅ Already connected to peer: {info.peer_id}, skipping connection attempt")
+                    continue
+                
                 # Log connection attempt
                 logger.info(f"🔗 Initiating connection to peer: {info.peer_id}")
                 await self.host.connect(info)
                 logger.info(f"✅ TCP connection established to peer: {info.peer_id}")
                 
-                # Wait for initial protocol negotiation
-                await trio.sleep(1)
+                # Wait longer for protocol negotiation
+                await trio.sleep(3)
                 
                 # Detailed protocol inspection
                 logger.info(f"🔍 Starting protocol inspection for peer: {info.peer_id}")
