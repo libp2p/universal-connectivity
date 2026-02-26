@@ -19,7 +19,6 @@
     "@libp2p/identify": "^3.0.28",
     "@libp2p/interface": "^2.8.0",
     "@libp2p/interface-internal": "^2.3.10",
-    "@libp2p/kad-dht": "^15.0.0",
     "@libp2p/ping": "^2.0.28",
     "@libp2p/pubsub-peer-discovery": "^11.0.1",
     "@libp2p/tcp": "^10.1.9",
