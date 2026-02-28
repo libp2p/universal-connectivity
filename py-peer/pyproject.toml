@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "textual>=0.47.0",
-    "libp2p @ git+https://github.com/sumanjeet0012/py-libp2p.git@611a6213327fddca5a753b7cfa3ca900ac01d4d8",
+    "libp2p @ git+https://github.com/libp2p/python-libp2p.git@dbadd064fe1fd63afd81dcda578c057320ebf738",
     "trio>=0.22.0",
     "base58",
     "protobuf",

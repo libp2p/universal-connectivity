@@ -33,7 +33,7 @@ def setup_logging(ui_mode=False):
         handlers.append(logging.NullHandler())
     
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)s - %(name)s - %(message)s",
         handlers=handlers,
         force=True  # Force reconfiguration

@@ -5,7 +5,9 @@ This module provides a headless service that manages libp2p host, pubsub, and ch
 without any UI. It communicates with the UI through queues and events.
 """
 
+import json
 import logging
+import os
 import random
 import socket
 import time
@@ -41,6 +43,15 @@ from libp2p.host.exceptions import (
     StreamFailure,
 )
 from chatroom import ChatRoom, ChatMessage
+from libp2p.bitswap import BitswapClient, MemoryBlockStore
+from libp2p.bitswap.dag import MerkleDag
+from libp2p.bitswap.cid import cid_to_string
+from libp2p.network.config import ConnectionConfig
+
+# File message prefix for pubsub
+FILE_MESSAGE_PREFIX = "[FILE]"
+# Default download directory
+DEFAULT_DOWNLOAD_DIR = os.path.expanduser("~/Downloads")
 
 logger = logging.getLogger("headless")
 
@@ -58,7 +69,8 @@ BOOTSTRAP_PEERS = [
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-    "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
+    "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb"
 ]
 
 
@@ -79,44 +91,44 @@ def filter_compatible_peer_info(peer_info) -> bool:
             return True
     return False
 
-async def maintain_connections(host) -> None:
-    """Maintain connections to ensure the host remains connected to healthy peers."""
-    while True:
-        try:
-            connected_peers = host.get_connected_peers()
-            list_peers = host.get_peerstore().peers_with_addrs()
+# async def maintain_connections(host) -> None:
+#     """Maintain connections to ensure the host remains connected to healthy peers."""
+#     while True:
+#         try:
+#             connected_peers = host.get_connected_peers()
+#             list_peers = host.get_peerstore().peers_with_addrs()
 
-            if len(connected_peers) < 20:
-                logger.debug("Reconnecting to maintain peer connections...")
+#             if len(connected_peers) < 20:
+#                 logger.debug("Reconnecting to maintain peer connections...")
 
-                # Find compatible peers
-                compatible_peers = []
-                for peer_id in list_peers:
-                    try:
-                        peer_info = host.get_peerstore().peer_info(peer_id)
-                        if filter_compatible_peer_info(peer_info):
-                            compatible_peers.append(peer_id)
-                    except Exception:
-                        continue
+#                 # Find compatible peers
+#                 compatible_peers = []
+#                 for peer_id in list_peers:
+#                     try:
+#                         peer_info = host.get_peerstore().peer_info(peer_id)
+#                         if filter_compatible_peer_info(peer_info):
+#                             compatible_peers.append(peer_id)
+#                     except Exception:
+#                         continue
 
-                # Connect to random subset of compatible peers
-                if compatible_peers:
-                    random_peers = random.sample(
-                        compatible_peers, min(50, len(compatible_peers))
-                    )
-                    for peer_id in random_peers:
-                        if peer_id not in connected_peers:
-                            try:
-                                with trio.move_on_after(5):
-                                    peer_info = host.get_peerstore().peer_info(peer_id)
-                                    await host.connect(peer_info)
-                                    logger.debug(f"Connected to peer: {peer_id}")
-                            except Exception as e:
-                                logger.debug(f"Failed to connect to {peer_id}: {e}")
+#                 # Connect to random subset of compatible peers
+#                 if compatible_peers:
+#                     random_peers = random.sample(
+#                         compatible_peers, min(50, len(compatible_peers))
+#                     )
+#                     for peer_id in random_peers:
+#                         if peer_id not in connected_peers:
+#                             try:
+#                                 with trio.move_on_after(5):
+#                                     peer_info = host.get_peerstore().peer_info(peer_id)
+#                                     await host.connect(peer_info)
+#                                     logger.debug(f"Connected to peer: {peer_id}")
+#                             except Exception as e:
+#                                 logger.debug(f"Failed to connect to {peer_id}: {e}")
 
-            await trio.sleep(15)
-        except Exception as e:
-            logger.error(f"Error maintaining connections: {e}")
+#             await trio.sleep(15)
+#         except Exception as e:
+#             logger.error(f"Error maintaining connections: {e}")
 
 
 class HeadlessService:
@@ -140,6 +152,11 @@ class HeadlessService:
         self.dht = None
         self.chat_room = None
         
+        # Bitswap components for file sharing
+        self.bitswap_client = None
+        self.merkle_dag = None
+        self.block_store = MemoryBlockStore()
+        
         # Service state
         self.running = False
         self.ready = False
@@ -151,10 +168,17 @@ class HeadlessService:
         self.outgoing_queue = None # UI sends messages to headless
         self.topic_subscription_queue = None  # UI sends topic subscription requests
         self.peer_connection_queue = None  # UI sends peer connection requests
+        self.file_share_queue = None  # UI sends file sharing requests
+        self.file_download_queue = None  # UI sends file download requests
         
         # Per-topic message storage
         self.topic_messages = {}  # {topic: [{'message': msg, 'timestamp': ts, 'read': bool}]}
         self.topic_unread_counts = {}  # {topic: int}
+        
+        # File sharing state
+        self.shared_files = {}  # {cid_hex: {'filename': str, 'filesize': int, 'filepath': str}}
+        self.download_dir = DEFAULT_DOWNLOAD_DIR
+        os.makedirs(self.download_dir, exist_ok=True)
         
         # Peer information storage for identify protocol
         self.peer_info_cache = {}  # Store peer info retrieved through identify
@@ -168,8 +192,6 @@ class HeadlessService:
     
     async def monitor_peers(self):
         while True:
-            print("testing print")
-            logger.info("testing status")
             logger.info(f"Connected peers are: len{self.host.get_connected_peers()}")
             logger.info(f"peers in peer store are: len{self.host.get_peerstore().peers_with_addrs()}")
             logger.info(f"peers in routing table are: len{self.dht.routing_table.get_peer_ids()}")
@@ -188,6 +210,8 @@ class HeadlessService:
             self.outgoing_queue = janus.Queue()     # Messages from UI to headless
             self.topic_subscription_queue = janus.Queue()  # Topic subscription requests from UI
             self.peer_connection_queue = janus.Queue()  # Peer connection requests from UI
+            self.file_share_queue = janus.Queue()  # File sharing requests from UI
+            self.file_download_queue = janus.Queue()  # File download requests from UI
             logger.debug("Message queues created successfully")
             
             # Enable trio-asyncio mode
@@ -207,11 +231,20 @@ class HeadlessService:
         
         # Create listen address
         listen_addr = multiaddr.Multiaddr(f"/ip4/0.0.0.0/tcp/{self.port}")
+
+        config = ConnectionConfig(
+        min_connections=10,
+        low_watermark=12,
+        high_watermark=40,
+        max_connections=50,
+        auto_connect_interval=2.0,  # Check every 5 seconds
+        )
         
         # Create libp2p host WITHOUT bootstrap nodes initially
         # We'll connect to bootstrap nodes after pubsub is running
         self.host = new_host(
-            key_pair=key_pair
+            key_pair=key_pair,
+            connection_config=config,
             # bootstrap = BOOTSTRAP_PEERS
         )
 
@@ -253,6 +286,11 @@ class HeadlessService:
         self.pubsub = Pubsub(self.host, self.gossipsub, strict_signing=self.strict_signing)
         logger.info("✅ PubSub service created successfully")
         
+        # Create Bitswap client for file sharing
+        self.bitswap_client = BitswapClient(self.host, self.block_store)
+        self.merkle_dag = MerkleDag(self.bitswap_client)
+        logger.info("✅ Bitswap client and MerkleDag created for file sharing")
+        
         # Start host and pubsub services
         async with self.host.run(listen_addrs=[listen_addr]):
             logger.info("📡 Initializing PubSub, GossipSub, and DHT services...")
@@ -271,6 +309,11 @@ class HeadlessService:
                             # Setup chat room BEFORE connections so topics are subscribed
                             # This ensures GossipSub protocol negotiation succeeds when connecting
                             await self._setup_chat_room()
+                            
+                            # Start Bitswap client
+                            await self.bitswap_client.start()
+                            logger.info("✅ Bitswap client started for file sharing")
+                            
                             # Now setup connections after we're subscribed to topics
                             await self._setup_connections()
                             
@@ -283,13 +326,18 @@ class HeadlessService:
                             
                             # Start message processing and wait for stop
                             async with trio.open_nursery() as nursery:
+                                # Set nursery for bitswap client
+                                self.bitswap_client.set_nursery(nursery)
+                                
                                 nursery.start_soon(self._process_messages)
                                 nursery.start_soon(self._process_outgoing_messages)
                                 nursery.start_soon(self._process_topic_subscriptions)
                                 nursery.start_soon(self._process_peer_connections)
+                                nursery.start_soon(self._process_file_shares)
+                                nursery.start_soon(self._process_file_downloads)
                                 nursery.start_soon(self._wait_for_stop)
                                 nursery.start_soon(self.monitor_peers)
-                                nursery.start_soon(maintain_connections, self.host)
+                                # nursery.start_soon(maintain_connections, self.host)
 
             except (MultiselectClientError, StreamFailure) as e:
                 logger.log(f"The protocol negotitaion failed: {e}")
@@ -454,23 +502,59 @@ class HeadlessService:
                 self.topic_messages[topic] = []
                 self.topic_unread_counts[topic] = 0
             
-            # Store message with unread flag
-            message_data = {
-                'type': 'chat_message',
-                'message': message.message,
-                'sender_nick': message.sender_nick,
-                'sender_id': message.sender_id,
-                'timestamp': message.timestamp,
-                'topic': topic,
-                'read': False  # New messages are unread by default
-            }
+            # Check if this is a file sharing message
+            is_file_message = message.message.startswith(FILE_MESSAGE_PREFIX)
+            
+            if is_file_message:
+                try:
+                    file_meta_json = message.message[len(FILE_MESSAGE_PREFIX):]
+                    file_meta = json.loads(file_meta_json)
+                    
+                    message_data = {
+                        'type': 'file_message',
+                        'message': message.message,
+                        'sender_nick': message.sender_nick,
+                        'sender_id': message.sender_id,
+                        'timestamp': message.timestamp,
+                        'topic': topic,
+                        'read': False,
+                        'file_cid': file_meta.get('cid', ''),
+                        'file_name': file_meta.get('filename', 'unknown'),
+                        'file_size': file_meta.get('filesize', 0),
+                    }
+                except (json.JSONDecodeError, KeyError) as e:
+                    logger.error(f"Failed to parse file message: {e}")
+                    # Fall back to regular message
+                    message_data = {
+                        'type': 'chat_message',
+                        'message': message.message,
+                        'sender_nick': message.sender_nick,
+                        'sender_id': message.sender_id,
+                        'timestamp': message.timestamp,
+                        'topic': topic,
+                        'read': False
+                    }
+            else:
+                # Store message with unread flag
+                message_data = {
+                    'type': 'chat_message',
+                    'message': message.message,
+                    'sender_nick': message.sender_nick,
+                    'sender_id': message.sender_id,
+                    'timestamp': message.timestamp,
+                    'topic': topic,
+                    'read': False
+                }
             
             self.topic_messages[topic].append(message_data)
             self.topic_unread_counts[topic] += 1
             
             # Log in simplified format only if not in UI mode
             if not self.ui_mode:
-                logger.info(f"[{topic}] {message.sender_nick}: {message.message}")
+                if is_file_message:
+                    logger.info(f"[{topic}] {message.sender_nick} shared a file: {message_data.get('file_name', 'unknown')}")
+                else:
+                    logger.info(f"[{topic}] {message.sender_nick}: {message.message}")
             
             # Still put message in queue for UI updates
             await self.message_queue.async_q.put(message_data)
@@ -623,6 +707,168 @@ class HeadlessService:
                 logger.error(f"Error in peer connection processing: {e}")
                 await trio.sleep(0.1)
 
+    async def _process_file_shares(self):
+        """Process file sharing requests from UI."""
+        while self.running:
+            try:
+                try:
+                    share_data = self.file_share_queue.sync_q.get_nowait()
+                    if share_data:
+                        file_path = share_data.get('file_path')
+                        topic = share_data.get('topic')
+                        
+                        if not file_path or not os.path.exists(file_path):
+                            logger.error(f"File not found: {file_path}")
+                            await self._send_system_message(f"File not found: {file_path}")
+                            continue
+                        
+                        filename = os.path.basename(file_path)
+                        filesize = os.path.getsize(file_path)
+                        
+                        logger.info(f"📁 Sharing file: {filename} ({filesize} bytes)")
+                        await self._send_system_message(f"Preparing to share: {filename}...")
+                        
+                        try:
+                            # Add file to Merkle DAG (chunks + stores in bitswap)
+                            root_cid = await self.merkle_dag.add_file(
+                                file_path,
+                                wrap_with_directory=True
+                            )
+                            
+                            cid_hex = root_cid.hex()
+                            
+                            # Track shared file locally
+                            self.shared_files[cid_hex] = {
+                                'filename': filename,
+                                'filesize': filesize,
+                                'filepath': file_path,
+                            }
+                            
+                            logger.info(f"✅ File added to DAG. CID: {cid_hex}")
+                            
+                            # Create file sharing message with metadata
+                            file_meta = {
+                                'cid': cid_hex,
+                                'filename': filename,
+                                'filesize': filesize,
+                            }
+                            file_message = f"{FILE_MESSAGE_PREFIX}{json.dumps(file_meta)}"
+                            
+                            # Publish file message via pubsub to the topic
+                            if topic and self.chat_room:
+                                success = await self.chat_room.publish_to_topic(topic, file_message)
+                                if success:
+                                    logger.info(f"✅ File shared to topic '{topic}': {filename}")
+                                    
+                                    # Don't store in topic_messages here - the pubsub echo
+                                    # will come back through _handle_chat_message and store it.
+                                    # Only notify the UI immediately so it shows the bubble.
+                                    await self.message_queue.async_q.put({
+                                        'type': 'file_shared',
+                                        'topic': topic,
+                                        'file_cid': cid_hex,
+                                        'file_name': filename,
+                                        'file_size': filesize,
+                                        'sender_nick': 'You',
+                                        'sender_id': 'self',
+                                        'timestamp': time.time(),
+                                    })
+                                else:
+                                    await self._send_system_message(f"Failed to share file to topic")
+                            else:
+                                await self._send_system_message(f"No topic specified for file sharing")
+                                
+                        except Exception as e:
+                            logger.error(f"Failed to share file: {e}")
+                            logger.exception("Full traceback:")
+                            await self._send_system_message(f"Failed to share file: {str(e)}")
+                            
+                except Empty:
+                    await trio.sleep(0.1)
+                except Exception as e:
+                    logger.error(f"Error processing file share: {e}")
+                    await trio.sleep(0.1)
+            except Exception as e:
+                logger.error(f"Error in file share processing: {e}")
+                await trio.sleep(0.1)
+
+    async def _process_file_downloads(self):
+        """Process file download requests from UI."""
+        while self.running:
+            try:
+                try:
+                    download_data = self.file_download_queue.sync_q.get_nowait()
+                    if download_data:
+                        cid_hex = download_data.get('file_cid')
+                        filename = download_data.get('file_name', 'unknown')
+                        
+                        if not cid_hex:
+                            logger.error("No CID provided for download")
+                            continue
+                        
+                        logger.info(f"📥 Downloading file: {filename} (CID: {cid_hex})")
+                        await self._send_system_message(f"Downloading: {filename}...")
+                        
+                        try:
+                            root_cid = bytes.fromhex(cid_hex)
+                            
+                            # Fetch file via bitswap
+                            file_data, extracted_filename = await self.merkle_dag.fetch_file(
+                                root_cid,
+                                timeout=60.0
+                            )
+                            
+                            # Use extracted filename if available, fallback to provided name
+                            save_filename = extracted_filename or filename
+                            
+                            # Ensure download directory exists
+                            os.makedirs(self.download_dir, exist_ok=True)
+                            
+                            # Handle filename conflicts
+                            save_path = os.path.join(self.download_dir, save_filename)
+                            if os.path.exists(save_path):
+                                name, ext = os.path.splitext(save_filename)
+                                counter = 1
+                                while os.path.exists(save_path):
+                                    save_path = os.path.join(self.download_dir, f"{name}_{counter}{ext}")
+                                    counter += 1
+                            
+                            # Write file
+                            with open(save_path, 'wb') as f:
+                                f.write(file_data)
+                            
+                            logger.info(f"✅ File downloaded: {save_path} ({len(file_data)} bytes)")
+                            
+                            # Notify UI
+                            await self.message_queue.async_q.put({
+                                'type': 'file_downloaded',
+                                'file_cid': cid_hex,
+                                'file_name': save_filename,
+                                'file_size': len(file_data),
+                                'save_path': save_path,
+                                'timestamp': time.time(),
+                            })
+                            
+                        except Exception as e:
+                            logger.error(f"Failed to download file: {e}")
+                            logger.exception("Full traceback:")
+                            await self.message_queue.async_q.put({
+                                'type': 'file_download_failed',
+                                'file_cid': cid_hex,
+                                'file_name': filename,
+                                'error': str(e),
+                                'timestamp': time.time(),
+                            })
+                            
+                except Empty:
+                    await trio.sleep(0.1)
+                except Exception as e:
+                    logger.error(f"Error processing file download: {e}")
+                    await trio.sleep(0.1)
+            except Exception as e:
+                logger.error(f"Error in file download processing: {e}")
+                await trio.sleep(0.1)
+
     async def _wait_for_stop(self):
         """Wait for stop signal."""
         await self.stop_event.wait()
@@ -726,6 +972,60 @@ class HeadlessService:
             
         except Exception as e:
             logger.error(f"Failed to queue peer connection: {e}")
+            return False
+    
+    def share_file(self, file_path: str, topic: str) -> bool:
+        """
+        Share a file to a topic via bitswap (thread-safe wrapper).
+        
+        Args:
+            file_path: Path to the file to share
+            topic: The topic to share the file in
+            
+        Returns:
+            True if file share request was queued, False otherwise
+        """
+        if not self.running or not self.file_share_queue:
+            logger.warning("Cannot share file: service not ready")
+            return False
+        
+        try:
+            self.file_share_queue.sync_q.put({
+                'file_path': file_path,
+                'topic': topic,
+                'timestamp': time.time(),
+            })
+            logger.info(f"Queued file share request: {file_path} -> {topic}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to queue file share: {e}")
+            return False
+    
+    def download_file(self, file_cid: str, file_name: str = "unknown") -> bool:
+        """
+        Download a file by CID via bitswap (thread-safe wrapper).
+        
+        Args:
+            file_cid: Hex CID of the file to download
+            file_name: Expected filename
+            
+        Returns:
+            True if download request was queued, False otherwise
+        """
+        if not self.running or not self.file_download_queue:
+            logger.warning("Cannot download file: service not ready")
+            return False
+        
+        try:
+            self.file_download_queue.sync_q.put({
+                'file_cid': file_cid,
+                'file_name': file_name,
+                'timestamp': time.time(),
+            })
+            logger.info(f"Queued file download request: {file_name} (CID: {file_cid[:16]}...)")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to queue file download: {e}")
             return False
     
     def get_message_queue(self):
@@ -892,6 +1192,10 @@ class HeadlessService:
         if self.chat_room:
             await self.chat_room.stop()
         
+        # Stop bitswap client
+        if self.bitswap_client:
+            await self.bitswap_client.stop()
+        
         # Close queues
         if self.message_queue:
             self.message_queue.close()
@@ -903,5 +1207,9 @@ class HeadlessService:
             self.topic_subscription_queue.close()
         if self.peer_connection_queue:
             self.peer_connection_queue.close()
+        if self.file_share_queue:
+            self.file_share_queue.close()
+        if self.file_download_queue:
+            self.file_download_queue.close()
         
         logger.info("Headless service stopped")

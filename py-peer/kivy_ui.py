@@ -10,6 +10,7 @@ import os
 # Disable Kivy argument parsing to avoid conflicts with our app's arguments
 os.environ['KIVY_NO_ARGS'] = '1'
 
+import json
 import logging
 import time
 import threading
@@ -28,14 +29,29 @@ from kivymd.app import MDApp
 from kivymd.uix.list import OneLineAvatarIconListItem, IconLeftWidget, IconRightWidget
 from kivymd.uix.label import MDLabel
 from kivymd.uix.textfield import MDTextField
-from kivymd.uix.button import MDIconButton, MDFlatButton
+from kivymd.uix.button import MDIconButton, MDFlatButton, MDRaisedButton
 from kivymd.uix.toolbar import MDTopAppBar
 from kivymd.uix.scrollview import MDScrollView
 from kivymd.uix.card import MDCard
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.navigationdrawer import MDNavigationDrawer, MDNavigationDrawerMenu
+from kivymd.uix.snackbar import Snackbar
+from kivymd.uix.filemanager import MDFileManager
 
 logger = logging.getLogger("kivy_ui")
+
+# File message prefix (must match headless.py)
+FILE_MESSAGE_PREFIX = "[FILE]"
+
+
+def format_file_size(size_bytes: int) -> str:
+    """Format file size in human-readable form."""
+    size = float(size_bytes)
+    for unit in ["B", "KB", "MB", "GB"]:
+        if size < 1024:
+            return f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} TB"
 
 
 class MessageBubble(MDCard):
@@ -92,6 +108,141 @@ class MessageBubble(MDCard):
         self.add_widget(time_label)
 
 
+class FileBubble(MDCard):
+    """A file sharing bubble displayed in chat for shared/received files."""
+    
+    def __init__(self, filename: str, filesize: int, file_cid: str, sender: str,
+                 is_self: bool = False, timestamp: str = "", on_download=None, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.file_cid = file_cid
+        self.filename = filename
+        self.filesize = filesize
+        self.on_download_callback = on_download
+        
+        # Set bubble properties
+        self.orientation = 'vertical'
+        self.size_hint_y = None
+        self.height = dp(120)
+        self.padding = dp(10)
+        self.spacing = dp(5)
+        self.radius = [dp(10)]
+        
+        # Set different colors for sent/received
+        if is_self:
+            self.md_bg_color = (0.8, 0.93, 0.8, 1)  # Light green for sent
+            self.pos_hint = {'right': 0.98}
+            self.size_hint_x = 0.8
+        else:
+            self.md_bg_color = (1, 1, 1, 1)  # White for received
+            self.pos_hint = {'x': 0.02}
+            self.size_hint_x = 0.8
+        
+        # Sender label (only for received)
+        if not is_self:
+            sender_label = MDLabel(
+                text=sender,
+                font_style='Caption',
+                theme_text_color='Secondary',
+                size_hint_y=None,
+                height=dp(15)
+            )
+            self.add_widget(sender_label)
+        
+        # File info row
+        file_row = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=dp(50),
+            spacing=dp(10)
+        )
+        
+        # File icon
+        file_icon = MDIconButton(
+            icon="file",
+            theme_icon_color="Custom",
+            icon_color=(0.2, 0.6, 0.2, 1),
+            disabled=True
+        )
+        file_row.add_widget(file_icon)
+        
+        # File details
+        file_details = BoxLayout(
+            orientation='vertical',
+            spacing=dp(2)
+        )
+        
+        name_label = MDLabel(
+            text=filename,
+            font_style='Body2',
+            bold=True,
+            size_hint_y=None,
+            height=dp(22)
+        )
+        file_details.add_widget(name_label)
+        
+        size_label = MDLabel(
+            text=format_file_size(filesize),
+            font_style='Caption',
+            theme_text_color='Secondary',
+            size_hint_y=None,
+            height=dp(18)
+        )
+        file_details.add_widget(size_label)
+        
+        file_row.add_widget(file_details)
+        self.add_widget(file_row)
+        
+        # Download button (only for received files)
+        if not is_self and on_download:
+            self.download_btn = MDRaisedButton(
+                text="Download",
+                size_hint=(None, None),
+                size=(dp(120), dp(36)),
+                pos_hint={'center_x': 0.5},
+                on_release=lambda x: self._on_download_pressed()
+            )
+            self.add_widget(self.download_btn)
+        elif is_self:
+            status_label = MDLabel(
+                text="Shared",
+                font_style='Caption',
+                theme_text_color='Custom',
+                text_color=(0.2, 0.7, 0.2, 1),
+                halign='center',
+                size_hint_y=None,
+                height=dp(20)
+            )
+            self.add_widget(status_label)
+        
+        # Timestamp
+        time_label = MDLabel(
+            text=timestamp,
+            font_style='Caption',
+            theme_text_color='Hint',
+            size_hint_y=None,
+            height=dp(15),
+            halign='right'
+        )
+        self.add_widget(time_label)
+    
+    def _on_download_pressed(self):
+        """Handle download button press."""
+        if self.on_download_callback:
+            # Disable button to prevent double-click
+            if hasattr(self, 'download_btn'):
+                self.download_btn.text = "Downloading..."
+                self.download_btn.disabled = True
+            self.on_download_callback(self.file_cid, self.filename)
+    
+    def mark_downloaded(self, save_path: str = ""):
+        """Update bubble to show download is complete."""
+        if hasattr(self, 'download_btn'):
+            self.download_btn.text = "Downloaded"
+            self.download_btn.disabled = True
+            self.download_btn.md_bg_color = (0.2, 0.7, 0.2, 1)
+
+
 class ChatScreen(Screen):
     """Chat screen for a specific topic conversation."""
     
@@ -102,6 +253,15 @@ class ChatScreen(Screen):
         self.system_queue = headless_service.get_system_queue()
         self.connection_info = headless_service.get_connection_info()
         self.current_topic = None  # The topic this chat screen is currently showing
+        self.file_bubbles = {}  # Track file bubbles by CID for download status updates
+        
+        # File manager for picking files
+        self.file_manager = MDFileManager(
+            exit_manager=self._exit_file_manager,
+            select_path=self._on_file_selected,
+            preview=False,
+        )
+        self.file_manager_open = False
         
         # Main layout
         layout = BoxLayout(orientation='vertical')
@@ -137,14 +297,22 @@ class ChatScreen(Screen):
             size_hint_y=None,
             height=dp(60),
             padding=dp(10),
-            spacing=dp(10)
+            spacing=dp(5)
         )
+        
+        # File attachment button
+        self.attach_btn = MDIconButton(
+            icon="paperclip",
+            on_release=self.open_file_picker,
+            disabled=True
+        )
+        input_layout.add_widget(self.attach_btn)
         
         # Text input
         self.message_input = MDTextField(
             hint_text="Select a topic first...",
             multiline=False,
-            size_hint_x=0.85,
+            size_hint_x=0.75,
             disabled=True
         )
         self.message_input.bind(on_text_validate=self.send_message)
@@ -181,6 +349,7 @@ class ChatScreen(Screen):
         self.message_input.hint_text = f"Message in {topic}..."
         self.message_input.disabled = False
         self.send_btn.disabled = False
+        self.attach_btn.disabled = False
         
         # Mark topic as read
         self.headless_service.mark_topic_as_read(topic)
@@ -200,11 +369,28 @@ class ChatScreen(Screen):
         for msg_data in messages:
             sender_id = msg_data['sender_id']
             sender_nick = msg_data['sender_nick']
-            message = msg_data['message']
             timestamp = time.strftime("%H:%M", time.localtime(msg_data['timestamp']))
-            
             is_self = (sender_id == our_peer_id or sender_id == "self")
-            self.add_message_bubble(message, sender_nick, is_self=is_self, timestamp=timestamp)
+            
+            msg_type = msg_data.get('type', 'chat_message')
+            
+            if msg_type == 'file_message':
+                # Render as file bubble
+                file_cid = msg_data.get('file_cid', '')
+                file_name = msg_data.get('file_name', 'unknown')
+                file_size = msg_data.get('file_size', 0)
+                
+                self.add_file_bubble(
+                    filename=file_name,
+                    filesize=file_size,
+                    file_cid=file_cid,
+                    sender=sender_nick,
+                    is_self=is_self,
+                    timestamp=timestamp
+                )
+            else:
+                message = msg_data['message']
+                self.add_message_bubble(message, sender_nick, is_self=is_self, timestamp=timestamp)
     
     def send_message(self, *args):
         """Send a message to the current topic."""
@@ -255,11 +441,12 @@ class ChatScreen(Screen):
             while True:
                 try:
                     message_data = self.message_queue.sync_q.get_nowait()
-                    if message_data.get('type') == 'chat_message':
+                    msg_type = message_data.get('type', '')
+                    
+                    if msg_type == 'chat_message':
                         # Only show messages for the current topic
                         msg_topic = message_data.get('topic', 'default')
                         if msg_topic != self.current_topic:
-                            # Message is for a different topic, skip it
                             continue
                         
                         sender_nick = message_data['sender_nick']
@@ -271,6 +458,69 @@ class ChatScreen(Screen):
                         if sender_id != our_peer_id and sender_id != "self":
                             timestamp = time.strftime("%H:%M")
                             self.add_message_bubble(msg, sender_nick, is_self=False, timestamp=timestamp)
+                    
+                    elif msg_type == 'file_message':
+                        # Received a file sharing message from another peer
+                        msg_topic = message_data.get('topic', 'default')
+                        if msg_topic != self.current_topic:
+                            continue
+                        
+                        sender_id = message_data.get('sender_id', '')
+                        our_peer_id = self.connection_info.get('peer_id', '')
+                        if sender_id != our_peer_id and sender_id != "self":
+                            timestamp = time.strftime("%H:%M")
+                            self.add_file_bubble(
+                                filename=message_data.get('file_name', 'unknown'),
+                                filesize=message_data.get('file_size', 0),
+                                file_cid=message_data.get('file_cid', ''),
+                                sender=message_data.get('sender_nick', 'Unknown'),
+                                is_self=False,
+                                timestamp=timestamp
+                            )
+                    
+                    elif msg_type == 'file_shared':
+                        # Our own file was successfully shared
+                        msg_topic = message_data.get('topic', 'default')
+                        if msg_topic != self.current_topic:
+                            continue
+                        
+                        timestamp = time.strftime("%H:%M")
+                        self.add_file_bubble(
+                            filename=message_data.get('file_name', 'unknown'),
+                            filesize=message_data.get('file_size', 0),
+                            file_cid=message_data.get('file_cid', ''),
+                            sender='You',
+                            is_self=True,
+                            timestamp=timestamp
+                        )
+                    
+                    elif msg_type == 'file_downloaded':
+                        # File download completed
+                        file_cid = message_data.get('file_cid', '')
+                        save_path = message_data.get('save_path', '')
+                        file_name = message_data.get('file_name', 'unknown')
+                        
+                        # Update the file bubble if it exists
+                        if file_cid in self.file_bubbles:
+                            self.file_bubbles[file_cid].mark_downloaded(save_path)
+                        
+                        # Show download notification
+                        self._show_download_notification(file_name, save_path)
+                    
+                    elif msg_type == 'file_download_failed':
+                        # File download failed
+                        file_cid = message_data.get('file_cid', '')
+                        file_name = message_data.get('file_name', 'unknown')
+                        error = message_data.get('error', 'Unknown error')
+                        
+                        # Re-enable download button
+                        if file_cid in self.file_bubbles:
+                            bubble = self.file_bubbles[file_cid]
+                            if hasattr(bubble, 'download_btn'):
+                                bubble.download_btn.text = "Retry"
+                                bubble.download_btn.disabled = False
+                        
+                        self.show_system_message(f"Download failed: {file_name} - {error}")
                         
                 except Empty:
                     break
@@ -298,6 +548,123 @@ class ChatScreen(Screen):
             timestamp=timestamp
         )
         self.messages_layout.add_widget(bubble)
+    
+    def add_file_bubble(self, filename: str, filesize: int, file_cid: str,
+                        sender: str, is_self: bool = False, timestamp: str = ""):
+        """Add a file sharing bubble to the chat."""
+        on_download = None if is_self else self._request_download
+        
+        bubble = FileBubble(
+            filename=filename,
+            filesize=filesize,
+            file_cid=file_cid,
+            sender=sender,
+            is_self=is_self,
+            timestamp=timestamp,
+            on_download=on_download
+        )
+        self.messages_layout.add_widget(bubble)
+        
+        # Track file bubbles for download status updates
+        if file_cid:
+            self.file_bubbles[file_cid] = bubble
+    
+    def open_file_picker(self, *args):
+        """Open the file picker to select a file to share."""
+        if not self.current_topic:
+            self.show_system_message("Select a topic first")
+            return
+        
+        if self.file_manager_open:
+            return
+        
+        # Open file manager at home directory
+        home_dir = os.path.expanduser("~")
+        self.file_manager.show(home_dir)
+        self.file_manager_open = True
+    
+    def _exit_file_manager(self, *args):
+        """Called when file manager is closed without selection."""
+        self.file_manager.close()
+        self.file_manager_open = False
+    
+    def _on_file_selected(self, path: str):
+        """Called when a file is selected from the file picker."""
+        self.file_manager.close()
+        self.file_manager_open = False
+        
+        if not path or not os.path.isfile(path):
+            self.show_system_message("Invalid file selected")
+            return
+        
+        if not self.current_topic:
+            self.show_system_message("Select a topic first")
+            return
+        
+        filename = os.path.basename(path)
+        filesize = os.path.getsize(path)
+        
+        # Show confirmation dialog
+        self._confirm_file_share(path, filename, filesize)
+    
+    def _confirm_file_share(self, file_path: str, filename: str, filesize: int):
+        """Show a confirmation dialog before sharing a file."""
+        dialog = MDDialog(
+            title="Share File?",
+            text=f"File: {filename}\nSize: {format_file_size(filesize)}\nTopic: {self.current_topic}",
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release=lambda x: dialog.dismiss()
+                ),
+                MDFlatButton(
+                    text="SHARE",
+                    on_release=lambda x: (dialog.dismiss(), self._do_share_file(file_path))
+                )
+            ]
+        )
+        dialog.open()
+    
+    def _do_share_file(self, file_path: str):
+        """Execute file sharing via headless service."""
+        try:
+            success = self.headless_service.share_file(file_path, self.current_topic)
+            if success:
+                self.show_system_message(f"Preparing file for sharing...")
+            else:
+                self.show_system_message("Failed to queue file share request")
+        except Exception as e:
+            logger.error(f"Error sharing file: {e}")
+            self.show_system_message(f"Error: {str(e)}")
+    
+    def _request_download(self, file_cid: str, filename: str):
+        """Request download of a file."""
+        try:
+            success = self.headless_service.download_file(file_cid, filename)
+            if success:
+                self.show_system_message(f"Downloading: {filename}...")
+            else:
+                self.show_system_message("Failed to queue download request")
+                # Re-enable download button
+                if file_cid in self.file_bubbles:
+                    bubble = self.file_bubbles[file_cid]
+                    if hasattr(bubble, 'download_btn'):
+                        bubble.download_btn.text = "Download"
+                        bubble.download_btn.disabled = False
+        except Exception as e:
+            logger.error(f"Error requesting download: {e}")
+            self.show_system_message(f"Error: {str(e)}")
+    
+    def _show_download_notification(self, filename: str, save_path: str):
+        """Show a brief notification that file has been downloaded."""
+        try:
+            Snackbar(
+                text=f"Downloaded: {filename} -> {save_path}",
+                duration=2,
+            ).open()
+        except Exception:
+            # Fallback if Snackbar fails
+            self.show_system_message(f"Downloaded: {filename} saved to {save_path}")
     
     def show_system_message(self, message: str):
         """Show a system message."""
