@@ -35,7 +35,7 @@ from libp2p.identity.identify.identify import identify_handler_for, parse_identi
 from libp2p.utils.varint import read_length_prefixed_protobuf
 from libp2p.peer.id import ID
 from libp2p.custom_types import TProtocol
-from libp2p.pubsub.gossipsub import PROTOCOL_ID, PROTOCOL_ID_V11
+from libp2p.pubsub.gossipsub import PROTOCOL_ID, PROTOCOL_ID_V11, PROTOCOL_ID_V12
 from libp2p.protocol_muxer.exceptions import (
     MultiselectClientError,
 )
@@ -57,14 +57,14 @@ logger = logging.getLogger("headless")
 
 # Constants
 DISCOVERY_SERVICE_TAG = "universal-connectivity"
-PROTOCOL_ID_LIST = [PROTOCOL_ID, PROTOCOL_ID_V11]
+PROTOCOL_ID_LIST = [PROTOCOL_ID, PROTOCOL_ID_V11, PROTOCOL_ID_V12]
 DEFAULT_PORT = 9095
 
 # Bootstrap nodes for peer discovery
 BOOTSTRAP_PEERS = [
     "/ip4/139.178.65.157/tcp/4001/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
     "/ip4/139.178.91.71/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt"
+    "/ip4/145.40.118.135/tcp/4001/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", 
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zp7ykQCj2gRNdrFeqQ1vG13rMb4sPS",

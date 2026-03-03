@@ -312,7 +312,24 @@ def main():
         type=str,
         help="Custom topic to subscribe.",
     )
-    
+    parser.add_argument(
+        "--api",
+        action="store_true",
+        help="Start Tornado REST + WebSocket API server (headless + API, no UI)"
+    )
+    parser.add_argument(
+        "--api-port",
+        type=int,
+        default=8765,
+        dest="api_port",
+        help="Port for the Tornado API server (default: 8765)"
+    )
+    parser.add_argument(
+        "--api-routes",
+        action="store_true",
+        help="Print all available API routes and exit"
+    )
+
     args = parser.parse_args()
     
     # Default logging setup (will be reconfigured based on mode)
@@ -325,8 +342,42 @@ def main():
         logging.getLogger("headless").setLevel(logging.DEBUG)
         logger.debug("Debug logging enabled")
     
+    # Print routes and exit early if requested
+    if getattr(args, 'api_routes', False):
+        from tornado_server import _print_routes
+        _print_routes(getattr(args, 'api_port', 8765))
+        sys.exit(0)
+
     try:
-        if args.kivy:
+        if args.api:
+            # ── Tornado API mode ─────────────────────────────────────────────
+            setup_logging(ui_mode=False)
+            logger.info("Starting in API mode (HeadlessService + Tornado REST server)...")
+
+            nickname = args.nick or f"peer-{time.time():.0f}"
+            strict_signing = not args.no_strict_signing
+            headless_service = HeadlessService(
+                nickname=nickname,
+                port=args.port,
+                connect_addrs=args.connect,
+                strict_signing=strict_signing,
+                seed=args.seed,
+                topic=args.topic
+            )
+
+            # Start HeadlessService in a background trio thread
+            logger.info("Starting HeadlessService in background thread...")
+            ready_event = threading.Event()
+            headless_thread = run_headless_in_thread(headless_service, ready_event)
+            logger.info(f"✅ HeadlessService ready — launching Tornado on port {args.api_port}")
+
+            # Start Tornado in the main thread (blocks here)
+            from tornado_server import TornadoServer, _print_routes
+            _print_routes(args.api_port)
+            server = TornadoServer(headless_service, port=args.api_port)
+            server.start()  # blocks until Ctrl-C
+
+        elif args.kivy:
             # Configure logging for Kivy mode (no console output)
             setup_logging(ui_mode=True)
             
