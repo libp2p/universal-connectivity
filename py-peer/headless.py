@@ -8,7 +8,6 @@ without any UI. It communicates with the UI through queues and events.
 import json
 import logging
 import os
-import random
 import socket
 import time
 import traceback
@@ -25,12 +24,11 @@ from libp2p.kad_dht.kad_dht import (
     KadDHT,
 )
 from libp2p import new_host
-from libp2p.crypto.rsa import create_new_key_pair
+from libp2p.crypto.ed25519 import create_new_key_pair
 from libp2p.pubsub.gossipsub import GossipSub
 from libp2p.pubsub.pubsub import Pubsub
 from libp2p.tools.async_service.trio_service import background_trio_service
 from libp2p.peer.peerinfo import info_from_p2p_addr
-from libp2p.peer.peerinfo import PeerInfo
 from libp2p.identity.identify.identify import identify_handler_for, parse_identify_response, ID as IDENTIFY_PROTOCOL_ID
 from libp2p.utils.varint import read_length_prefixed_protobuf
 from libp2p.peer.id import ID
@@ -53,6 +51,8 @@ FILE_MESSAGE_PREFIX = "[FILE]"
 # Default download directory
 DEFAULT_DOWNLOAD_DIR = os.path.expanduser("~/Downloads")
 
+DEFAULT_SEED = "py-peer"  # Default seed for deterministic peer ID generation
+
 logger = logging.getLogger("headless")
 
 # Constants
@@ -72,13 +72,6 @@ BOOTSTRAP_PEERS = [
     "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
     "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb"
 ]
-
-
-def find_free_port() -> int:
-    """Find a free port on localhost."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("", 0))  # Bind to a free port provided by the OS
-        return s.getsockname()[1]
 
 def filter_compatible_peer_info(peer_info) -> bool:
     """Filter peer info to check if it has compatible addresses (TCP + IPv4)."""
@@ -136,13 +129,13 @@ class HeadlessService:
     Headless service that manages libp2p components and provides data to UI through queues.
     """
 
-    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False, strict_signing: bool = True, seed: int = None, topic: str = None):
+    def __init__(self, nickname: str, port: int = 0, connect_addrs: List[str] = None, ui_mode: bool = False, strict_signing: bool = True, seed: str = None, topic: str = None):
         self.nickname = nickname
-        self.port = port if port != 0 else find_free_port()
+        self.port = port if port != 0 else 4001
         self.connect_addrs = connect_addrs or []
         self.ui_mode = ui_mode  # Flag to control logging behavior
         self.strict_signing = strict_signing  # Flag to control message signing
-        self.seed = seed
+        self.seed = seed if seed else DEFAULT_SEED  # Seed string for deterministic peer ID (default: 'py-peer')
         self.topic = topic  # Custom topic to use instead of default
 
         # libp2p components
@@ -188,7 +181,7 @@ class HeadlessService:
         self.stop_event = trio.Event()
         
         if not ui_mode:  # Only log initialization if not in UI mode
-            logger.info(f"HeadlessService initialized - nickname: {nickname}, port: {self.port}, strict_signing: {strict_signing}")
+            logger.info(f"HeadlessService initialized - nickname: {nickname}, port: {self.port}, strict_signing: {strict_signing}, seed: {self.seed}")
     
     async def monitor_peers(self):
         while True:
@@ -227,7 +220,10 @@ class HeadlessService:
     
     async def _run_service(self):
         """Run the main service loop."""
-        key_pair = create_new_key_pair()
+        seed_str = self.seed
+        secret = hashlib.sha256(seed_str.encode()).digest()
+        logger.info(f"Using deterministic Ed25519 key derived from seed='{seed_str}'")
+        key_pair = create_new_key_pair(seed=secret)
         
         # Create listen address
         listen_addr = multiaddr.Multiaddr(f"/ip4/0.0.0.0/tcp/{self.port}")
