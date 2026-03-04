@@ -66,8 +66,12 @@ export interface DHTStatus {
 }
 
 // ─── Base URL ─────────────────────────────────────────────────────────────────
+// In development the Vite proxy forwards /api/* → localhost:8765, so VITE_API_URL
+// can be left empty.  In production (Vercel / Netlify) set it to your backend's
+// full origin, e.g.  VITE_API_URL=https://your-backend.example.com
 
-const BASE = '/api/v1'
+const API_ORIGIN: string = import.meta.env.VITE_API_URL ?? ''
+const BASE = `${API_ORIGIN}/api/v1`
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`)
@@ -136,10 +140,9 @@ export const getPubSubMesh = () =>
 
 // ─── WebSocket helpers ────────────────────────────────────────────────────────
 
-export const WS_BASE =
-  (typeof window !== 'undefined'
-    ? `ws://${window.location.host}`
-    : 'ws://localhost:8765')
+export const WS_BASE: string = API_ORIGIN
+  ? API_ORIGIN.replace(/^http/, 'ws')
+  : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
 
 export const wsMessages = () => new WebSocket(`${WS_BASE}/ws/messages`)
 export const wsPeers = () => new WebSocket(`${WS_BASE}/ws/peers`)
