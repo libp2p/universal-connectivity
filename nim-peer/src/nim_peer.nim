@@ -6,6 +6,7 @@ import std/sets
 import libp2p, chronos, cligen, chronicles
 import libp2p/protocols/kademlia
 import libp2p/protocols/pubsub/rpc/message as pubsub_message
+import libp2p/nameresolving/dnsresolver
 
 from illwave as iw import nil, `[]`, `[]=`, `==`, width, height
 from terminal import nil
@@ -119,14 +120,15 @@ proc kadBootstrapNodes(): seq[(PeerId, seq[MultiAddress])] {.raises: [].} =
 
     let peerIdStr = addr[tagPos + PeerIdTag.len .. ^1]
     let peerId = PeerId.init(peerIdStr).valueOr:
-      error "Invalid Kad bootstrap peer id", address = addr, peerId = peerIdStr, description = error
+      error "Invalid Kad bootstrap peer id",
+        address = addr, peerId = peerIdStr, description = error
       continue
 
     result.add((peerId, @[multiAddr]))
 
-proc discoverPeersWithKad(switch: Switch, kad: KadDHT, room: string) {.
-    async: (raises: [])
-.} =
+proc discoverPeersWithKad(
+    switch: Switch, kad: KadDHT, room: string
+) {.async: (raises: []).} =
   let roomKey = roomToKadKey(room)
   if roomKey.isNone():
     return
@@ -161,7 +163,8 @@ proc discoverPeersWithKad(switch: Switch, kad: KadDHT, room: string) {.
           await switch.connect(peerId, provider.addrs)
           info "Connected to peer via Kad-DHT", peerId = $peerId
         except DialFailedError as exc:
-          debug "Failed to connect to discovered peer", peerId = $peerId, description = exc.msg
+          debug "Failed to connect to discovered peer",
+            peerId = $peerId, description = exc.msg
 
       await sleepAsync(DiscoveryInterval)
   except CancelledError:
@@ -180,24 +183,26 @@ proc start(
     type WriterStr = LogOutputStr
 
   # Early (bootstrap) writer: mirror logs to stdout so nothing is dropped
-  defaultChroniclesStream.output.writer =
-    proc (lvl: LogLevel, rec: WriterStr) {.closure, gcsafe, raises: [].} =
-      let s = cast[string](rec)
-      try:
-        for line in s.splitLines():
-          stdout.writeLine(line)
-        stdout.flushFile()
-      except IOError:
-        discard
-
+  defaultChroniclesStream.output.writer = proc(
+      lvl: LogLevel, rec: WriterStr
+  ) {.closure, gcsafe, raises: [].} =
+    let s = cast[string](rec)
+    try:
+      for line in s.splitLines():
+        stdout.writeLine(line)
+      stdout.flushFile()
+    except IOError:
+      discard
 
   var rng = newRng()
+  let nameResolver = DnsResolver.new(@[initTAddress("1.1.1.1:53")])
 
   let switch =
     try:
       SwitchBuilder
       .new()
       .withRng(rng)
+      .withNameResolver(nameResolver)
       .withTcpTransport()
       .withAddresses(@[MultiAddress.init("/ip4/0.0.0.0/tcp/" & $port).tryGet()])
       .withYamux()
