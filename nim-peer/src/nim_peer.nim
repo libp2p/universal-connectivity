@@ -110,7 +110,19 @@ proc discoverPeersWithKad(switch: Switch, kad: KadDHT, room: string) {.
 
     # announce ourselves as a provider for this room and query for other providers
     await kad.addProvider(roomKey.get())
-    let providers = await kad.getProviders(roomKey.get())
+    var providers: HashSet[Provider]
+    try:
+      providers = await kad.getProviders(roomKey.get())
+    except CancelledError as exc:
+      raise exc
+    except DialFailedError as exc:
+      debug "Kad provider lookup failed to dial", description = exc.msg
+      await sleepAsync(DiscoveryInterval)
+      continue
+    except LPStreamError as exc:
+      debug "Kad provider lookup stream error", description = exc.msg
+      await sleepAsync(DiscoveryInterval)
+      continue
 
     for provider in providers.items:
       let peerId = PeerId.init(provider.id).valueOr:
