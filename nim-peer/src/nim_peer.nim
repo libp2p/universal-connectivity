@@ -20,6 +20,12 @@ const
   MaxKeyLen: int = 4096
   ListenPort: int = 9093
   DiscoveryInterval = 10.seconds
+  KadBootstrapPeerAddrs = [
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+  ]
 
 proc cleanup() {.noconv: (raises: []).} =
   try:
@@ -97,6 +103,26 @@ proc seedKadRoutingTable(kad: KadDHT, switch: Switch) {.raises: [].} =
 
   if peers.len > 0:
     kad.updatePeers(peers)
+
+proc kadBootstrapNodes(): seq[(PeerId, seq[MultiAddress])] {.raises: [].} =
+  const PeerIdTag = "/p2p/"
+
+  for addr in KadBootstrapPeerAddrs:
+    let multiAddr = MultiAddress.init(addr).valueOr:
+      error "Invalid Kad bootstrap multiaddr", address = addr, description = error
+      continue
+
+    let tagPos = addr.rfind(PeerIdTag)
+    if tagPos < 0:
+      error "Missing /p2p/ segment in Kad bootstrap multiaddr", address = addr
+      continue
+
+    let peerIdStr = addr[tagPos + PeerIdTag.len .. ^1]
+    let peerId = PeerId.init(peerIdStr).valueOr:
+      error "Invalid Kad bootstrap peer id", address = addr, peerId = peerIdStr, description = error
+      continue
+
+    result.add((peerId, @[multiAddr]))
 
 proc discoverPeersWithKad(switch: Switch, kad: KadDHT, room: string) {.
     async: (raises: [])
@@ -196,7 +222,7 @@ proc start(
     except InitializationError as exc:
       echo "Could not initialize gossipsub: " & $exc.msg
       quit(1)
-  let kad = KadDHT.new(switch)
+  let kad = KadDHT.new(switch, bootstrapNodes = kadBootstrapNodes())
 
   try:
     switch.mount(kad)
@@ -245,7 +271,7 @@ proc start(
       topic: string, msg: pubsub_message.Message
   ): Future[ValidationResult] {.async, gcsafe.} =
     let fileId = sanitizeFileId(cast[string](msg.data))
-    # this will only work if we're connected to `fromPeer` (since we don't have kad-dht)
+    # File transfer still requires a direct stream to the announcing peer.
     let conn = await switch.dial(msg.fromPeer, FileExchangeCodec)
     let filePath = getTempDir() / fileId
     let fileContents = await fileExchange.requestFile(conn, fileId)
