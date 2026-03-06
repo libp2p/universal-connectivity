@@ -1,8 +1,10 @@
 {.push raises: [Exception].}
 
 import tables, deques, strutils, os, streams
+import std/sets
 
 import libp2p, chronos, cligen, chronicles
+import libp2p/protocols/kademlia
 from libp2p/protocols/pubsub/rpc/message import Message
 
 from illwave as iw import nil, `[]`, `[]=`, `==`, width, height
@@ -17,6 +19,7 @@ const
   PeerIdFile: string = "local.peerid"
   MaxKeyLen: int = 4096
   ListenPort: int = 9093
+  DiscoveryInterval = 10.seconds
 
 proc cleanup() {.noconv: (raises: []).} =
   try:
@@ -76,6 +79,52 @@ proc loadOrCreateKey(rng: var HmacDrbgContext): PrivateKey =
     echo "Could not create new key"
     quit(1)
 
+proc roomToKadKey(room: string): Key {.raises: [].} =
+  var roomBytes = newSeq[byte](room.len)
+  for i, ch in room:
+    roomBytes[i] = byte(ord(ch))
+  MultiHash.digest("sha2-256", roomBytes).tryGet().toKey()
+
+proc seedKadRoutingTable(kad: KadDHT, switch: Switch) =
+  var peers: seq[(PeerId, seq[MultiAddress])]
+  for peerId, addrs in switch.peerStore[AddressBook].book.pairs:
+    if peerId == switch.peerInfo.peerId or addrs.len == 0:
+      continue
+    peers.add((peerId, addrs))
+
+  if peers.len > 0:
+    kad.updatePeers(peers)
+
+proc discoverPeersWithKad(switch: Switch, kad: KadDHT, room: string) {.
+    async: (raises: [CancelledError])
+.} =
+  let roomKey = roomToKadKey(room)
+
+  while true:
+    seedKadRoutingTable(kad, switch)
+
+    # announce ourselves as a provider for this room and query for other providers
+    await kad.addProvider(roomKey)
+    let providers = await kad.getProviders(roomKey)
+
+    for provider in providers.items:
+      let peerId = PeerId.init(provider.id).valueOr:
+        continue
+      if peerId == switch.peerInfo.peerId or switch.isConnected(peerId):
+        continue
+      if provider.addrs.len == 0:
+        continue
+
+      try:
+        await switch.connect(peerId, provider.addrs)
+        info "Connected to peer via Kad-DHT", peerId = $peerId
+      except CancelledError as exc:
+        raise exc
+      except DialFailedError as exc:
+        debug "Failed to connect to discovered peer", peerId = $peerId, description = exc.msg
+
+    await sleepAsync(DiscoveryInterval)
+
 proc start(
     addrs: Opt[MultiAddress], headless: bool, room: string, port: int
 ) {.async: (raises: [CancelledError]).} =
@@ -131,8 +180,10 @@ proc start(
     except InitializationError as exc:
       echo "Could not initialize gossipsub: " & $exc.msg
       quit(1)
+  let kad = KadDHT.new(switch)
 
   try:
+    switch.mount(kad)
     switch.mount(gossip)
     switch.mount(fileExchange)
     await switch.start()
@@ -152,6 +203,8 @@ proc start(
       discard await switch.connect(addrs.get())
     except Exception as exc:
       error "Connection error", description = exc.msg
+
+  asyncSpawn discoverPeersWithKad(switch, kad, room)
 
   # wait so that gossipsub can form mesh
   await sleepAsync(3.seconds)
