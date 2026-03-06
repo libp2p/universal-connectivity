@@ -143,7 +143,7 @@ proc discoverPeersWithKad(switch: Switch, kad: KadDHT, room: string) {.
 
 proc start(
     addrs: Opt[MultiAddress], headless: bool, room: string, port: int
-) {.async: (raises: [CancelledError]).} =
+) {.async.} =
   # Handle Ctrl+C
   setControlCHook(cleanup)
 
@@ -314,9 +314,9 @@ proc cli(connect = "", room = ChatTopic, port = ListenPort, headless = false) =
   if connect.len > 0:
     addrs = Opt.some(MultiAddress.init(connect).get())
   try:
-    waitFor start(addrs, headless, room, port)
-  except CancelledError:
-    echo "Operation cancelled"
+    waitFor noCancel(start(addrs, headless, room, port))
+  except CatchableError as exc:
+    echo "Operation failed: " & exc.msg
 
 when isMainModule:
   dispatch cli,
