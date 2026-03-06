@@ -102,13 +102,15 @@ proc discoverPeersWithKad(switch: Switch, kad: KadDHT, room: string) {.
     async: (raises: [CancelledError])
 .} =
   let roomKey = roomToKadKey(room)
+  if roomKey.isNone():
+    return
 
   while true:
     seedKadRoutingTable(kad, switch)
 
     # announce ourselves as a provider for this room and query for other providers
-    await kad.addProvider(roomKey)
-    let providers = await kad.getProviders(roomKey)
+    await kad.addProvider(roomKey.get())
+    let providers = await kad.getProviders(roomKey.get())
 
     for provider in providers.items:
       let peerId = PeerId.init(provider.id).valueOr:
