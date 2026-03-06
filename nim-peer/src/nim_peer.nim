@@ -88,7 +88,7 @@ proc roomToKadKey(room: string): Opt[Key] {.raises: [].} =
     return Opt.none(Key)
   Opt.some(digest.toKey())
 
-proc seedKadRoutingTable(kad: KadDHT, switch: Switch) =
+proc seedKadRoutingTable(kad: KadDHT, switch: Switch) {.raises: [].} =
   var peers: seq[(PeerId, seq[MultiAddress])]
   for peerId, addrs in switch.peerStore[AddressBook].book.pairs:
     if peerId == switch.peerInfo.peerId or addrs.len == 0:
