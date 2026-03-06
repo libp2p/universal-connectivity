@@ -7,6 +7,7 @@ import libp2p, chronos, cligen, chronicles
 import libp2p/protocols/kademlia
 import libp2p/protocols/pubsub/rpc/message as pubsub_message
 import libp2p/nameresolving/dnsresolver
+import libp2p/nameresolving/nameresolver
 
 from illwave as iw import nil, `[]`, `[]=`, `==`, width, height
 from terminal import nil
@@ -21,12 +22,8 @@ const
   MaxKeyLen: int = 4096
   ListenPort: int = 9093
   DiscoveryInterval = 10.seconds
-  KadBootstrapPeerAddrs = [
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-  ]
+  KadBootstrapPeerAddrs =
+    ["/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"]
 
 proc cleanup() {.noconv: (raises: []).} =
   try:
@@ -95,57 +92,44 @@ proc roomToKadKey(room: string): Opt[Key] {.raises: [].} =
     return Opt.none(Key)
   Opt.some(digest.toKey())
 
-proc seedKadRoutingTable(kad: KadDHT, switch: Switch) {.raises: [].} =
-  var peers: seq[(PeerId, seq[MultiAddress])]
-  for peerId, addrs in switch.peerStore[AddressBook].book.pairs:
-    if peerId == switch.peerInfo.peerId or addrs.len == 0:
-      continue
-    peers.add((peerId, addrs))
-
-  if peers.len > 0:
-    kad.updatePeers(peers)
-
-proc kadBootstrapNodes(): seq[(PeerId, seq[MultiAddress])] {.raises: [].} =
+proc kadBootstrapNodes(
+    resolver: DnsResolver
+): Future[seq[(PeerId, seq[MultiAddress])]] {.async.} =
   const PeerIdTag = "/p2p/"
 
   for addr in KadBootstrapPeerAddrs:
-    let multiAddr = MultiAddress.init(addr).valueOr:
-      error "Invalid Kad bootstrap multiaddr", address = addr, description = error
-      continue
-
     let tagPos = addr.rfind(PeerIdTag)
     if tagPos < 0:
-      error "Missing /p2p/ segment in Kad bootstrap multiaddr", address = addr
+      error "Missing /p2p/ segment", address = addr
       continue
 
     let peerIdStr = addr[tagPos + PeerIdTag.len .. ^1]
     let peerId = PeerId.init(peerIdStr).valueOr:
-      error "Invalid Kad bootstrap peer id",
-        address = addr, peerId = peerIdStr, description = error
+      error "Invalid peer id", peerId = peerIdStr
       continue
 
-    result.add((peerId, @[multiAddr]))
+    let baseAddr = addr[0 ..< tagPos]
+
+    let maddr = MultiAddress.init(baseAddr).valueOr:
+      error "Invalid multiaddr", address = baseAddr
+      continue
+
+    result.add((peerId, @[maddr]))
 
 proc discoverPeersWithKad(
     switch: Switch, kad: KadDHT, room: string
 ) {.async: (raises: []).} =
-  let roomKey = roomToKadKey(room)
-  if roomKey.isNone():
+  let roomKey = roomToKadKey(room).valueOr:
+    error "Unable to convert room to kad key"
     return
 
   try:
     while true:
-      seedKadRoutingTable(kad, switch)
-
       # announce ourselves as a provider for this room and query for other providers
-      await kad.addProvider(roomKey.get())
+      await kad.addProvider(roomKey)
       var providers: HashSet[Provider]
       try:
-        providers = await kad.getProviders(roomKey.get())
-      except DialFailedError as exc:
-        debug "Kad provider lookup failed to dial", description = exc.msg
-        await sleepAsync(DiscoveryInterval)
-        continue
+        providers = await kad.getProviders(roomKey)
       except LPStreamError as exc:
         debug "Kad provider lookup stream error", description = exc.msg
         await sleepAsync(DiscoveryInterval)
@@ -161,7 +145,7 @@ proc discoverPeersWithKad(
 
         try:
           await switch.connect(peerId, provider.addrs)
-          info "Connected to peer via Kad-DHT", peerId = $peerId
+          info "Kad Connected to peer via Kad-DHT", peerId = $peerId
         except DialFailedError as exc:
           debug "Failed to connect to discovered peer",
             peerId = $peerId, description = exc.msg
@@ -227,7 +211,7 @@ proc start(
     except InitializationError as exc:
       echo "Could not initialize gossipsub: " & $exc.msg
       quit(1)
-  let kad = KadDHT.new(switch, bootstrapNodes = kadBootstrapNodes())
+  let kad = KadDHT.new(switch, bootstrapNodes = await kadBootstrapNodes(nameResolver))
 
   try:
     switch.mount(kad)
@@ -252,9 +236,6 @@ proc start(
       error "Connection error", description = exc.msg
 
   asyncSpawn discoverPeersWithKad(switch, kad, room)
-
-  # wait so that gossipsub can form mesh
-  await sleepAsync(3.seconds)
 
   # topic handlers
   # chat and file handlers actually need to be validators instead of regular handlers
@@ -301,8 +282,8 @@ proc start(
   gossip.addValidator(room, onChatMsg)
 
   # receive files offerings
-  gossip.subscribe(ChatFileTopic, nil)
-  gossip.addValidator(ChatFileTopic, onNewFile)
+  gossip.subscribe(FileChatTopic, nil)
+  gossip.addValidator(FileChatTopic, onNewFile)
 
   # receive newly connected peers through gossipsub
   gossip.subscribe(PeerDiscoveryTopic, onNewPeer)
@@ -322,7 +303,10 @@ proc start(
   switch.addPeerEventHandler(onPeerLeft, PeerEventKind.Left)
 
   # add already connected peers
-  for peerId in switch.peerStore[AddressBook].book.keys:
+  for peerId in switch.connectedPeers(Direction.Out):
+    await peerQ.put((peerId, PeerEventKind.Joined))
+
+  for peerId in switch.connectedPeers(Direction.In):
     await peerQ.put((peerId, PeerEventKind.Joined))
 
   if headless:
@@ -355,5 +339,3 @@ when isMainModule:
       "connect": "full multiaddress (with /p2p/ peerId) of the node to connect to",
       "room": "Room name",
       "port": "TCP listen port",
-      "headless": "No UI, can only receive messages",
-    }
