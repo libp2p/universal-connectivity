@@ -5,7 +5,7 @@ import std/sets
 
 import libp2p, chronos, cligen, chronicles
 import libp2p/protocols/kademlia
-from libp2p/protocols/pubsub/rpc/message import Message
+import libp2p/protocols/pubsub/rpc/message as pubsub_message
 
 from illwave as iw import nil, `[]`, `[]=`, `==`, width, height
 from terminal import nil
@@ -99,48 +99,47 @@ proc seedKadRoutingTable(kad: KadDHT, switch: Switch) {.raises: [].} =
     kad.updatePeers(peers)
 
 proc discoverPeersWithKad(switch: Switch, kad: KadDHT, room: string) {.
-    async: (raises: [CancelledError])
+    async: (raises: [])
 .} =
   let roomKey = roomToKadKey(room)
   if roomKey.isNone():
     return
 
-  while true:
-    seedKadRoutingTable(kad, switch)
+  try:
+    while true:
+      seedKadRoutingTable(kad, switch)
 
-    # announce ourselves as a provider for this room and query for other providers
-    await kad.addProvider(roomKey.get())
-    var providers: HashSet[Provider]
-    try:
-      providers = await kad.getProviders(roomKey.get())
-    except CancelledError as exc:
-      raise exc
-    except DialFailedError as exc:
-      debug "Kad provider lookup failed to dial", description = exc.msg
-      await sleepAsync(DiscoveryInterval)
-      continue
-    except LPStreamError as exc:
-      debug "Kad provider lookup stream error", description = exc.msg
-      await sleepAsync(DiscoveryInterval)
-      continue
-
-    for provider in providers.items:
-      let peerId = PeerId.init(provider.id).valueOr:
-        continue
-      if peerId == switch.peerInfo.peerId or switch.isConnected(peerId):
-        continue
-      if provider.addrs.len == 0:
-        continue
-
+      # announce ourselves as a provider for this room and query for other providers
+      await kad.addProvider(roomKey.get())
+      var providers: HashSet[Provider]
       try:
-        await switch.connect(peerId, provider.addrs)
-        info "Connected to peer via Kad-DHT", peerId = $peerId
-      except CancelledError as exc:
-        raise exc
+        providers = await kad.getProviders(roomKey.get())
       except DialFailedError as exc:
-        debug "Failed to connect to discovered peer", peerId = $peerId, description = exc.msg
+        debug "Kad provider lookup failed to dial", description = exc.msg
+        await sleepAsync(DiscoveryInterval)
+        continue
+      except LPStreamError as exc:
+        debug "Kad provider lookup stream error", description = exc.msg
+        await sleepAsync(DiscoveryInterval)
+        continue
 
-    await sleepAsync(DiscoveryInterval)
+      for provider in providers.items:
+        let peerId = PeerId.init(provider.id).valueOr:
+          continue
+        if peerId == switch.peerInfo.peerId or switch.isConnected(peerId):
+          continue
+        if provider.addrs.len == 0:
+          continue
+
+        try:
+          await switch.connect(peerId, provider.addrs)
+          info "Connected to peer via Kad-DHT", peerId = $peerId
+        except DialFailedError as exc:
+          debug "Failed to connect to discovered peer", peerId = $peerId, description = exc.msg
+
+      await sleepAsync(DiscoveryInterval)
+  except CancelledError:
+    discard
 
 proc start(
     addrs: Opt[MultiAddress], headless: bool, room: string, port: int
@@ -230,7 +229,7 @@ proc start(
   # chat and file handlers actually need to be validators instead of regular handlers
   # validators allow us to get information about which peer sent a message
   let onChatMsg = proc(
-      topic: string, msg: Message
+      topic: string, msg: pubsub_message.Message
   ): Future[ValidationResult] {.async, gcsafe.} =
     let strMsg = cast[string](msg.data)
     await recvQ.put(shortPeerId(msg.fromPeer) & ": " & strMsg)
@@ -243,7 +242,7 @@ proc start(
 
   # when a new file is announced, download it
   let onNewFile = proc(
-      topic: string, msg: Message
+      topic: string, msg: pubsub_message.Message
   ): Future[ValidationResult] {.async, gcsafe.} =
     let fileId = sanitizeFileId(cast[string](msg.data))
     # this will only work if we're connected to `fromPeer` (since we don't have kad-dht)
