@@ -79,11 +79,14 @@ proc loadOrCreateKey(rng: var HmacDrbgContext): PrivateKey =
     echo "Could not create new key"
     quit(1)
 
-proc roomToKadKey(room: string): Key {.raises: [].} =
+proc roomToKadKey(room: string): Opt[Key] {.raises: [].} =
   var roomBytes = newSeq[byte](room.len)
   for i, ch in room:
     roomBytes[i] = byte(ord(ch))
-  MultiHash.digest("sha2-256", roomBytes).tryGet().toKey()
+  let digest = MultiHash.digest("sha2-256", roomBytes).valueOr:
+    error "Could not derive Kad-DHT key for room", room = room, description = error
+    return Opt.none(Key)
+  Opt.some(digest.toKey())
 
 proc seedKadRoutingTable(kad: KadDHT, switch: Switch) =
   var peers: seq[(PeerId, seq[MultiAddress])]
