@@ -339,3 +339,5 @@ when isMainModule:
       "connect": "full multiaddress (with /p2p/ peerId) of the node to connect to",
       "room": "Room name",
       "port": "TCP listen port",
+      "headless": "No UI, can only receive messages",
+    }
