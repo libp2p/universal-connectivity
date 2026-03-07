@@ -1,0 +1,418 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"math"
+	"math/rand"
+	"os"
+	"time"
+
+	"github.com/ipfs/go-log/v2"
+
+	"github.com/caddyserver/certmagic"
+	p2pforge "github.com/ipshipyard/p2p-forge/client"
+	"github.com/libp2p/go-libp2p"
+	dht "github.com/libp2p/go-libp2p-kad-dht"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
+	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
+	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
+	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
+	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
+	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
+	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
+	"github.com/multiformats/go-multiaddr"
+)
+
+// DiscoveryInterval is how often we re-publish our mDNS records.
+const DiscoveryInterval = time.Hour
+
+// DefaultRoom is used as the gossipsub topic to join and the DiscoveryServiceTag in mDNS advertisements.
+// It can be overridden by the -room flag. The concept of different rooms is only supported by mDNS in Go.
+const DefaultRoom = "universal-connectivity"
+
+var SysMsgChan chan *ChatMessage
+
+var logger = log.Logger("app")
+
+// Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
+// NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
+// If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
+func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Multiaddr) (*dht.IpfsDHT, error) {
+	kdht, err := dht.New(ctx, host,
+		dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...),
+		dht.Mode(dht.ModeAuto),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = kdht.Bootstrap(ctx); err != nil {
+		return nil, err
+	}
+
+	return kdht, nil
+}
+
+// Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
+// Only used by Go peer to find each other.
+// TODO: since this isn't implemented on the Rust or the JS side, can probably be removed
+func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, tag string) {
+	routingDiscovery := routing.NewRoutingDiscovery(dht)
+
+	discovery.Advertise(ctx, routingDiscovery, tag)
+
+	ticker := time.NewTicker(time.Second * 10)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+
+			peers, err := discovery.FindPeers(ctx, routingDiscovery, tag)
+			if err != nil {
+				panic(err)
+			}
+
+			for _, p := range peers {
+				if p.ID == h.ID() {
+					continue
+				}
+				if h.Network().Connectedness(p.ID) != network.Connected {
+					_, err = h.Network().DialPeer(ctx, p.ID)
+					if err != nil {
+						LogMsgf("Failed to connect to peer (%s): %s", p.ID, err.Error())
+						continue
+					}
+					LogMsgf("Connected to peer %s", p.ID.String())
+				}
+			}
+		}
+	}
+}
+
+func LogMsgf(f string, msg ...any) {
+	SysMsgChan <- &ChatMessage{Message: fmt.Sprintf(f, msg...), SenderID: "system", SenderNick: "system"}
+}
+
+func main() {
+	// parse some flags to set our nickname and the room to join
+	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
+	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
+	roomFlag := flag.String("room", DefaultRoom, "the gossipsub topic / room to join (mDNS only)")
+	headless := flag.Bool("headless", false, "run without chat UI")
+	port := flag.String("port", "9095", "port to listen on")
+
+	var addrsToConnectTo stringSlice
+	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
+
+	flag.Parse()
+
+	err := log.SetLogLevel("*", "ERROR")
+	if err != nil {
+		fmt.Printf("failed to set log level: %s", err)
+		os.Exit(1)
+	}
+
+	if !*headless {
+		err = log.SetLogLevel("app", "ERROR")
+		if err != nil {
+			fmt.Printf("failed to set log level: %s", err)
+			os.Exit(1)
+		}
+	} else {
+		err = log.SetLogLevel("app", "INFO")
+		if err != nil {
+			fmt.Printf("failed to set log level: %s", err)
+			os.Exit(1)
+		}
+	}
+
+	ctx := context.Background()
+
+	// Create a channel to signal when the cert is loaded
+	certLoaded := make(chan bool, 1)
+
+	// Initialize the certificate manager
+	certManager, err := p2pforge.NewP2PForgeCertMgr(
+		p2pforge.WithCertificateStorage(&certmagic.FileStorage{Path: "p2p-forge-certs"}),
+		p2pforge.WithUserAgent("go-libp2p/example/autotls"),
+		p2pforge.WithCAEndpoint(p2pforge.DefaultCAEndpoint),
+		p2pforge.WithOnCertLoaded(func() { certLoaded <- true }), // Signal when cert is loaded
+		p2pforge.WithLogger(logger.Desugar().Sugar().Named("autotls")),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Start the cert manager
+	logger.Info("Starting cert manager")
+	err = certManager.Start()
+	if err != nil {
+		panic(err)
+	}
+	defer certManager.Stop()
+
+	// Load identity key
+	privk, err := LoadIdentity(*idPath)
+	if err != nil {
+		panic(err)
+	}
+
+	// Configure libp2p options with AutoTLS
+	opts := []libp2p.Option{
+		libp2p.Identity(privk),
+		libp2p.NATPortMap(),
+		libp2p.ListenAddrStrings(
+			"/ip4/0.0.0.0/tcp/"+*port,
+			"/ip4/0.0.0.0/udp/"+*port+"/quic-v1",
+			"/ip4/0.0.0.0/udp/"+*port+"/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/"+*port+"/webrtc-direct",
+			"/ip6/::/tcp/"+*port,
+			"/ip6/::/udp/"+*port+"/quic-v1",
+			"/ip6/::/udp/"+*port+"/quic-v1/webtransport",
+			"/ip6/::/udp/"+*port+"/webrtc-direct",
+			fmt.Sprintf("/ip4/0.0.0.0/tcp/"+*port+"/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+			fmt.Sprintf("/ip6/::/tcp/"+*port+"/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+		),
+		libp2p.ResourceManager(getResourceManager()),
+		libp2p.Transport(webtransport.New),
+		libp2p.Transport(quic.NewTransport),
+		libp2p.Transport(tcp.NewTCPTransport),
+		libp2p.Transport(webrtc.New),
+
+		// Share the same TCP listener between the TCP and WS transports
+		libp2p.ShareTCPListener(),
+
+		// Configure the WS transport with the AutoTLS cert manager
+		libp2p.Transport(ws.New, ws.WithTLSConfig(certManager.TLSConfig())),
+
+		libp2p.UserAgent("universal-connectivity/go-peer"),
+
+		libp2p.AddrsFactory(certManager.AddressFactory()),
+	}
+
+	// Create a new libp2p Host
+	h, err := libp2p.New(opts...)
+	if err != nil {
+		panic(err)
+	}
+
+	certManager.ProvideHost(h)
+
+	logger.Info("Host created with PeerID: ", h.ID())
+
+	resources := relayv2.DefaultResources()
+	resources.MaxReservations = 256
+	_, err = relayv2.New(h, relayv2.WithResources(resources))
+	if err != nil {
+		panic(err)
+	}
+
+	// create a new PubSub service using the GossipSub router
+	ps, err := pubsub.NewGossipSub(ctx, h)
+	if err != nil {
+		panic(err)
+	}
+
+	// use the nickname from the cli flag, or a default if blank
+	nick := *nickFlag
+	if nick == "" {
+		nick = defaultNick(h.ID())
+	}
+
+	// join the chat room
+	cr, err := JoinChatRoom(ctx, h, ps, nick, *roomFlag)
+	if err != nil {
+		panic(err)
+	}
+	SysMsgChan = cr.SysMessages
+
+	// setup DHT with empty discovery peers
+	// so this will be a discovery peer for others
+	// this peer should run on cloud(with public ip address)
+	hDHT, err := NewDHT(ctx, h, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	// setup peer discovery
+	go Discover(ctx, h, hDHT, *roomFlag)
+
+	// setup local mDNS discovery
+	if err := setupDiscovery(h, *roomFlag); err != nil {
+		panic(err)
+	}
+
+	if len(addrsToConnectTo) > 0 {
+		for _, addr := range addrsToConnectTo {
+			// convert to a peer.AddrInfo struct
+			peerinfo, err := peer.AddrInfoFromString(addr)
+			if err != nil {
+				LogMsgf("Failed to parse multiaddr: %s", err.Error())
+				continue
+			}
+
+			// connect to the peer
+			if err := h.Connect(ctx, *peerinfo); err != nil {
+				LogMsgf("Failed to connect to peer: %s", err.Error())
+				continue
+			}
+		}
+	}
+
+	// Start a background ticker to periodically log connected peers
+	go func() {
+		ticker := time.NewTicker(time.Second * 10)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				rm := h.Network().ResourceManager()
+
+				err = rm.ViewSystem(
+					func(rs network.ResourceScope) error {
+						LogMsgf("System Stats: %+v", rs.Stat())
+						if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
+							LogMsgf("System Limits: %+v", r.Limit())
+						}
+						return nil
+					},
+				)
+				if err != nil {
+					LogMsgf("ViewSystem error: %s", err)
+				}
+			}
+		}
+	}()
+
+	LogMsgf("PeerID: %s", h.ID().String())
+	for _, addr := range h.Addrs() {
+		if *headless {
+			logger.Infof("Listening on: %s/p2p/%s", addr.String(), h.ID())
+		} else {
+			LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
+		}
+	}
+
+	go func() {
+		<-certLoaded
+		for _, addr := range h.Addrs() {
+			if *headless {
+				logger.Infof("Listening on: %s/p2p/%s", addr.String(), h.ID())
+			} else {
+				LogMsgf("Listening on: %s/p2p/%s", addr.String(), h.ID())
+			}
+		}
+	}()
+
+	if *headless {
+		select {}
+	} else {
+		// draw the UI
+		ui := NewChatUI(cr)
+		if err = ui.Run(); err != nil {
+			printErr("error running text UI: %s", err)
+		}
+	}
+}
+
+// printErr is like fmt.Printf, but writes to stderr.
+func printErr(m string, args ...any) {
+	fmt.Fprintf(os.Stderr, m, args...)
+}
+
+// defaultNick generates a nickname based on the $USER environment variable and
+// the last 8 chars of a peer ID.
+func defaultNick(p peer.ID) string {
+	return fmt.Sprintf("%s-%s", os.Getenv("USER"), shortID(p))
+}
+
+// shortID returns the last 8 chars of a base58-encoded peer id.
+func shortID(p peer.ID) string {
+	str := p.String()
+	return str[len(str)-8:]
+}
+
+// discoveryNotifee gets notified when we find a new peer via mDNS discovery
+type discoveryNotifee struct {
+	h host.Host
+}
+
+// HandlePeerFound connects to peers discovered via mDNS. Once they're connected,
+// the PubSub system will automatically start interacting with them if they also
+// support PubSub.
+func (n *discoveryNotifee) HandlePeerFound(pi peer.AddrInfo) {
+	LogMsgf("mDNS discovered new peer %s", pi.ID.String())
+
+	go func(pi peer.AddrInfo) {
+		// add 1 second jitter to avoid all peers connecting at the same time
+		time.Sleep(time.Duration(1+rand.Intn(999)) * time.Millisecond)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		err := n.h.Connect(ctx, pi)
+		if err != nil {
+			LogMsgf("error connecting to mDNS peer %s: %s", pi.ID.String(), err)
+		}
+	}(pi)
+}
+
+// setupDiscovery creates an mDNS discovery service and attaches it to the libp2p Host.
+// This lets us automatically discover peers on the same LAN and connect to them.
+func setupDiscovery(h host.Host, serviceName string) error {
+	// setup mDNS discovery to find local peers
+	s := mdns.NewMdnsService(h, serviceName, &discoveryNotifee{h: h})
+	return s.Start()
+}
+
+// creates and returns a libp2p resource manager with very permissive limits.
+// This resource manager is configured with maximum values for most limits to prevent resource constraints
+// from blocking connections and streams.
+//
+// Note: Using maximum values for limits could lead to resource exhaustion.
+func getResourceManager() network.ResourceManager {
+	baseLimits := rcmgr.BaseLimit{
+		Streams:         math.MaxInt,
+		StreamsInbound:  math.MaxInt,
+		StreamsOutbound: math.MaxInt,
+		Conns:           math.MaxInt,
+		ConnsInbound:    1000,
+		ConnsOutbound:   math.MaxInt,
+		FD:              math.MaxInt,
+		Memory:          math.MaxInt64,
+	}
+
+	scl := rcmgr.ScalingLimitConfig{
+		SystemBaseLimit:       baseLimits,
+		TransientBaseLimit:    baseLimits,
+		ServiceBaseLimit:      baseLimits,
+		ServicePeerBaseLimit:  baseLimits,
+		ProtocolBaseLimit:     baseLimits,
+		ProtocolPeerBaseLimit: baseLimits,
+		PeerBaseLimit:         baseLimits,
+		ConnBaseLimit:         baseLimits,
+		StreamBaseLimit:       baseLimits,
+	}
+	cl := scl.Scale(0, 0)
+
+	resourceMaanger, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
+	if err != nil {
+		panic(err)
+	}
+
+	return resourceMaanger
+}
