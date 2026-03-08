@@ -71,7 +71,7 @@ export interface DHTStatus {
 // full origin, e.g.  VITE_API_URL=https://your-backend.example.com
 
 const API_ORIGIN: string = import.meta.env.VITE_API_URL ?? ''
-const BASE = `${API_ORIGIN}/api/v1`
+export const BASE = `${API_ORIGIN}/api/v1`
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`)

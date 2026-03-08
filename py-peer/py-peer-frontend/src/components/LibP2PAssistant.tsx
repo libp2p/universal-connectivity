@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { SparklesIcon, XMarkIcon, PaperAirplaneIcon, ChevronDownIcon } from '@heroicons/react/24/solid'
 import Spinner from './Spinner'
+import { BASE } from '../api/client'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -9,7 +10,7 @@ interface Message {
 }
 
 async function askQuestion(question: string): Promise<{ answer: string; sources: string[] }> {
-  const res = await fetch('/api/v1/ask', {
+  const res = await fetch(`${BASE}/ask`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),
