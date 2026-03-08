@@ -14,6 +14,9 @@ import traceback
 import trio
 import threading
 
+from dotenv import load_dotenv
+load_dotenv()  # loads .env from cwd (py-peer/)
+
 from headless import HeadlessService
 from ui import ChatUI
 

@@ -37,13 +37,14 @@ from api.service   import (ServiceStatusHandler, ServiceConfigHandler,
                            ServiceStopHandler, ServiceBootstrapHandler)
 from api.websocket import (MessageStreamHandler, SystemStreamHandler,
                            PeerUpdateHandler, MeshUpdateHandler)
+from rag_handler import AskHandler, load_vectorstore
 
 logger = logging.getLogger("tornado_server")
 
 DEFAULT_API_PORT = 8765
 
 
-def _make_app(service) -> tornado.web.Application:
+def _make_app(service, vectorstore=None) -> tornado.web.Application:
     """Build and return the Tornado Application with all routes."""
 
     kw = dict(service=service)   # kwargs passed to every handler's initialize()
@@ -103,7 +104,8 @@ def _make_app(service) -> tornado.web.Application:
         (r"/api/v1/service/config",    ServiceConfigHandler,    kw),
         (r"/api/v1/service/stop",      ServiceStopHandler,      kw),
         (r"/api/v1/service/bootstrap", ServiceBootstrapHandler, kw),
-
+        # ── RAG assistant ───────────────────────────────────────────────
+        (r"/api/v1/ask",  AskHandler, dict(vectorstore=vectorstore)),
         # ── WebSockets ───────────────────────────────────────────────────
         (r"/ws/messages",    MessageStreamHandler, kw),
         (r"/ws/system",      SystemStreamHandler,  kw),
@@ -134,7 +136,8 @@ class TornadoServer:
     def __init__(self, service, port: int = DEFAULT_API_PORT):
         self.service = service
         self.port = port
-        self._app = _make_app(service)
+        vectorstore = load_vectorstore()
+        self._app = _make_app(service, vectorstore=vectorstore)
 
     def start(self):
         """Start Tornado — blocks until the process is killed."""
@@ -191,6 +194,7 @@ def _print_routes(port=DEFAULT_API_PORT):
         ("GET",    f"/api/v1/service/config",           "Service config"),
         ("POST",   f"/api/v1/service/stop",             "Graceful stop"),
         ("POST",   f"/api/v1/service/bootstrap",        "Re-trigger bootstrap"),
+        ("POST",   f"/api/v1/ask",                      "RAG assistant — ask about py-libp2p"),
         ("WS",     f"/ws/messages",                     "Real-time message stream"),
         ("WS",     f"/ws/system",                       "Real-time system events"),
         ("WS",     f"/ws/peers",                        "Real-time peer updates"),

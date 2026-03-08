@@ -4,6 +4,7 @@ import Nav from './components/Nav'
 import Chat from './components/Chat'
 import ConnectionPanel from './components/ConnectionPanel'
 import Booting from './components/Booting'
+import LibP2PAssistant from './components/LibP2PAssistant'
 
 function AppInner() {
   const { loading, error } = usePyPeer()
@@ -25,6 +26,7 @@ function AppInner() {
       </main>
 
       <ConnectionPanel isOpen={panelOpen} onClose={() => setPanelOpen(false)} />
+      <LibP2PAssistant />
     </div>
   )
 }
