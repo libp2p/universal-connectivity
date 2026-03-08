@@ -20,7 +20,7 @@ log = logging.getLogger("rag_handler")
 
 # Absolute path derived from this file's location — works regardless of cwd
 _HERE = os.path.dirname(os.path.abspath(__file__))
-VECTOR_STORE_DIR = os.path.join(_HERE, "training", "codes", "libp2p_vectorstore")
+VECTOR_STORE_DIR = os.path.join(_HERE, "llm", "codes", "libp2p_vectorstore")
 GROQ_MODEL       = "llama-3.3-70b-versatile"
 _groq_client     = None
 TOP_K            = 4
@@ -43,7 +43,7 @@ def load_vectorstore():
     if not os.path.isdir(VECTOR_STORE_DIR):
         log.warning(
             "RAG vector store not found at %s — /api/v1/ask will be unavailable. "
-            "Run the indexer (training/codes/build_vectorstore.py) first.",
+            "Run the indexer (llm/codes/build_vectorstore.py) first.",
             VECTOR_STORE_DIR,
         )
         return None
