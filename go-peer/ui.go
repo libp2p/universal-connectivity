@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rivo/tview"
 )
 
@@ -18,43 +17,35 @@ type ChatUI struct {
 	cr        *ChatRoom
 	app       *tview.Application
 	peersList *tview.TextView
+	msgBox    *tview.TextView
+	sysBox    *tview.TextView
 
-	msgW    io.Writer
-	sysW    io.Writer
-	inputCh chan string
-	doneCh  chan struct{}
+	msgW         io.Writer
+	sysW         io.Writer
+	inputCh      chan string
+	doneCh       chan struct{}
+	uiUpdateChan chan func()
 }
 
 // NewChatUI returns a new ChatUI struct that controls the text UI.
 // It won't actually do anything until you call Run().
 func NewChatUI(cr *ChatRoom) *ChatUI {
 	app := tview.NewApplication()
+	app.EnableMouse(true)
 
 	// make a text view to contain our chat messages
 	msgBox := tview.NewTextView()
 	msgBox.SetDynamicColors(true)
 	msgBox.SetBorder(true)
 	msgBox.SetTitle(fmt.Sprintf("Room: %s", cr.roomName))
-
-	// text views are io.Writers, but they don't automatically refresh.
-	// this sets a change handler to force the app to redraw when we get
-	// new messages to display.
-	msgBox.SetChangedFunc(func() {
-		app.Draw()
-	})
+	msgBox.SetScrollable(true)
 
 	// make a text view to contain our error messages
 	sysBox := tview.NewTextView()
 	sysBox.SetDynamicColors(true)
 	sysBox.SetBorder(true)
 	sysBox.SetTitle("System")
-
-	// text views are io.Writers, but they don't automatically refresh.
-	// this sets a change handler to force the app to redraw when we get
-	// new messages to display.
-	sysBox.SetChangedFunc(func() {
-		app.Draw()
-	})
+	sysBox.SetScrollable(true)
 
 	// an input field for typing messages into
 	inputCh := make(chan string, 32)
@@ -70,7 +61,7 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 			return
 		}
 		line := input.GetText()
-		if len(line) == 0 {
+		if line == "" {
 			// ignore blank lines
 			return
 		}
@@ -90,7 +81,6 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 	peersList := tview.NewTextView()
 	peersList.SetBorder(true)
 	peersList.SetTitle("Peers")
-	peersList.SetChangedFunc(func() { app.Draw() })
 
 	// chatPanel is a horizontal box with messages on the left and peers on the right
 	// the peers list takes 20 columns, and the messages take the remaining space
@@ -99,7 +89,6 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 		AddItem(peersList, 20, 1, false)
 
 	// flex is a vertical box with the chatPanel on top and the input field at the bottom.
-
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(chatPanel, 0, 3, false).
@@ -109,13 +98,22 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 	app.SetRoot(flex, true)
 
 	return &ChatUI{
-		cr:        cr,
-		app:       app,
-		peersList: peersList,
-		msgW:      msgBox,
-		sysW:      sysBox,
-		inputCh:   inputCh,
-		doneCh:    make(chan struct{}, 1),
+		cr:           cr,
+		app:          app,
+		peersList:    peersList,
+		msgBox:       msgBox,
+		sysBox:       sysBox,
+		msgW:         msgBox,
+		sysW:         sysBox,
+		inputCh:      inputCh,
+		doneCh:       make(chan struct{}, 1),
+		uiUpdateChan: make(chan func(), 256),
+	}
+}
+
+func (ui *ChatUI) uiUpdater() {
+	for f := range ui.uiUpdateChan {
+		ui.app.QueueUpdateDraw(f)
 	}
 }
 
@@ -123,6 +121,7 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 // the event loop for the text UI.
 func (ui *ChatUI) Run() error {
 	go ui.handleEvents()
+	go ui.uiUpdater()
 	defer ui.end()
 
 	return ui.app.Run()
@@ -130,6 +129,7 @@ func (ui *ChatUI) Run() error {
 
 // end signals the event loop to exit gracefully
 func (ui *ChatUI) end() {
+	close(ui.uiUpdateChan)
 	ui.doneCh <- struct{}{}
 }
 
@@ -144,16 +144,14 @@ func (ui *ChatUI) refreshPeers() {
 	for _, p := range peers {
 		fmt.Fprintln(ui.peersList, shortID(p))
 	}
-
-	ui.app.Draw()
 }
 
 // displayChatMessage writes a ChatMessage from the room to the message window,
 // with the sender's nick highlighted in green.
 func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
-	p := peer.ID(cm.SenderID)
-	prompt := withColor("green", fmt.Sprintf("<%s>:", shortID(p)))
+	prompt := withColor("green", fmt.Sprintf("<%s>:", cm.SenderNick))
 	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
+	ui.msgBox.ScrollToEnd()
 }
 
 // displayChatMessage writes a ChatMessage from the room to the message window,
@@ -161,6 +159,7 @@ func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 func (ui *ChatUI) displaySysMessage(cm *ChatMessage) {
 	fmt.Fprintf(ui.sysW, "%s\n", cm.Message)
 	logger.Info(cm.Message)
+	ui.sysBox.ScrollToEnd()
 }
 
 // displaySelfMessage writes a message from ourself to the message window,
@@ -168,6 +167,7 @@ func (ui *ChatUI) displaySysMessage(cm *ChatMessage) {
 func (ui *ChatUI) displaySelfMessage(msg string) {
 	prompt := withColor("yellow", fmt.Sprintf("<%s>:", ui.cr.nick))
 	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, msg)
+	ui.msgBox.ScrollToEnd()
 }
 
 // handleEvents runs an event loop that sends user input to the chat room
@@ -185,19 +185,31 @@ func (ui *ChatUI) handleEvents() {
 			if err != nil {
 				printErr("publish error: %s", err)
 			}
-			ui.displaySelfMessage(input)
+
+			ui.app.QueueUpdateDraw(func() {
+				if err != nil {
+					fmt.Fprintf(ui.sysW, "[red]publish error: %s[-]\n", err)
+				}
+				ui.displaySelfMessage(input)
+			})
 
 		case m := <-ui.cr.Messages:
 			// when we receive a message from the chat room, print it to the message window
-			ui.displayChatMessage(m)
+			ui.app.QueueUpdateDraw(func() {
+				ui.displayChatMessage(m)
+			})
 
 		case s := <-ui.cr.SysMessages:
-			// when we receive a message from the chat room, print it to the message window
-			ui.displaySysMessage(s)
+			// when we receive a system message, print it to the system window
+			ui.app.QueueUpdateDraw(func() {
+				ui.displaySysMessage(s)
+			})
 
 		case <-peerRefreshTicker.C:
 			// refresh the list of peers in the chat room periodically
-			ui.refreshPeers()
+			ui.app.QueueUpdateDraw(func() {
+				ui.refreshPeers()
+			})
 
 		case <-ui.cr.ctx.Done():
 			return

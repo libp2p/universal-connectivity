@@ -8,34 +8,40 @@ use libp2p::{request_response, StreamProtocol};
 // To request a file a peer sends the varuint encoded length of the file id string followed by the
 // file id string itself.
 //
-// FileRequest:
+// Request:
 //  varuint - file id length
 //  bytes - file id
 //
 // The file response message consists of a varuint length followed by the contents of the file.
 //
-// FileResponse:
+// Response:
 //  varuint - file contents length
 //  bytes - file contents
 //
 
+/// The codec for the file exchange protocol.
 #[derive(Default, Clone)]
-pub struct FileExchangeCodec;
+pub struct Codec;
 
+/// The request message for the file exchange protocol.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FileRequest {
+pub struct Request {
+    /// The identifier of the file that is being requested.
     pub file_id: String,
 }
+
+/// The response message for the file exchange protocol.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FileResponse {
+pub struct Response {
+    /// The contents of the file that is being sent.
     pub file_body: Vec<u8>,
 }
 
 #[async_trait]
-impl request_response::Codec for FileExchangeCodec {
+impl request_response::Codec for Codec {
     type Protocol = StreamProtocol;
-    type Request = FileRequest;
-    type Response = FileResponse;
+    type Request = Request;
+    type Response = Response;
 
     async fn read_request<T>(&mut self, _: &StreamProtocol, io: &mut T) -> io::Result<Self::Request>
     where
@@ -47,7 +53,7 @@ impl request_response::Codec for FileExchangeCodec {
             return Err(io::ErrorKind::UnexpectedEof.into());
         }
 
-        Ok(FileRequest {
+        Ok(Request {
             file_id: String::from_utf8(vec).unwrap(),
         })
     }
@@ -66,14 +72,14 @@ impl request_response::Codec for FileExchangeCodec {
             return Err(io::ErrorKind::UnexpectedEof.into());
         }
 
-        Ok(FileResponse { file_body: vec })
+        Ok(Response { file_body: vec })
     }
 
     async fn write_request<T>(
         &mut self,
         _: &StreamProtocol,
         io: &mut T,
-        FileRequest { file_id }: FileRequest,
+        Request { file_id }: Request,
     ) -> io::Result<()>
     where
         T: AsyncWrite + Unpin + Send,
@@ -87,7 +93,7 @@ impl request_response::Codec for FileExchangeCodec {
         &mut self,
         _: &StreamProtocol,
         io: &mut T,
-        FileResponse { file_body }: FileResponse,
+        Response { file_body }: Response,
     ) -> io::Result<()>
     where
         T: AsyncWrite + Unpin + Send,

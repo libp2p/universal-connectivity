@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"math/rand"
 	"os"
 	"time"
 
@@ -34,8 +35,9 @@ import (
 // DiscoveryInterval is how often we re-publish our mDNS records.
 const DiscoveryInterval = time.Hour
 
-// DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
-const DiscoveryServiceTag = "universal-connectivity"
+// DefaultRoom is used as the gossipsub topic to join and the DiscoveryServiceTag in mDNS advertisements.
+// It can be overridden by the -room flag. The concept of different rooms is only supported by mDNS in Go.
+const DefaultRoom = "universal-connectivity"
 
 var SysMsgChan chan *ChatMessage
 
@@ -45,7 +47,6 @@ var logger = log.Logger("app")
 // NewDHT attempts to connect to a bunch of bootstrap peers and returns a new DHT.
 // If you don't have any bootstrapPeers, you can use dht.DefaultBootstrapPeers or an empty list.
 func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Multiaddr) (*dht.IpfsDHT, error) {
-
 	kdht, err := dht.New(ctx, host,
 		dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...),
 		dht.Mode(dht.ModeAuto),
@@ -64,10 +65,10 @@ func NewDHT(ctx context.Context, host host.Host, bootstrapPeers []multiaddr.Mult
 // Borrowed from https://medium.com/rahasak/libp2p-pubsub-peer-discovery-with-kademlia-dht-c8b131550ac7
 // Only used by Go peer to find each other.
 // TODO: since this isn't implemented on the Rust or the JS side, can probably be removed
-func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT) {
+func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT, tag string) {
 	routingDiscovery := routing.NewRoutingDiscovery(dht)
 
-	discovery.Advertise(ctx, routingDiscovery, DiscoveryServiceTag)
+	discovery.Advertise(ctx, routingDiscovery, tag)
 
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
@@ -78,7 +79,7 @@ func Discover(ctx context.Context, h host.Host, dht *dht.IpfsDHT) {
 			return
 		case <-ticker.C:
 
-			peers, err := discovery.FindPeers(ctx, routingDiscovery, DiscoveryServiceTag)
+			peers, err := discovery.FindPeers(ctx, routingDiscovery, tag)
 			if err != nil {
 				panic(err)
 			}
@@ -108,14 +109,34 @@ func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	idPath := flag.String("identity", "identity.key", "path to the private key (PeerID) file")
+	roomFlag := flag.String("room", DefaultRoom, "the gossipsub topic / room to join (mDNS only)")
 	headless := flag.Bool("headless", false, "run without chat UI")
+	port := flag.String("port", "9095", "port to listen on")
 
 	var addrsToConnectTo stringSlice
 	flag.Var(&addrsToConnectTo, "connect", "address to connect to (can be used multiple times)")
 
 	flag.Parse()
 
-	log.SetLogLevel("app", "debug")
+	err := log.SetLogLevel("*", "ERROR")
+	if err != nil {
+		fmt.Printf("failed to set log level: %s", err)
+		os.Exit(1)
+	}
+
+	if !*headless {
+		err = log.SetLogLevel("app", "ERROR")
+		if err != nil {
+			fmt.Printf("failed to set log level: %s", err)
+			os.Exit(1)
+		}
+	} else {
+		err = log.SetLogLevel("app", "INFO")
+		if err != nil {
+			fmt.Printf("failed to set log level: %s", err)
+			os.Exit(1)
+		}
+	}
 
 	ctx := context.Background()
 
@@ -153,16 +174,16 @@ func main() {
 		libp2p.Identity(privk),
 		libp2p.NATPortMap(),
 		libp2p.ListenAddrStrings(
-			"/ip4/0.0.0.0/tcp/9095",
-			"/ip4/0.0.0.0/udp/9095/quic-v1",
-			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
-			"/ip4/0.0.0.0/udp/9095/webrtc-direct",
-			"/ip6/::/tcp/9095",
-			"/ip6/::/udp/9095/quic-v1",
-			"/ip6/::/udp/9095/quic-v1/webtransport",
-			"/ip6/::/udp/9095/webrtc-direct",
-			fmt.Sprintf("/ip4/0.0.0.0/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
-			fmt.Sprintf("/ip6/::/tcp/9095/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+			"/ip4/0.0.0.0/tcp/"+*port,
+			"/ip4/0.0.0.0/udp/"+*port+"/quic-v1",
+			"/ip4/0.0.0.0/udp/"+*port+"/quic-v1/webtransport",
+			"/ip4/0.0.0.0/udp/"+*port+"/webrtc-direct",
+			"/ip6/::/tcp/"+*port,
+			"/ip6/::/udp/"+*port+"/quic-v1",
+			"/ip6/::/udp/"+*port+"/quic-v1/webtransport",
+			"/ip6/::/udp/"+*port+"/webrtc-direct",
+			fmt.Sprintf("/ip4/0.0.0.0/tcp/"+*port+"/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
+			fmt.Sprintf("/ip6/::/tcp/"+*port+"/tls/sni/*.%s/ws", p2pforge.DefaultForgeDomain),
 		),
 		libp2p.ResourceManager(getResourceManager()),
 		libp2p.Transport(webtransport.New),
@@ -206,12 +227,12 @@ func main() {
 
 	// use the nickname from the cli flag, or a default if blank
 	nick := *nickFlag
-	if len(nick) == 0 {
+	if nick == "" {
 		nick = defaultNick(h.ID())
 	}
 
 	// join the chat room
-	cr, err := JoinChatRoom(ctx, h, ps, nick)
+	cr, err := JoinChatRoom(ctx, h, ps, nick, *roomFlag)
 	if err != nil {
 		panic(err)
 	}
@@ -220,16 +241,16 @@ func main() {
 	// setup DHT with empty discovery peers
 	// so this will be a discovery peer for others
 	// this peer should run on cloud(with public ip address)
-	dht, err := NewDHT(ctx, h, nil)
+	hDHT, err := NewDHT(ctx, h, nil)
 	if err != nil {
 		panic(err)
 	}
 
 	// setup peer discovery
-	go Discover(ctx, h, dht)
+	go Discover(ctx, h, hDHT, *roomFlag)
 
 	// setup local mDNS discovery
-	if err := setupDiscovery(h); err != nil {
+	if err := setupDiscovery(h, *roomFlag); err != nil {
 		panic(err)
 	}
 
@@ -260,15 +281,19 @@ func main() {
 				return
 			case <-ticker.C:
 				rm := h.Network().ResourceManager()
-				rm.ViewSystem(
+
+				err = rm.ViewSystem(
 					func(rs network.ResourceScope) error {
-						fmt.Printf("Stats: %+v\n", rs.Stat())
+						LogMsgf("System Stats: %+v", rs.Stat())
 						if r, ok := rs.(interface{ Limit() rcmgr.Limit }); ok {
-							fmt.Printf("Limits: %+v\n", r.Limit())
+							LogMsgf("System Limits: %+v", r.Limit())
 						}
 						return nil
 					},
 				)
+				if err != nil {
+					LogMsgf("ViewSystem error: %s", err)
+				}
 			}
 		}
 	}()
@@ -305,7 +330,7 @@ func main() {
 }
 
 // printErr is like fmt.Printf, but writes to stderr.
-func printErr(m string, args ...interface{}) {
+func printErr(m string, args ...any) {
 	fmt.Fprintf(os.Stderr, m, args...)
 }
 
@@ -330,18 +355,27 @@ type discoveryNotifee struct {
 // the PubSub system will automatically start interacting with them if they also
 // support PubSub.
 func (n *discoveryNotifee) HandlePeerFound(pi peer.AddrInfo) {
-	LogMsgf("discovered new peer %s", pi.ID.String())
-	err := n.h.Connect(context.Background(), pi)
-	if err != nil {
-		LogMsgf("error connecting to peer %s: %s", pi.ID.String(), err)
-	}
+	LogMsgf("mDNS discovered new peer %s", pi.ID.String())
+
+	go func(pi peer.AddrInfo) {
+		// add 1 second jitter to avoid all peers connecting at the same time
+		time.Sleep(time.Duration(1+rand.Intn(999)) * time.Millisecond)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		err := n.h.Connect(ctx, pi)
+		if err != nil {
+			LogMsgf("error connecting to mDNS peer %s: %s", pi.ID.String(), err)
+		}
+	}(pi)
 }
 
 // setupDiscovery creates an mDNS discovery service and attaches it to the libp2p Host.
 // This lets us automatically discover peers on the same LAN and connect to them.
-func setupDiscovery(h host.Host) error {
+func setupDiscovery(h host.Host, serviceName string) error {
 	// setup mDNS discovery to find local peers
-	s := mdns.NewMdnsService(h, DiscoveryServiceTag, &discoveryNotifee{h: h})
+	s := mdns.NewMdnsService(h, serviceName, &discoveryNotifee{h: h})
 	return s.Start()
 }
 
@@ -374,9 +408,11 @@ func getResourceManager() network.ResourceManager {
 		StreamBaseLimit:       baseLimits,
 	}
 	cl := scl.Scale(0, 0)
-	rcmgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
+
+	resourceMaanger, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(cl))
 	if err != nil {
 		panic(err)
 	}
-	return rcmgr
+
+	return resourceMaanger
 }
