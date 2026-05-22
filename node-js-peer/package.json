@@ -2,7 +2,7 @@
   "name": "universal-connectivity-node-js-peer",
   "type": "module",
   "scripts": {
-    "start": "npx esbuild src/App.tsx --outfile=.dist/index.js --bundle --platform=node --format=esm --external:'./node_modules/*' --sourcemap && node --enable-source-maps .dist",
+    "start": "npx esbuild src/App.tsx --outfile=.dist/index.mjs --bundle --platform=node --format=esm --packages=external --sourcemap && node .dist/index.mjs",
     "dist": "npx esbuild src/App.tsx --outfile=.dist/index.cjs --bundle --platform=node --define:'process.env.NODE_ENV=\"production\"' --minify --tree-shaking=true",
     "generate": "protons protobuf/*.proto",
     "format": "prettier --write src",
@@ -29,7 +29,7 @@
     "multiformats": "^13.3.2",
     "protons-runtime": "^5.5.0",
     "react": "^18.3.1",
-    "react-curse": "1.0.15",
+    "react-curse": "1.0.23",
     "uint8arraylist": "^2.4.8"
   },
   "devDependencies": {
