@@ -130,7 +130,7 @@ proc runUI*(
             copyFile(path, getTempDir().joinPath(fileId))
             # publish /tmp/{filename}
             try:
-              discard await gossip.publish(ChatFileTopic, cast[seq[byte]](@(fileId)))
+              discard await gossip.publish(FileChatTopic, cast[seq[byte]](@(fileId)))
               systemPanel.push("Offering file " & fileId)
             except Exception as exc:
               systemPanel.push("Unable to offer file: " & exc.msg)

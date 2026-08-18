@@ -4,8 +4,8 @@ import libp2p
 
 const
   ChatTopic*: string = "universal-connectivity"
-  ChatFileTopic*: string = "universal-connectivity-file"
-  PeerDiscoveryTopic*: string = "universal-connectivity-browser-peer-discovery"
+  FileChatTopic*: string = ChatTopic & "-file"
+  PeerDiscoveryTopic*: string = ChatTopic & "-browser-peer-discovery"
 
 const SanitizationRules = [
   ({'\0' .. '\31'}, ' '), # Control chars -> space
