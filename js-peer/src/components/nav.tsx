@@ -5,7 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 
-const navigationItems = [{ name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' }]
+const navigationItems = [
+  { name: 'Chat', href: '/' },
+  { name: 'Pixel Art', href: '/pixel-art' },
+  { name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' },
+]
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
