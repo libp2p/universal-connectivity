@@ -33,6 +33,8 @@ from libp2p.identity.identify.identify import (
 identify_mod.AGENT_VERSION = "universal-connectivity/0.1.0"
 from libp2p.kad_dht.kad_dht import DHTMode, KadDHT
 from libp2p.network.config import ConnectionConfig
+from libp2p.rcmgr import new_resource_manager
+from libp2p.rcmgr.connection_limits import ConnectionLimits
 from libp2p.peer.peerinfo import PeerInfo
 from libp2p.protocol_muxer.exceptions import MultiselectClientError
 from libp2p.pubsub.gossipsub import (
@@ -291,6 +293,16 @@ class HeadlessService:
             auto_connect_interval=5.0,
         )
 
+        rcmgr_limits = ConnectionLimits(
+            max_pending_inbound=128,
+            max_pending_outbound=128,
+            max_established_inbound=self.max_connections,
+            max_established_outbound=self.max_connections,
+            max_established_per_peer=8,
+            max_established_total=max(self.max_connections * 2, 1000),
+        )
+        resource_manager = new_resource_manager(connection_limits=rcmgr_limits)
+
         # Create libp2p host WITHOUT bootstrap nodes initially; bootstrap
         # dials happen after pubsub is running.
         host = new_host(
@@ -299,6 +311,7 @@ class HeadlessService:
             listen_addrs=listen_addrs,
             announce_addrs=explicit_announce or None,
             addrs_factory=addrs_factory,
+            resource_manager=resource_manager,
         )
         self.host = host
 
