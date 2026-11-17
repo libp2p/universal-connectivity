@@ -178,7 +178,7 @@ class MessagingService:
             pubsub=self._engine.pubsub,
             nickname=self._engine.nickname,
             multiaddr=self._engine.full_multiaddr,
-            headless_service=self._identity or self._engine,
+            headless_service=self._engine,
             topic=self._engine.topic,
         )
 

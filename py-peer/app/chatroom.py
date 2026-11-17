@@ -513,13 +513,21 @@ class ChatRoom:
                 connected_peers = {
                     str(p) for p in self.host.get_connected_peers()
                 }
-                if pid_str not in connected_peers:
-                    for addr in discovered_addrs:
-                        addr_str = str(addr)
-                        if f"/p2p/{pid_str}" not in addr_str:
-                            addr_str = f"{addr_str}/p2p/{pid_str}"
-                        if getattr(self, "headless_service", None):
-                            self.headless_service.connect_to_peer(addr_str)
+                if pid_str not in connected_peers and discovered_addrs:
+                    # Sort to prioritize non-loopback addresses
+                    sorted_addrs = sorted(
+                        discovered_addrs,
+                        key=lambda a: (
+                            1 if "/ip4/127." in str(a) or "/ip6/::1" in str(a)
+                            else 0
+                        ),
+                    )
+                    best_addr = sorted_addrs[0]
+                    addr_str = str(best_addr)
+                    if f"/p2p/{pid_str}" not in addr_str:
+                        addr_str = f"{addr_str}/p2p/{pid_str}"
+                    if getattr(self, "headless_service", None):
+                        self.headless_service.connect_to_peer(addr_str)
             except Exception as e:
                 logger.debug(f"Error handling discovery message: {e}")
 

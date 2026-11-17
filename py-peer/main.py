@@ -461,6 +461,34 @@ def main() -> None:
         action="store_true",
         help="Print all available API routes and exit"
     )
+    parser.add_argument(
+        "--max-connections",
+        type=int,
+        default=500,
+        dest="max_connections",
+        help="Maximum simultaneous connections (default: 500)"
+    )
+    parser.add_argument(
+        "--min-connections",
+        type=int,
+        default=50,
+        dest="min_connections",
+        help="Minimum outbound connections (default: 50)"
+    )
+    parser.add_argument(
+        "--low-watermark",
+        type=int,
+        default=400,
+        dest="low_watermark",
+        help="Low watermark for connection pruning (default: 400)"
+    )
+    parser.add_argument(
+        "--high-watermark",
+        type=int,
+        default=450,
+        dest="high_watermark",
+        help="High watermark for connection pruning (default: 450)"
+    )
 
     args = parser.parse_args()
 

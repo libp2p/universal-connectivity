@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"math"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ipfs/go-log/v2"
@@ -268,6 +270,7 @@ func main() {
 				LogMsgf("Failed to connect to peer: %s", err.Error())
 				continue
 			}
+			LogMsgf("Successfully connected to peer: %s", peerinfo.ID.String())
 		}
 	}
 
@@ -280,6 +283,18 @@ func main() {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
+				peers := h.Network().Peers()
+				LogMsgf("Connected network peers (%d): %v", len(peers), peers)
+				for _, p := range peers {
+					if p.String() == "12D3KooWRpJ4EQ41ogMaxoef4eu2L9GNzM4BRQ5FweH3eGiazF3p" {
+						protos, _ := h.Peerstore().GetProtocols(p)
+						agent, _ := h.Peerstore().Get(p, "AgentVersion")
+						LogMsgf("Target Peer %s: AgentVersion=%v, Protocols=%v", p, agent, protos)
+					}
+				}
+				psPeers := cr.ListPeers()
+				LogMsgf("GossipSub room peers (%d): %v", len(psPeers), psPeers)
+
 				rm := h.Network().ResourceManager()
 
 				err = rm.ViewSystem(
@@ -318,7 +333,40 @@ func main() {
 		}
 	}()
 
+	go func() {
+		time.Sleep(5 * time.Second)
+		err := cr.Publish("Hello from go-peer to remote peer!")
+		if err != nil {
+			LogMsgf("Failed to publish message: %s", err)
+		} else {
+			LogMsgf("Successfully published message to room '%s'", cr.roomName)
+		}
+	}()
+
 	if *headless {
+		go func() {
+			for msg := range cr.Messages {
+				logger.Infof("[CHAT] %s: %s", msg.SenderNick, msg.Message)
+			}
+		}()
+		go func() {
+			for sysMsg := range cr.SysMessages {
+				logger.Infof("[SYSTEM] %s", sysMsg.Message)
+			}
+		}()
+		go func() {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if line != "" {
+					if err := cr.Publish(line); err != nil {
+						logger.Errorf("Failed to publish: %s", err)
+					} else {
+						logger.Infof("[SENT] %s", line)
+					}
+				}
+			}
+		}()
 		select {}
 	} else {
 		// draw the UI

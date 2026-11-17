@@ -21,6 +21,7 @@ from libp2p.bitswap import BitswapClient, MemoryBlockStore
 from libp2p.bitswap.dag import MerkleDag
 from libp2p.discovery.bootstrap import BootstrapDiscovery
 from libp2p.host.exceptions import StreamFailure
+from libp2p.host.ping import ID as PING_PROTOCOL_ID, PingService
 import libp2p.identity.identify.identify as identify_mod
 from libp2p.identity.identify.identify import (
     ID as IDENTIFY_PROTOCOL_ID,
@@ -117,10 +118,18 @@ class HeadlessService:
         event_bus: Any = None,
         identity_path: str | None = None,
         services: Any = None,
+        min_connections: int = 50,
+        low_watermark: int = 400,
+        high_watermark: int = 450,
+        max_connections: int = 500,
     ):
         self.nickname = nickname
         self.port = port if port != 0 else 4001
         self.connect_addrs = connect_addrs or []
+        self.min_connections = min_connections
+        self.low_watermark = low_watermark
+        self.high_watermark = high_watermark
+        self.max_connections = max_connections
 
         # Address model (deliberately separate concepts):
         #   listen  : where sockets are opened. Default binds all IPv4
@@ -152,6 +161,7 @@ class HeadlessService:
         self.pubsub: Pubsub | None = None
         self.gossipsub: GossipSub | None = None
         self.dht: KadDHT | None = None
+        self.ping_service: PingService | None = None
         self.chat_room: Any = None
 
         # Bitswap components for file sharing
@@ -274,10 +284,10 @@ class HeadlessService:
         services.addresses.warn_if_port_in_use(listen_addrs)
 
         config = ConnectionConfig(
-            min_connections=10,
-            low_watermark=12,
-            high_watermark=40,
-            max_connections=50,
+            min_connections=self.min_connections,
+            low_watermark=self.low_watermark,
+            high_watermark=self.high_watermark,
+            max_connections=self.max_connections,
             auto_connect_interval=5.0,
         )
 
@@ -303,6 +313,11 @@ class HeadlessService:
         logger.info(
             f"✅ Identify protocol handler registered for {IDENTIFY_PROTOCOL_ID}"
         )
+
+        ping_service = PingService(host)
+        self.ping_service = ping_service
+        host.set_stream_handler(PING_PROTOCOL_ID, ping_service.handle_ping)
+        logger.info(f"✅ Ping protocol handler registered for {PING_PROTOCOL_ID}")
 
         dht = KadDHT(host, DHTMode.SERVER, enable_random_walk=True)
         self.dht = dht
@@ -337,10 +352,10 @@ class HeadlessService:
 
         gossipsub = GossipSub(
             protocols=PROTOCOL_ID_LIST,
-            degree=3,
-            degree_low=2,
-            degree_high=4,
-            gossip_window=2,
+            degree=6,
+            degree_low=4,
+            degree_high=12,
+            gossip_window=3,
             gossip_history=5,
             heartbeat_initial_delay=2.0,
             heartbeat_interval=5,
@@ -402,6 +417,7 @@ class HeadlessService:
                             async with trio.open_nursery() as nursery:
                                 bitswap.set_nursery(nursery)
                                 services.start_workers(nursery)
+                                nursery.start_soon(self._ping_keepalive_worker)
 
                                 await self._wait_for_stop()
                                 nursery.cancel_scope.cancel()
@@ -419,6 +435,29 @@ class HeadlessService:
             await trio.sleep(0.1)
         logger.info("Stop signal received, shutting down...")
         self.running = False
+
+    async def _ping_keepalive_worker(self) -> None:
+        """Periodically ping connected peers to keep NAT mappings and connections alive."""
+        while not self.stop_event.is_set():
+            try:
+                await trio.sleep(30)
+                if self.stop_event.is_set():
+                    break
+                host = self.host
+                ping_svc = self.ping_service
+                if host is None or ping_svc is None or not self.ready:
+                    continue
+                connected = list(host.get_connected_peers())
+                for peer in connected:
+                    try:
+                        with trio.move_on_after(5):
+                            await ping_svc.ping(peer, ping_amt=1)
+                    except Exception:
+                        pass
+            except trio.Cancelled:
+                break
+            except Exception as exc:
+                logger.debug(f"Ping keepalive error: {exc}")
 
     def request_stop(self) -> None:
         """Ask the service to stop. Safe to call from any thread.

@@ -54,6 +54,7 @@ class DiscoveryService:
         self._messaging = messaging
         self._notifications = notifications
         self._connections = connections
+        self._dial_cooldown: dict[str, float] = {}
 
     @property
     def engine(self) -> Any:
@@ -356,14 +357,29 @@ class DiscoveryService:
                         except Exception as exc:
                             logger.debug("DHT provide error: %s", exc)
 
-                    # 2. Check pubsub peer count; if low, search for providers
+                    # 2. Check pubsub peer count; if low, search for providers and restore from peerstore/routing table
                     current_pubsub_peers = self.pubsub_peers()
                     if len(current_pubsub_peers) < TARGET_PUBSUB_PEERS:
                         logger.info(
-                            "PubSub peer count (%d) below target (%d); querying DHT providers...",
+                            "PubSub peer count (%d) below target (%d); querying DHT providers and restoring peers...",
                             len(current_pubsub_peers),
                             TARGET_PUBSUB_PEERS,
                         )
+                        my_id = str(host.get_id())
+                        connected = {
+                            str(p) for p in host.get_connected_peers()
+                        }
+
+                        # Evict expired dial cooldowns
+                        self._dial_cooldown = {
+                            pid: exp
+                            for pid, exp in self._dial_cooldown.items()
+                            if exp > now
+                        }
+
+                        dial_count = 0
+
+                        # A. Query DHT provider records
                         try:
                             providers = await dht.find_providers(
                                 dht_key_hex, count=20
@@ -376,43 +392,96 @@ class DiscoveryService:
                                 rust_providers = []
                             all_providers = providers + rust_providers
 
-                            my_id = str(host.get_id())
-                            connected = {
-                                str(p) for p in host.get_connected_peers()
-                            }
-
-                            dial_count = 0
                             for pinfo in all_providers:
                                 pid = str(pinfo.peer_id)
-                                if pid == my_id or pid in connected:
+                                if (
+                                    pid == my_id
+                                    or pid in connected
+                                    or pid in self._dial_cooldown
+                                ):
                                     continue
                                 if pinfo.addrs:
                                     host.get_peerstore().add_addrs(
                                         pinfo.peer_id, pinfo.addrs, ttl=3600
                                     )
-                                    for addr in pinfo.addrs:
-                                        addr_str = str(addr)
-                                        if f"/p2p/{pid}" not in addr_str:
-                                            addr_str = f"{addr_str}/p2p/{pid}"
-                                        if self._connections is not None:
-                                            if self._connections.queue_connection(
-                                                addr_str
-                                            ):
-                                                dial_count += 1
-                                                break
-
-                            if dial_count > 0:
-                                logger.info(
-                                    "🧭 Queued connections to %d discovered DHT providers",
-                                    dial_count,
-                                )
+                                    # Sort to prefer public/routable addresses
+                                    sorted_addrs = sorted(
+                                        pinfo.addrs,
+                                        key=lambda a: (
+                                            1
+                                            if "/ip4/127." in str(a)
+                                            or "/ip6/::1" in str(a)
+                                            or "/ip4/192.168." in str(a)
+                                            or "/ip4/10." in str(a)
+                                            else 0
+                                        ),
+                                    )
+                                    best_addr = sorted_addrs[0]
+                                    addr_str = str(best_addr)
+                                    if f"/p2p/{pid}" not in addr_str:
+                                        addr_str = f"{addr_str}/p2p/{pid}"
+                                    if self._connections is not None and self._connections.queue_connection(
+                                        addr_str
+                                    ):
+                                        self._dial_cooldown[pid] = now + 45.0
+                                        dial_count += 1
                         except Exception as exc:
                             logger.debug("DHT find_providers error: %s", exc)
 
-                    # 3. Fallback: if pubsub peers dropped to 0, trigger bootstrap dials
-                    if len(current_pubsub_peers) == 0:
+                        # B. Restore from known peerstore peers if still below target
+                        if len(current_pubsub_peers) + dial_count < TARGET_PUBSUB_PEERS:
+                            try:
+                                peerstore = host.get_peerstore()
+                                for peer_id in peerstore.peers_with_addrs():
+                                    pid = str(peer_id)
+                                    if (
+                                        pid == my_id
+                                        or pid in connected
+                                        or pid in self._dial_cooldown
+                                    ):
+                                        continue
+                                    addrs = peerstore.addrs(peer_id)
+                                    if not addrs:
+                                        continue
+                                    sorted_addrs = sorted(
+                                        addrs,
+                                        key=lambda a: (
+                                            1
+                                            if "/ip4/127." in str(a)
+                                            or "/ip6/::1" in str(a)
+                                            or "/ip4/192.168." in str(a)
+                                            or "/ip4/10." in str(a)
+                                            else 0
+                                        ),
+                                    )
+                                    best_addr = sorted_addrs[0]
+                                    addr_str = str(best_addr)
+                                    if f"/p2p/{pid}" not in addr_str:
+                                        addr_str = f"{addr_str}/p2p/{pid}"
+                                    if self._connections is not None and self._connections.queue_connection(
+                                        addr_str
+                                    ):
+                                        self._dial_cooldown[pid] = now + 45.0
+                                        dial_count += 1
+                                        if (
+                                            len(current_pubsub_peers) + dial_count
+                                            >= TARGET_PUBSUB_PEERS
+                                        ):
+                                            break
+                            except Exception as exc:
+                                logger.debug("Peerstore reconnect error: %s", exc)
+
+                        if dial_count > 0:
+                            logger.info(
+                                "🧭 Queued connections to %d peers for PubSub mesh recovery",
+                                dial_count,
+                            )
+
+                    # 3. Fallback: if pubsub peers dropped critically low (< 2), trigger bootstrap dials
+                    if len(current_pubsub_peers) < 2:
                         logger.info(
-                            "No active PubSub peers; re-triggering bootstrap dials"
+                            "PubSub peers critically low (%d); re-triggering bootstrap dials",
+                            len(current_pubsub_peers),
                         )
                         self.bootstrap()
 

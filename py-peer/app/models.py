@@ -105,6 +105,10 @@ class RuntimeConfig:
     announce_addrs: list[str] | None = None
     storage_path: str | None = None
     data_dir: str | None = None
+    min_connections: int = 50
+    low_watermark: int = 400
+    high_watermark: int = 450
+    max_connections: int = 500
 
     @classmethod
     def from_namespace(cls, args: Any) -> "RuntimeConfig":
@@ -122,6 +126,10 @@ class RuntimeConfig:
             announce_addrs=list(getattr(args, "announce_addrs", None) or []) or None,
             storage_path=getattr(args, "storage_path", None) or None,
             data_dir=getattr(args, "data_dir", None) or None,
+            min_connections=int(getattr(args, "min_connections", 50) or 50),
+            low_watermark=int(getattr(args, "low_watermark", 400) or 400),
+            high_watermark=int(getattr(args, "high_watermark", 450) or 450),
+            max_connections=int(getattr(args, "max_connections", 500) or 500),
         )
 
     def service_kwargs(self, *, identity_path: str | None = None) -> dict[str, Any]:
@@ -142,4 +150,8 @@ class RuntimeConfig:
             "listen_addrs": self.listen_addrs,
             "announce_addrs": self.announce_addrs,
             "identity_path": identity_path,
+            "min_connections": self.min_connections,
+            "low_watermark": self.low_watermark,
+            "high_watermark": self.high_watermark,
+            "max_connections": self.max_connections,
         }
