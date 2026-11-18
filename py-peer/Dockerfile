@@ -68,7 +68,6 @@ COPY --chown=uc:uc core ./core
 COPY --chown=uc:uc ui ./ui
 COPY --chown=uc:uc app ./app
 COPY --chown=uc:uc api ./api
-COPY --chown=uc:uc llm ./llm
 
 # Durable application state lives only here. A named volume inherits this
 # ownership on first use; a bind mount must be chowned by the operator.

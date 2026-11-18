@@ -12,7 +12,6 @@ REQUIRED_RUNTIME = {
     "ui",
     "api",
     "app",
-    "llm",
 }
 
 

@@ -63,7 +63,6 @@ Textual and CLI modes run with direct in-process access to the HeadlessService. 
 - **Custom Topics** - Use custom topic names via command line or UI
 - **Persistent Connections** - Automatic peer connection maintenance
 - **File Sharing API** - Share/download files via Bitswap/MerkleDag API endpoints
-- **RAG Assistant** - Ask py-libp2p questions through `/api/v1/ask` powered by vector search + LLM
 
 ### UI-Specific Features
 
@@ -83,7 +82,6 @@ Textual and CLI modes run with direct in-process access to the HeadlessService. 
 - Connection panel for peer connect + topic subscribe
 - Topic sidebar with unread counts
 - WebSocket-backed real-time messages and peer updates
-- Built-in py-libp2p assistant widget (RAG)
 
 ## 🏗️ Architecture
 
@@ -101,7 +99,7 @@ Textual and CLI modes run with direct in-process access to the HeadlessService. 
 │ Textual TUI / CLI                  │      │ React Frontend (Vite + TS)   │
 │                                    │      │ • /api/v1 calls              │
 │ • In-process access                │      │ • /ws streams                │
-│ • No HTTP hop required             │      │ • RAG assistant UI           │
+│ • No HTTP hop required             │      │                              │
 └───────────────────┬────────────────┘      └──────────────┬───────────────┘
                     │                                       │
                     │ direct in-process                     │ HTTP + WS
@@ -145,7 +143,6 @@ Textual and CLI modes run with direct in-process access to the HeadlessService. 
 - **core/** - Transport engine and shared transport definitions
   - **headless.py** - Background engine managing libp2p operations (the runtime's transport layer)
   - **constants.py** - Transport limits, bootstrap peers, and defaults
-  - **rag_handler.py** - Retrieval-augmented QA endpoint (`/api/v1/ask`)
   - **healthcheck.py** - Container readiness probe
 - **app/** - Framework-independent runtime, chat domain, and services (peer, connection, messaging, discovery, identity, files, storage)
   - **chatroom.py** - Chat room logic, topic management, message handling, and peer nicknames
@@ -177,7 +174,6 @@ User Input → UI Thread → Queue → Async Thread (Trio)
 - **uv** (recommended) or pip package manager
 - Network connectivity for peer-to-peer communication
 - For React frontend: **Node.js 18+** and npm
-- For RAG endpoint (`/api/v1/ask`): the optional `rag` extra (Groq SDK), a Groq API key, and the vector-store build dependencies
 
 ### Supported platforms
 
@@ -244,7 +240,7 @@ pip install -e .
 ### Option 3: Build and install a wheel
 
 `uv build` produces a small runtime wheel and a source distribution. The wheel
-contains the root runner modules plus `api/`, `app/`, and `llm/`; it excludes
+contains the root runner modules plus `api/` and `app/`; it excludes
 the React workspace, `node_modules`, Docker assets, local databases, and
 caches. The sdist additionally contains the Docker files and `uv.lock`.
 
@@ -291,11 +287,10 @@ follows py-libp2p's strict policy: every function is annotated, untyped calls
 and bare generics are rejected, and optional/equality checking stays strict.
 
 `pyrefly` reads `[tool.pyrefly]` from the same file and checks the same modules.
-Its report is also clean. The optional RAG tree (`llm/`) and packages that do
-not ship type information in every install are excluded or treated as `Any`.
-Tornado's handler override check is relaxed for `api/` and the RAG handler
-because route arguments are not part of Tornado's base method signatures;
-all other Pyrefly checks stay enabled.
+Its report is also clean. Packages that do not ship type information in every
+install are excluded or treated as `Any`. Tornado's handler override check is
+relaxed for `api/` because route arguments are not part of Tornado's base
+method signatures; all other Pyrefly checks stay enabled.
 
 The same checks are available through the py-libp2p-style wrappers:
 
@@ -691,7 +686,7 @@ There is no configuration file. Values resolve in this order:
 The `UC_*` variables in `docker-compose.yml` are **Compose substitutions** used to
 build the container command and port mappings; the peer runtime only reads
 `UC_DATA_DIR` from the environment (`core/healthcheck.py` reads
-`UC_HEALTHCHECK_URL`, and the optional RAG client reads `GROQ_API_KEY`). Keep
+`UC_HEALTHCHECK_URL`). Keep
 Compose values and any explicit CLI flags consistent, because a CLI flag inside
 `command:` wins.
 
@@ -743,28 +738,6 @@ python main.py --api --nick MyNode --api-port 8765
 
 - Base URL: `http://localhost:8765/api/v1`
 - Route listing: `python main.py --api-routes`
-
-### RAG Assistant Configuration
-
-The `/api/v1/ask` endpoint is optional and is not installed with the base
-package. It becomes available when the RAG extra, a vector store, and a Groq
-API key are configured.
-
-1. Install the optional dependencies:
-```bash
-uv pip install -e '.[rag]'          # Groq SDK only
-# or install the vector-store build stack as well:
-pip install -r requirements-rag.txt
-```
-2. Build vector store:
-```bash
-cd llm/codes
-python build_vectorstore.py
-```
-3. Set your Groq API key in environment:
-```bash
-export GROQ_API_KEY=your_key_here
-```
 
 ### Data Directory
 
@@ -822,7 +795,6 @@ py-peer/
 ├── core/                # Transport engine and shared definitions
 │   ├── headless.py      # libp2p transport & lifecycle
 │   ├── constants.py     # Transport limits, peers, and defaults
-│   ├── rag_handler.py   # RAG assistant endpoint
 │   └── healthcheck.py   # Container readiness probe
 ├── app/                 # Runtime, chat domain, services, storage
 │   ├── chatroom.py      # Chat room logic & topic handling
@@ -859,11 +831,6 @@ of this tree.
 - REST endpoints for node, peers, topics, messages, files, DHT, pubsub, identity, service
 - WebSocket streams for messages, system events, peer updates, mesh updates
 - Shared JSON response envelope + readiness guards
-
-**core/rag_handler.py:**
-- `POST /api/v1/ask` retrieval-augmented question answering
-- Loads Chroma vector store at startup
-- Uses Groq LLM backend for grounded answers with source attribution
 
 ### Running from Source
 
@@ -923,11 +890,6 @@ python main.py --ui --nick YourName --port 8081
 - Confirm backend is running: `python main.py --api --nick YourName`
 - For local dev, keep `VITE_API_URL` empty or set to `http://localhost:8765`
 - Restart Vite after `.env.local` changes
-
-**6. RAG Assistant Unavailable (`/api/v1/ask` returns 503)**
-- Build vector store via `llm/codes/build_vectorstore.py`
-- Install the RAG extra: `uv pip install -e '.[rag]'` (or `pip install -r requirements-rag.txt` for the vector-store build stack)
-- Set `GROQ_API_KEY` environment variable
 
 ### Debug Mode
 

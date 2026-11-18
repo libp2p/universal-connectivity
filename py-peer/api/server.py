@@ -40,7 +40,6 @@ from .service   import (ServiceStatusHandler, ServiceConfigHandler,
                            ServiceStopHandler, ServiceBootstrapHandler)
 from .websocket import (MessageStreamHandler, SystemStreamHandler,
                            PeerUpdateHandler, MeshUpdateHandler)
-from core.rag_handler import AskHandler
 
 logger = logging.getLogger("tornado_server")
 
@@ -52,9 +51,7 @@ DEFAULT_API_HOST = "127.0.0.1"
 
 
 
-def _make_app(
-    runtime: Any, vectorstore: Any = None
-) -> tornado.web.Application:
+def _make_app(runtime: Any) -> tornado.web.Application:
     """Build and return the Tornado Application with all routes."""
 
     kw = dict(runtime=runtime)   # kwargs passed to every handler's initialize()
@@ -114,8 +111,6 @@ def _make_app(
         (r"/api/v1/service/config",    ServiceConfigHandler,    kw),
         (r"/api/v1/service/stop",      ServiceStopHandler,      kw),
         (r"/api/v1/service/bootstrap", ServiceBootstrapHandler, kw),
-        # ── RAG assistant ───────────────────────────────────────────────
-        (r"/api/v1/ask",  AskHandler, dict(vectorstore=vectorstore)),
         # ── WebSockets ───────────────────────────────────────────────────
         (r"/ws/messages",    MessageStreamHandler, kw),
         (r"/ws/system",      SystemStreamHandler,  kw),
@@ -166,8 +161,6 @@ class TornadoServer:
         self._ioloop = tornado.ioloop.IOLoop.current()
         if hasattr(self.service, "on_stopped"):
             self.service.on_stopped = self._on_service_stopped
-        # The RAG vector store is resolved lazily by AskHandler on first use:
-        # loading Chroma/embeddings during startup would stall the peer.
         self._app = _make_app(self.runtime)
 
     def _on_service_stopped(self) -> None:
@@ -242,7 +235,6 @@ def _print_routes(port: int = DEFAULT_API_PORT) -> None:
         ("GET",    f"/api/v1/service/config",           "Service config"),
         ("POST",   f"/api/v1/service/stop",             "Graceful stop"),
         ("POST",   f"/api/v1/service/bootstrap",        "Re-trigger bootstrap"),
-        ("POST",   f"/api/v1/ask",                      "RAG assistant — ask about py-libp2p"),
         ("WS",     f"/ws/messages",                     "Real-time message stream"),
         ("WS",     f"/ws/system",                       "Real-time system events"),
         ("WS",     f"/ws/peers",                        "Real-time peer updates"),

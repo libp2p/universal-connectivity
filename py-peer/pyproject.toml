@@ -17,15 +17,6 @@ dependencies = [
     "aiortc>=1.15.0"
 ]
 
-# The Groq SDK is only used by the optional RAG assistant (POST /api/v1/ask).
-# Install with ``uv pip install -e '.[rag]'`` (or requirements-rag.txt) when
-# the vector store and LLM endpoint are actually needed.
-[project.optional-dependencies]
-rag = [
-    "groq>=1.0.0",
-]
-
-
 [project.scripts]
 py-peer = "main:main"
 
@@ -44,7 +35,6 @@ only-include = [
     "ui",
     "api",
     "app",
-    "llm",
 ]
 
 # The source distribution carries the Python project and its review assets.
@@ -57,12 +47,10 @@ only-include = [
     "ui",
     "api",
     "app",
-    "llm",
     "tests",
     "assets",
     "Dockerfile",
     "docker-compose.yml",
-    "requirements-rag.txt",
     "requirements-dev.txt",
     ".dockerignore",
     "README.md",
@@ -72,13 +60,13 @@ only-include = [
 ]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 
 [tool.mypy]
 python_version = "3.12"
 files = ["main.py", "core", "app", "api", "ui"]
-exclude = ["^llm/"]
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_incomplete_defs = true
@@ -107,23 +95,16 @@ module = ["core.pb.*"]
 ignore_errors = true
 
 # Pyrefly runs alongside mypy in py-libp2p. It checks the same application
-# modules; the optional RAG tree is excluded because its third-party packages
-# are not part of the base install.
+# modules.
 [tool.pyrefly]
 python_version = "3.12"
 project_includes = ["main.py", "core", "app", "api", "ui"]
-project_excludes = ["llm/**", "core/pb/**"]
+project_excludes = ["core/pb/**"]
 # These optional/third-party packages do not ship type information in all
 # installs, matching the mypy ``ignore_missing_imports`` policy above.
 replace_imports_with_any = [
     "multiaddr",
     "multiaddr.*",
-    "langchain_huggingface.*",
-    "langchain_chroma.*",
-    "langchain_community.*",
-    "langchain_text_splitters.*",
-    "groq",
-    "groq.*",
     "aiortc",
     "aiortc.*",
 ]
@@ -133,10 +114,5 @@ replace_imports_with_any = [
 # Pyrefly's Liskov override check. Keep the check everywhere else.
 [[tool.pyrefly.sub_config]]
 matches = "api/**"
-[tool.pyrefly.sub_config.errors]
-bad-override = false
-
-[[tool.pyrefly.sub_config]]
-matches = "core/rag_handler.py"
 [tool.pyrefly.sub_config.errors]
 bad-override = false

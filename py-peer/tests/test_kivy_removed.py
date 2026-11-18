@@ -110,7 +110,7 @@ print("CORE_OK")
         offenders = []
         for path in glob.glob(os.path.join(ROOT, "**", "*.py"), recursive=True):
             relative = os.path.relpath(path, ROOT)
-            if relative.startswith((".venv", "tests", "llm")):
+            if relative.startswith((".venv", "tests")):
                 continue
             if "__pycache__" in relative:
                 continue
