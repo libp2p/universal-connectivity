@@ -186,7 +186,7 @@ and `fastecdsa` ship native or platform-specific dependencies.
 | Linux arm64 (Debian bookworm, Python 3.12, container) | **Tested** | Headless runtime, health check, two-container connectivity, persistence |
 | Linux x86_64 | Expected, not tested in this repository | Same Python 3.12 requirements; verify native wheels before release |
 | Windows 11 | Expected, not tested in this repository | TCP only; no native test, no service installer |
-| Android/iOS | Not supported | The former Kivy mobile path was removed |
+| Android/iOS | Not supported | Mobile platforms are not supported |
 
 Simultaneous multi-transport is enabled by default. `py-peer` listens across all 5 transports:
 - **TCP** (`/ip4/0.0.0.0/tcp/<port>`)
@@ -257,9 +257,7 @@ cd /tmp
 /tmp/py-peer-venv/bin/py-peer --api-routes
 ```
 
-The wheel pins the tested libp2p fork to one git commit
-(`fbf4ff94d7201edfa90992574c4879738f2dab96`), so a clean install needs network
-access and `git` to build that dependency. It does **not** install Kivy or any
+The wheel requires `libp2p>=0.8.1`. It does **not** install any
 UI framework beyond Textual, and it never writes into the installation
 directory: identity, history, and logs go to the data directory described
 below. Upgrading the package leaves that directory untouched.

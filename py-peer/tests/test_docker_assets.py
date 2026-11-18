@@ -103,7 +103,6 @@ class DockerfileTests(unittest.TestCase):
     def test_only_tcp_ports_and_no_secrets(self):
         self.assertIn("EXPOSE 4001/tcp 4001/udp 4002/udp 4003/udp 8765/tcp", self.text)
         self.assertNotIn("node_modules", self.text)
-        self.assertNotIn("--kivy", self.text)
 
 
 class DockerignoreTests(unittest.TestCase):

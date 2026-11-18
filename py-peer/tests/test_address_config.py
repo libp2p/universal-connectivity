@@ -1,4 +1,4 @@
-"""Phase 1: transport/address configuration and announced-address correctness."""
+"""Transport/address configuration and announced-address correctness."""
 
 import socket
 import threading
