@@ -276,9 +276,12 @@ layers use its interfaces (`IHost`, `ISubscriptionAPI`, `Message`) instead of
 untyped stand-ins.
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -e '.[dev]'
+# or using uv:
+uv pip install -e '.[dev]'
 mypy
 pyrefly check
+pytest
 ```
 
 `mypy` reads `[tool.mypy]` in `pyproject.toml`, checks `main.py`, `core`, `app`,
