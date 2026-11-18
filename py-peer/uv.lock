@@ -777,13 +777,12 @@ wheels = [
 [[package]]
 name = "libp2p"
 version = "0.8.1"
-source = { git = "https://github.com/sumanjeet0012/py-libp2p.git?rev=metrics#516816fae6f20ee0d10e0362b6f1d39af7884a49" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aioquic" },
     { name = "anyio" },
     { name = "base58" },
     { name = "cbor2" },
-    { name = "certifi" },
     { name = "coincurve" },
     { name = "fastecdsa", marker = "sys_platform != 'win32'" },
     { name = "grpcio" },
@@ -808,6 +807,10 @@ dependencies = [
     { name = "trio-websocket" },
     { name = "types-requests" },
     { name = "zeroconf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/55/07/7da82f3cf3705278c583a5353a1235875ea886324ee7d3cd94ebd4404e56/libp2p-0.8.1.tar.gz", hash = "sha256:3fb1493d215d10205f56095014e21c3d4eec025a9becb3e73a768d1151f27fd0", size = 36281043, upload-time = "2026-10-22T19:48:27.887Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bc/c0/bc99a6cfb57965313649c3d6f899fa00e51f6b05fb3418459a052d7392b2/libp2p-0.8.1-py3-none-any.whl", hash = "sha256:3d53daa20a6a78984c9b4ed1654d771757b187282f90376d7156c2b67828b308", size = 1317217, upload-time = "2026-10-22T19:48:23.894Z" },
 ]
 
 [[package]]
@@ -1279,7 +1282,7 @@ requires-dist = [
     { name = "base58" },
     { name = "groq", marker = "extra == 'rag'", specifier = ">=1.0.0" },
     { name = "janus", specifier = ">=1.0.0" },
-    { name = "libp2p", git = "https://github.com/sumanjeet0012/py-libp2p.git?rev=metrics" },
+    { name = "libp2p", specifier = ">=0.8.1" },
     { name = "platformdirs", specifier = ">=4.0.0" },
     { name = "protobuf", specifier = ">=6.32.1,<7" },
     { name = "python-dotenv", specifier = ">=1.2.2" },

@@ -4,8 +4,8 @@
 # Builder: install the locked runtime environment into /app/.venv.
 #
 # uv reads pyproject.toml + uv.lock, so the image resolves exactly the
-# dependency set committed to the repository (including the libp2p git fork).
-# Build tools and git stay in this stage and never reach the final image.
+# dependency set committed to the repository.
+# Build tools stay in this stage and never reach the final image.
 # ---------------------------------------------------------------------------
 ARG PYTHON_VERSION=3.12
 ARG UV_VERSION=0.13.5
@@ -22,13 +22,12 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 WORKDIR /app
 
-# git is required by the locked libp2p git source; build-essential covers any
-# dependency without a prebuilt wheel. Both are discarded with this stage.
+# build-essential covers any dependency without a prebuilt wheel. Discarded
+# with this stage.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
-        git \
         libgmp-dev \
     && rm -rf /var/lib/apt/lists/*
 

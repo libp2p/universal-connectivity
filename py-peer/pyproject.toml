@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "textual>=0.47.0",
-    "libp2p @ git+https://github.com/sumanjeet0012/py-libp2p.git@metrics",
+    "libp2p>=0.8.1",
     "trio>=0.22.0",
     "base58",
     "protobuf>=6.32.1,<7",
@@ -69,9 +69,6 @@ only-include = [
     "uv.lock",
     ".python-version",
 ]
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 [tool.mypy]
 python_version = "3.12"
