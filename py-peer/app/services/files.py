@@ -170,6 +170,7 @@ class FileService:
         if name in ("", ".", ".."):
             name = "upload"
         directory = self.download_dir
+        os.makedirs(directory, exist_ok=True)
         save_path = os.path.join(directory, name)
         base, ext = os.path.splitext(name)
         counter = 1

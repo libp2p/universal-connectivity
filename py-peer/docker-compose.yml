@@ -44,11 +44,15 @@ services:
       # API: loopback-only by default. To expose it, set
       # UC_API_PUBLISH_HOST=0.0.0.0 only behind an authenticating proxy/firewall.
       - "${UC_API_PUBLISH_HOST:-127.0.0.1}:${UC_API_PORT:-8765}:${UC_API_PORT:-8765}"
-      # Peer transports: simultaneous TCP, WebSocket, QUIC-v1, WebTransport, WebRTC-Direct
+      # Peer transports: TCP + WebSocket share UC_PEER_PORT, QUIC-v1 uses the
+      # same number over UDP, and WebTransport / WebRTC-direct are bound on
+      # UC_PEER_PORT+1 and +2 (each terminates its own TLS certificate).
+      # If you change UC_PEER_PORT you must change the two UDP mappings below
+      # to that port + 1 and + 2 as well; the app derives them, Compose cannot.
       - "${UC_PEER_PORT:-4001}:${UC_PEER_PORT:-4001}/tcp"
       - "${UC_PEER_PORT:-4001}:${UC_PEER_PORT:-4001}/udp"
-      - "4002:4002/udp"
-      - "4003:4003/udp"
+      - "4002:4002/udp"   # WebTransport  (UC_PEER_PORT+1)
+      - "4003:4003/udp"   # WebRTC-direct (UC_PEER_PORT+2)
 
     volumes:
       - uc-data:/data

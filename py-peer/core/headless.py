@@ -28,9 +28,11 @@ from libp2p.identity.identify.identify import (
     identify_handler_for,
 )
 
-# Align identify agent version with universal-connectivity standard so
-# go-peer, rust-peer, and other peers recognise py-peer as a UC node.
-identify_mod.AGENT_VERSION = "universal-connectivity/0.1.0"
+# Value advertised through the identify protocol. go-peer and rust-peer use it
+# to recognise py-peer as a Universal Connectivity node. Applied in
+# ``_configure_agent_version`` rather than at import time so importing this
+# module has no side effects on the shared library.
+UC_AGENT_VERSION = "universal-connectivity/0.1.0"
 from libp2p.kad_dht.kad_dht import DHTMode, KadDHT
 from libp2p.network.config import ConnectionConfig
 from libp2p.rcmgr import new_resource_manager
@@ -81,8 +83,27 @@ __all__ = [
 ]
 
 
+def _configure_agent_version() -> None:
+    """Advertise ``UC_AGENT_VERSION`` through identify.
+
+    py-libp2p 0.8.x reads ``AGENT_VERSION`` from the module at handler time and
+    exposes no constructor parameter, so the assignment is the supported
+    workaround until an upstream option lands. Called from startup (not at
+    import) so merely importing this module leaves the library untouched.
+    """
+    if getattr(identify_mod, "AGENT_VERSION", None) is None:
+        logger.debug("identify module has no AGENT_VERSION; leaving it unchanged")
+        return
+    identify_mod.AGENT_VERSION = UC_AGENT_VERSION
+
+
 def filter_compatible_peer_info(peer_info: PeerInfo) -> bool:
-    """Filter peer info to check if it has compatible addresses across supported transports."""
+    """True when *peer_info* has at least one address this peer can dial.
+
+    Every transport the DApp advertises is accepted, including WebTransport and
+    WebRTC(-direct): browser peers only publish those, so excluding them would
+    make py-peer unreachable from js-peer.
+    """
     if not hasattr(peer_info, "addrs") or not peer_info.addrs:
         return False
 
@@ -92,13 +113,14 @@ def filter_compatible_peer_info(peer_info: PeerInfo) -> bool:
         "/wss",
         "/quic-v1",
         "/quic",
+        "/webtransport",
+        "/webrtc",
     )
-    for addr in peer_info.addrs:
-        addr_str = str(addr)
-        if any(marker in addr_str for marker in supported_markers):
-            if "/webtransport" not in addr_str and "/webrtc" not in addr_str:
-                return True
-    return False
+    return any(
+        marker in str(addr)
+        for addr in peer_info.addrs
+        for marker in supported_markers
+    )
 
 
 class HeadlessService:
@@ -126,7 +148,9 @@ class HeadlessService:
         max_connections: int = 500,
     ):
         self.nickname = nickname
-        self.port = port if port != 0 else 4001
+        # 0 means "let the kernel pick an ephemeral port"; the CLI default is
+        # DEFAULT_PORT (4001). Never silently rewrite 0 to a fixed port.
+        self.port = port
         self.connect_addrs = connect_addrs or []
         self.min_connections = min_connections
         self.low_watermark = low_watermark
@@ -188,10 +212,11 @@ class HeadlessService:
         self.file_share_queue: janus.Queue[Any] | None = None
         self.file_download_queue: janus.Queue[Any] | None = None
 
-        # Storage and file destination are engine-owned configuration.
+        # Storage and file destination are engine-owned configuration. The
+        # download directory is created lazily by the file service (constructing
+        # a service must not touch $HOME, which may be read-only in a container).
         self.message_store: Any = message_store
         self.download_dir = DEFAULT_DOWNLOAD_DIR
-        os.makedirs(self.download_dir, exist_ok=True)
 
         # Events for synchronization. stop_event must be settable from the
         # Tornado/API thread, so it is a threading.Event rather than a trio.Event.
@@ -199,6 +224,9 @@ class HeadlessService:
         self.stop_event = threading.Event()
 
         self.on_stopped: Callable[[], None] | None = None
+        # Called once on the trio thread when the peer becomes ready. Lets
+        # thread-based owners wait without polling ``ready`` in a sleep loop.
+        self.on_ready: Callable[[], None] | None = None
         self.failed = False
 
         # Lifecycle ownership. start() may run at most once per instance, and
@@ -209,13 +237,74 @@ class HeadlessService:
 
         # Injected by ApplicationRuntime so the transport engine stays free of
         # application-layer imports.
-        self.services: Any = services
+        self._services: Any = services
 
         if not ui_mode:
             logger.info(
                 f"HeadlessService initialized - nickname: {nickname}, "
                 f"port: {self.port}, strict_signing: {strict_signing}"
             )
+
+    @property
+    def services(self) -> Any:
+        if getattr(self, "_services", None) is None:
+            try:
+                from app.services import ServiceBundle
+                self._services = ServiceBundle(self, store=getattr(self, "message_store", None))
+            except Exception:
+                pass
+        return self._services
+
+    @services.setter
+    def services(self, value: Any) -> None:
+        self._services = value
+
+    # Compatibility helpers for test harnesses and legacy callers
+    def _load_identity(self) -> Any:
+        return self.services.identity.load_identity()
+
+    def _resolve_listen_addrs(self) -> List[Any]:
+        return self.services.addresses.resolve_listen_addrs()
+
+    def _resolve_announce_addrs(self) -> List[Any]:
+        return self.services.addresses.resolve_announce_addrs()
+
+    def _make_addrs_factory(self) -> Any:
+        return self.services.addresses.make_addrs_factory()
+
+    def _verify_listeners(self, requested: List[Any]) -> None:
+        self.services.addresses.verify_listeners(self.host, requested)
+
+    @staticmethod
+    def _is_wildcard_addr(addr: Any) -> bool:
+        from app.services.addressing import AddressService
+        return AddressService.is_wildcard_addr(addr)
+
+    @staticmethod
+    def _classify_announced_addr(addr: str) -> str:
+        from app.services.addressing import AddressService
+        return AddressService.classify_announced_addr(addr)
+
+    async def _handle_chat_message(self, message: Any) -> None:
+        await self.services.messaging.handle_chat_message(message)
+
+    @property
+    def shared_files(self) -> Dict[str, Any]:
+        return self.services.files._shared
+
+    @property
+    def peer_info_cache(self) -> Dict[str, Any]:
+        return self.services.identity._cache
+
+    @property
+    def _state_lock(self) -> Any:
+        return self.services.identity._lock
+
+    def _put_legacy(self, queue: Any, item: Any) -> None:
+        self.services.notifications.put_legacy(queue, item)
+
+    async def _send_system_message(self, message: str) -> None:
+        await self.services.notifications.system(message)
 
     # ------------------------------------------------------------------ #
     #  Lifecycle
@@ -274,6 +363,7 @@ class HeadlessService:
         """Run the main service loop: build transport, then start services."""
         services = self.services
 
+        _configure_agent_version()
         key_pair = services.identity.load_identity()
 
         # Resolve bind vs advertised addresses before creating the host. The
@@ -305,6 +395,7 @@ class HeadlessService:
 
         # Create libp2p host WITHOUT bootstrap nodes initially; bootstrap
         # dials happen after pubsub is running.
+        listen_strs = [str(addr) for addr in listen_addrs]
         host = new_host(
             key_pair=key_pair,
             connection_config=config,
@@ -312,6 +403,11 @@ class HeadlessService:
             announce_addrs=explicit_announce or None,
             addrs_factory=addrs_factory,
             resource_manager=resource_manager,
+            enable_tcp=any("/tcp/" in s for s in listen_strs),
+            enable_websocket=any("/ws" in s for s in listen_strs),
+            enable_quic=any("quic" in s for s in listen_strs),
+            enable_webtransport=any("webtransport" in s for s in listen_strs),
+            enable_webrtc=any("webrtc" in s for s in listen_strs),
         )
         self.host = host
 
@@ -425,6 +521,7 @@ class HeadlessService:
 
                             self.ready = True
                             self.ready_event.set()
+                            self._notify_ready()
                             logger.info("✅ Headless service is ready")
 
                             async with trio.open_nursery() as nursery:
@@ -442,8 +539,24 @@ class HeadlessService:
                 self.failed = True
                 raise
 
+    def _notify_ready(self) -> None:
+        """Fire the optional readiness callback once, on the trio thread."""
+        callback = self.on_ready
+        if callback is None:
+            return
+        try:
+            callback()
+        except Exception:
+            logger.exception("Error in on_ready callback")
+
     async def _wait_for_stop(self) -> None:
-        """Poll the thread-safe stop signal without blocking the trio thread."""
+        """Wait for the thread-safe stop signal.
+
+        ``stop_event`` is a ``threading.Event`` because the API/UI thread must be
+        able to set it. Polling it from the trio loop keeps the wait
+        cancellable: if a protocol task fails and tears the nursery down, this
+        coroutine must not stay blocked on a never-set event.
+        """
         while not self.stop_event.is_set():
             await trio.sleep(0.1)
         logger.info("Stop signal received, shutting down...")
@@ -525,6 +638,20 @@ class HeadlessService:
                     queue.close()
                 except Exception:
                     pass
+
+        # Release the listen sockets explicitly. py-libp2p 0.8.x runs the swarm
+        # as a trio service whose ``run()`` cleanup awaits are cancelled before
+        # they execute, so UDP listeners (QUIC, WebTransport, WebRTC-direct)
+        # survive ``host.run()``'s exit. ``Swarm.close()`` is idempotent and
+        # closes listeners and transports deterministically, which is what lets
+        # a peer restart on the same ports inside one process.
+        host = self.host
+        network = host.get_network() if host is not None else None
+        if network is not None:
+            try:
+                await network.close()
+            except Exception:
+                logger.exception("Error closing the libp2p swarm")
 
         logger.info("Headless service stopped")
 

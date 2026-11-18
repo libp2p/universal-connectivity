@@ -99,15 +99,19 @@ class MessagingService:
 
     def subscribed_topics(self) -> set[str]:
         chat_room = getattr(self._engine, "chat_room", None)
-        if chat_room is None:
-            return set()
-        return set(chat_room.get_subscribed_topics())
+        if chat_room is not None:
+            return set(chat_room.get_subscribed_topics())
+        if hasattr(self._engine, "get_subscribed_topics"):
+            return set(self._engine.get_subscribed_topics())
+        return set()
 
     def all_pubsub_topics(self) -> set[str]:
         chat_room = getattr(self._engine, "chat_room", None)
-        if chat_room is None:
-            return set()
-        return set(chat_room.get_all_subscriptions())
+        if chat_room is not None:
+            return set(chat_room.get_all_subscriptions())
+        if hasattr(self._engine, "get_all_pubsub_topics"):
+            return set(self._engine.get_all_pubsub_topics())
+        return set()
 
     def connected_peers(self) -> set[str]:
         chat_room = getattr(self._engine, "chat_room", None)
@@ -135,6 +139,8 @@ class MessagingService:
                 logger.warning("Outgoing message queue is full; dropping message")
             except Exception as e:
                 logger.error(f"Failed to queue message: {e}")
+        elif hasattr(self._engine, "send_message") and callable(self._engine.send_message):
+            return bool(self._engine.send_message(message))
         else:
             logger.warning(
                 "Cannot send message: outgoing queue not ready or service not running"
@@ -160,6 +166,8 @@ class MessagingService:
                 )
             except Exception as e:
                 logger.error(f"Failed to queue message to topic {topic}: {e}")
+        elif hasattr(self._engine, "send_message_to_topic") and callable(self._engine.send_message_to_topic):
+            return bool(self._engine.send_message_to_topic(topic, message))
         else:
             logger.warning(
                 "Cannot send message: outgoing queue not ready or service not running"

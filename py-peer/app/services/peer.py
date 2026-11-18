@@ -52,9 +52,9 @@ class PeerService:
             peer_count = 0
 
         return {
-            "peer_id": str(engine.host.get_id()),
+            "peer_id": str(engine.host.get_id()) if getattr(engine, "host", None) else getattr(engine, "peer_id", ""),
             "nickname": engine.nickname,
-            "multiaddr": engine.full_multiaddr,
+            "multiaddr": engine.full_multiaddrs[0] if engine.full_multiaddrs else None,
             "multiaddrs": list(engine.full_multiaddrs),
             "listen_addrs": list(engine.transport_addrs),
             "connected_peers": connected,
@@ -163,22 +163,20 @@ class PeerService:
                                     exc_info=True,
                                 )
 
-                logger.info(f"Connected peers are: {len(current)}")
-                logger.info(
-                    "Peers in peer store are: "
-                    f"{len(engine.host.get_peerstore().peers_with_addrs())}"
+                logger.debug("Connected peers are: %d", len(current))
+                logger.debug(
+                    "Peers in peer store are: %d",
+                    len(engine.host.get_peerstore().peers_with_addrs()),
                 )
                 dht = getattr(engine, "dht", None)
                 if dht is not None:
-                    logger.info(
-                        "Peers in routing table are: "
-                        f"{len(dht.routing_table.get_peer_ids())}"
+                    logger.debug(
+                        "Peers in routing table are: %d",
+                        len(dht.routing_table.get_peer_ids()),
                     )
                 pubsub = getattr(engine, "pubsub", None)
                 if pubsub is not None:
-                    logger.info(
-                        f"Peers in pubsub are: {len(pubsub.peers.keys())}"
-                    )
+                    logger.debug("Peers in pubsub are: %d", len(pubsub.peers.keys()))
             except Exception as e:
                 # A status-logging failure must never take down the node.
                 logger.warning(f"Peer monitor error: {e}")

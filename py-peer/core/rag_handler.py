@@ -4,18 +4,22 @@ RAG (Retrieval-Augmented Generation) handler for the py-libp2p assistant.
 Exposes:
   POST /api/v1/ask   — accepts {"question": "..."}, returns {"answer": "...", "sources": [...]}
 
-The vector store (ChromaDB) is loaded once at startup via load_vectorstore().
-Queries are answered by: embed question → ChromaDB similarity search → build grounded
-prompt → send to Groq (llama-3.3-70b-versatile).
+The vector store (ChromaDB) is loaded lazily on the first request via
+get_vectorstore(), never during peer startup. Queries are answered by:
+embed question → ChromaDB similarity search → build grounded prompt → send to
+Groq (llama-3.3-70b-versatile).
 """
 
+import asyncio
 import json
 import logging
 import os
+import threading
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import tornado.ioloop
 import tornado.web
 
 if TYPE_CHECKING:
@@ -93,6 +97,27 @@ def load_vectorstore() -> Any:
         return None
 
 
+_vectorstore: Any = None
+_vectorstore_loaded = False
+_vectorstore_lock = threading.Lock()
+
+
+def get_vectorstore() -> Any:
+    """Load the vector store at most once, on first use.
+
+    Importing Chroma/torch and downloading the embedding model can take
+    seconds to minutes and must not happen while the peer is starting, so the
+    API server resolves it lazily from the first ``/api/v1/ask`` request
+    (off the IOLoop, via ``run_in_executor``).
+    """
+    global _vectorstore, _vectorstore_loaded
+    with _vectorstore_lock:
+        if not _vectorstore_loaded:
+            _vectorstore = load_vectorstore()
+            _vectorstore_loaded = True
+    return _vectorstore
+
+
 def _build_prompt(question: str, chunks: list[Any]) -> str:
     context = "\n\n---\n\n".join(
         f"[Source: {c.metadata.get('source', 'unknown')}]\n{c.page_content}"
@@ -119,8 +144,16 @@ class AskHandler(tornado.web.RequestHandler):
 
     vectorstore: Any
 
-    def initialize(self, vectorstore: Any) -> None:
+    def initialize(self, vectorstore: Any = None) -> None:
         self.vectorstore = vectorstore
+
+    async def _resolve_vectorstore(self) -> Any:
+        """Return the store, loading it off the IOLoop on first use."""
+        if self.vectorstore is not None:
+            return self.vectorstore
+        loop = tornado.ioloop.IOLoop.current()
+        self.vectorstore = await loop.run_in_executor(None, get_vectorstore)
+        return self.vectorstore
 
     def set_default_headers(self) -> None:
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -160,7 +193,8 @@ class AskHandler(tornado.web.RequestHandler):
         }))
 
     async def post(self) -> None:
-        if self.vectorstore is None:
+        store = await self._resolve_vectorstore()
+        if store is None:
             self.send_error_response(
                 "RAG assistant is not available. Vector store not loaded.",
                 status=503,
@@ -190,7 +224,7 @@ class AskHandler(tornado.web.RequestHandler):
 
         # Retrieve relevant chunks from ChromaDB
         try:
-            chunks = self.vectorstore.similarity_search(question, k=TOP_K)
+            chunks = await asyncio.to_thread(lambda: store.similarity_search(question, k=TOP_K))
         except Exception as exc:
             log.error("ChromaDB similarity search failed: %s", exc)
             self.send_error_response("Vector search failed.", status=500)

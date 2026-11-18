@@ -10,6 +10,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+from .constants import DEFAULT_PORT
+
 
 @dataclass(frozen=True)
 class PeerIdentity:
@@ -94,7 +96,7 @@ class RuntimeConfig:
     """
 
     nickname: str
-    port: int = 0
+    port: int = DEFAULT_PORT
     connect_addrs: list[str] = field(default_factory=list)
     ui_mode: bool = False
     strict_signing: bool = True

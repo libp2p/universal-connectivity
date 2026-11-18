@@ -254,7 +254,10 @@ class ChatUI(App[None]):
             for addr in info.get("listen_addrs", []) or []:
                 self.display_system_message(f"  - Listening: {addr}")
             self.display_system_message(f"  - Connected peers: {info.get('peer_count', 0)}")
-            self.display_system_message(f"  - Subscribed topics: chat, discovery")
+            topics = sorted(self.runtime.messaging.subscribed_topics())
+            self.display_system_message(
+                f"  - Subscribed topics: {', '.join(topics) or 'none'}"
+            )
 
         elif cmd == "/multiaddr":
             info = self.runtime.peer.connection_info().to_dict()

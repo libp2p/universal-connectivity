@@ -54,3 +54,8 @@ jobs:
         run: |
           source .venv/bin/activate
           pyrefly check
+
+      - name: Run pytest
+        run: |
+          source .venv/bin/activate
+          pytest

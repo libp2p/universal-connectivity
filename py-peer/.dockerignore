@@ -35,6 +35,8 @@ dist/
 
 # Repository-only files
 assets/
+tests/
+docs/
 *.md
 !README.md
 

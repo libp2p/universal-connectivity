@@ -33,9 +33,21 @@ MAX_OUTGOING_QUEUE = 1024        # API/UI -> chat publisher
 MAX_REQUEST_QUEUE = 256          # topic/peer requests
 MAX_FILE_QUEUE = 64              # file share/download requests
 
+# Largest inbound gossip payload accepted from a remote peer. Anything bigger
+# is dropped before decoding, so a peer cannot force unbounded JSON/protobuf
+# parsing or storage growth.
+MAX_GOSSIP_MESSAGE_BYTES = 64 * 1024
+
 # Discovery service tag and default listener port.
 DISCOVERY_SERVICE_TAG = "universal-connectivity"
-DEFAULT_PORT = 9095
+DEFAULT_PORT = 4001
+
+# The default listener set binds one port per transport family. WebTransport
+# and WebRTC-direct cannot share the QUIC-v1 socket (each owns its own
+# certificate), so they are offset from the base port. When the base port is
+# 0 (ephemeral) every transport binds its own kernel-assigned port instead.
+WEBTRANSPORT_PORT_OFFSET = 1
+WEBRTC_DIRECT_PORT_OFFSET = 2
 
 __all__ = [
     "BOOTSTRAP_PEERS",
@@ -44,8 +56,11 @@ __all__ = [
     "DISCOVERY_SERVICE_TAG",
     "FILE_MESSAGE_PREFIX",
     "MAX_FILE_QUEUE",
+    "MAX_GOSSIP_MESSAGE_BYTES",
     "MAX_LEGACY_QUEUE",
     "MAX_OUTGOING_QUEUE",
     "MAX_REQUEST_QUEUE",
     "MAX_TOPIC_MESSAGES",
+    "WEBRTC_DIRECT_PORT_OFFSET",
+    "WEBTRANSPORT_PORT_OFFSET",
 ]

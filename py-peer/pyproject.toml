@@ -58,6 +58,7 @@ only-include = [
     "api",
     "app",
     "llm",
+    "tests",
     "assets",
     "Dockerfile",
     "docker-compose.yml",
@@ -69,6 +70,10 @@ only-include = [
     "uv.lock",
     ".python-version",
 ]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
 
 [tool.mypy]
 python_version = "3.12"

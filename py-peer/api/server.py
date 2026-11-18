@@ -29,7 +29,8 @@ from .messages  import (SendDefaultMessageHandler, TopicMessagesHandler,
                            TopicUnreadHandler, TopicMarkReadHandler)
 from .topics    import TopicListHandler, TopicInfoHandler, TopicMeshPeersHandler
 from .files     import (SharedFilesHandler, SharedFileDetailHandler,
-                           ShareFileHandler, DownloadFileHandler, UploadAndShareHandler)
+                           ShareFileHandler, DownloadFileHandler, UploadAndShareHandler,
+                           MAX_UPLOAD_BYTES)
 from .dht       import DHTStatusHandler, DHTPeersHandler, DHTRoutingTableHandler
 from .pubsub    import (PubSubPeersHandler, PubSubMeshHandler, PubSubFanoutHandler,
                            PubSubConfigHandler, PubSubSubscriptionsHandler)
@@ -39,7 +40,7 @@ from .service   import (ServiceStatusHandler, ServiceConfigHandler,
                            ServiceStopHandler, ServiceBootstrapHandler)
 from .websocket import (MessageStreamHandler, SystemStreamHandler,
                            PeerUpdateHandler, MeshUpdateHandler)
-from core.rag_handler import AskHandler, load_vectorstore
+from core.rag_handler import AskHandler
 
 logger = logging.getLogger("tornado_server")
 
@@ -125,10 +126,11 @@ def _make_app(
     return tornado.web.Application(
         routes,
         debug=False,
-        # The upload handler enforces a 25 MB per-file cap. Keep the absolute
-        # body limit close to it so an unauthenticated request cannot make the
-        # process buffer 100 MB before the handler rejects it.
-        max_body_size=32 * 1024 * 1024,
+        # The upload handler enforces MAX_UPLOAD_BYTES per file. Allow one
+        # multipart boundary/part-header of headroom on top so that a legal
+        # upload is never rejected by the transport layer, while a request of
+        # tens of megabytes is refused before it is buffered in memory.
+        max_body_size=MAX_UPLOAD_BYTES + 1024 * 1024,
     )
 
 
@@ -164,8 +166,9 @@ class TornadoServer:
         self._ioloop = tornado.ioloop.IOLoop.current()
         if hasattr(self.service, "on_stopped"):
             self.service.on_stopped = self._on_service_stopped
-        vectorstore = load_vectorstore()
-        self._app = _make_app(self.runtime, vectorstore=vectorstore)
+        # The RAG vector store is resolved lazily by AskHandler on first use:
+        # loading Chroma/embeddings during startup would stall the peer.
+        self._app = _make_app(self.runtime)
 
     def _on_service_stopped(self) -> None:
         """Shut the API down once the headless service has stopped."""

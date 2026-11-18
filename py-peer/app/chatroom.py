@@ -28,6 +28,8 @@ from multiaddr import Multiaddr
 
 from core.pb import Peer as DiscoveredPeer
 
+from .constants import MAX_GOSSIP_MESSAGE_BYTES
+
 logger = logging.getLogger("chatroom")
 
 # Separate logger for the human-readable system log. The file location is
@@ -266,21 +268,20 @@ class ChatRoom:
             # Check if we have any peers connected
             peer_count = len(self.pubsub.peers)
             logger.info(f"📤 Publishing message to {peer_count} peers: {message}")
-            logger.info(f"Total pubsub peers: {list(self.pubsub.peers.keys())}")
+            logger.debug(f"Total pubsub peers: {list(self.pubsub.peers.keys())}")
 
             # Send plain text message (Go-compatible format) to the custom topic
-            print(f"Sending message {message}")
             await self.pubsub.publish(self.chat_topic, message.encode())
             logger.info(f"✅ Message published successfully to topic '{self.chat_topic}'")
 
             if peer_count == 0:
-                print(f"⚠️  No peers connected - message sent to topic but no one will receive it")
-            else:
-                print(f"✓ Message sent to {peer_count} peer(s)")
+                logger.warning(
+                    "No peers connected: message was published to the topic but "
+                    "nobody will receive it"
+                )
 
         except Exception as e:
             logger.error(f"❌ Failed to publish message: {e}")
-            print(f"❌ Error sending message: {e}")
             self._log_system_message(f"ERROR: Failed to publish message: {e}")
 
     async def publish_to_topic(self, topic: str, message: str) -> bool:
@@ -310,40 +311,6 @@ class ChatRoom:
             self._log_system_message(f"ERROR: Failed to publish message to topic '{topic}': {e}")
             return False
 
-    async def _validate_message_with_identify(
-        self, message: Message, sender_id: str
-    ) -> bool:
-        """Validate message using identify protocol to get sender's public key.
-
-        This should only be called for messages from OTHER peers that don't include
-        a public key in the message data.
-        """
-        # Safety check: never try to identify ourselves
-        if sender_id == self.peer_id:
-            logger.debug(f"⏭️  Skipping identify for own peer ID {sender_id}")
-            return True
-
-        if not self.headless_service:
-            logger.warning("No headless service available for identify protocol")
-            return True  # Default to accepting message if no identify available
-
-        try:
-            # Get peer info via identify protocol (this will cache it)
-            peer_info = await self.headless_service.get_cached_peer_info(sender_id)
-
-            if peer_info and peer_info.get('public_key'):
-                logger.info(f"✅ Retrieved public key for {sender_id} via identify protocol")
-                # Here you could add actual message signature validation
-                # For now, we just log that we got the public key
-                return True
-            else:
-                logger.warning(f"⚠️  Could not get public key for {sender_id} via identify protocol")
-                return True  # Still accept message but log the issue
-
-        except Exception as e:
-            logger.error(f"❌ Error validating message with identify: {e}")
-            return True  # Default to accepting message on error
-
     async def _handle_topic_messages(
         self, topic_name: str, subscription: ISubscriptionAPI
     ) -> None:
@@ -353,6 +320,8 @@ class ChatRoom:
         if topic_name == PROFILE_TOPIC:
             async for message in self._message_stream(subscription):
                 try:
+                    if len(message.data) > MAX_GOSSIP_MESSAGE_BYTES:
+                        continue
                     payload = json.loads(message.data.decode())
                     if not isinstance(payload, dict):
                         continue
@@ -388,6 +357,18 @@ class ChatRoom:
         try:
             async for message in self._message_stream(subscription):
                 try:
+                    # Drop oversized frames before decoding them. Gossip messages
+                    # are attacker-controlled; decoding and storing only bounded
+                    # payloads keeps memory use predictable.
+                    if len(message.data) > MAX_GOSSIP_MESSAGE_BYTES:
+                        logger.warning(
+                            "Dropping oversized message on %r: %d bytes (limit %d)",
+                            topic_name,
+                            len(message.data),
+                            MAX_GOSSIP_MESSAGE_BYTES,
+                        )
+                        continue
+
                     # Handle messages in the same way as chat messages
                     raw_data = message.data.decode()
                     sender_id = base58.b58encode(message.from_id).decode() if message.from_id else "unknown"
@@ -395,18 +376,19 @@ class ChatRoom:
                     # Check if this is our own message
                     is_own_message = sender_id == self.peer_id
 
-                    # Only validate messages from other peers
+                    # Message authenticity is enforced by Pubsub itself:
+                    # ``strict_signing`` verifies the signature against the key
+                    # embedded in the peer ID (or the inline ``message.key``)
+                    # before a frame ever reaches this handler. Nothing is left
+                    # to check here, so do not pretend otherwise.
                     if not is_own_message:
-                        if not message.key:
-                            logger.debug(f"🔍 Message from {sender_id} has no public key, using identify protocol")
-                            is_valid = await self._validate_message_with_identify(message, sender_id)
-                            if not is_valid:
-                                logger.warning(f"⚠️  Message validation failed for {sender_id}, skipping")
-                                continue
-                        else:
-                            logger.debug(f"✅ Message from {sender_id} includes public key")
-                    else:
-                        logger.debug(f"📝 Processing own message from {sender_id} (no validation needed)")
+                        logger.debug(
+                            "Message from %s accepted (signature %s)",
+                            sender_id,
+                            "verified by pubsub"
+                            if self.pubsub.strict_signing
+                            else "not checked: strict_signing is off",
+                        )
 
                     # Use the libp2p sequence number as the stable wire id.
                     # Re-delivery of the same frame must collapse in storage.
@@ -448,7 +430,12 @@ class ChatRoom:
 
                     # Default console output if no handlers
                     if not self.message_handlers:
-                        print(f"[{topic_name}][{chat_msg.sender_nick}]: {chat_msg.message}")
+                        logger.info(
+                            "[%s][%s]: %s",
+                            topic_name,
+                            chat_msg.sender_nick,
+                            chat_msg.message,
+                        )
 
                 except Exception as e:
                     logger.error(f"❌ Error processing message on topic '{topic_name}': {e}")
@@ -463,6 +450,13 @@ class ChatRoom:
         logger.info(f"📡 Starting discovery listener on {PUBSUB_DISCOVERY_TOPIC}")
         async for message in self._message_stream(subscription):
             try:
+                if len(message.data) > MAX_GOSSIP_MESSAGE_BYTES:
+                    logger.warning(
+                        "Dropping oversized discovery message: %d bytes (limit %d)",
+                        len(message.data),
+                        MAX_GOSSIP_MESSAGE_BYTES,
+                    )
+                    continue
                 peer_msg = DiscoveredPeer()
                 peer_msg.ParseFromString(message.data)
 
@@ -592,78 +586,6 @@ class ChatRoom:
     ) -> None:
         """Add a custom system message handler."""
         self.system_message_handlers.append(handler)
-
-    async def run_interactive(self) -> None:
-        """Run interactive chat mode."""
-        print(f"\n=== Universal Connectivity Chat ===")
-        print(f"Nickname: {self.nickname}")
-        print(f"Peer ID: {self.peer_id}")
-        print(f"Type messages and press Enter to send. Type 'quit' to exit.")
-        print(f"Commands: /peers, /status, /multiaddr")
-        print()
-
-        async with trio.open_nursery() as nursery:
-            # Start message handlers
-            nursery.start_soon(self.start_message_handlers)
-
-            # Start input handler
-            nursery.start_soon(self._input_handler)
-
-    async def _input_handler(self) -> None:
-        """Handle user input in interactive mode."""
-        try:
-            while self.running:
-                try:
-                    # Use trio's to_thread to avoid blocking the event loop
-                    message = await trio.to_thread.run_sync(input)
-
-                    if message.lower() in ["quit", "exit", "q"]:
-                        print("Goodbye!")
-                        self.running = False
-                        break
-
-                    # Handle special commands
-                    elif message.strip() == "/peers":
-                        peers = self.get_connected_peers()
-                        if peers:
-                            print(f"📡 Connected peers ({len(peers)}):")
-                            for peer in peers:
-                                print(f"  - {peer}")
-                        else:
-                            print("📡 No peers connected")
-                        continue
-
-                    elif message.strip() == "/multiaddr":
-                        print(f"\n📋 Copy this multiaddress:")
-                        print(f"{self.multiaddr}")
-                        print()
-                        continue
-
-                    elif message.strip() == "/status":
-                        peer_count = self.get_peer_count()
-                        subscribed_topics = ", ".join(sorted(self.get_subscribed_topics()))
-                        print(f"📊 Status:")
-                        print(f"  - Multiaddr: {self.multiaddr}")
-                        print(f"  - Nickname: {self.nickname}")
-                        print(f"  - Connected peers: {peer_count}")
-                        print(f"  - Chat topic: {self.chat_topic}")
-                        print(f"  - Subscribed topics: {subscribed_topics}")
-                        continue
-
-                    if message.strip():
-                        await self.publish_message(message)
-
-                except EOFError:
-                    print("\nGoodbye!")
-                    self.running = False
-                    break
-                except Exception as e:
-                    logger.error(f"Error in input handler: {e}")
-                    await trio.sleep(0.1)
-
-        except Exception as e:
-            logger.error(f"Fatal error in input handler: {e}")
-            self.running = False
 
     async def stop(self) -> None:
         """Stop the chat room."""

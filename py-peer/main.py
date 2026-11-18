@@ -10,16 +10,16 @@ import argparse
 import logging
 import signal
 import sys
-import time
 import traceback
+
 import trio
-import threading
 from collections.abc import Callable
 from typing import Any
 
 from dotenv import load_dotenv
 load_dotenv()  # loads .env from cwd (py-peer/)
 
+from core.constants import DEFAULT_PORT
 from core.headless import HeadlessService
 from app import ApplicationError, ApplicationRuntime, RuntimeConfig
 
@@ -55,71 +55,6 @@ def setup_logging(ui_mode: bool = False) -> None:
     )
 
 logger = logging.getLogger("main")
-
-def run_headless_in_thread(
-    headless_service: Any, ready_event: Any
-) -> threading.Thread:
-    """Run headless service in a separate thread."""
-    def run_service() -> None:
-        try:
-            trio.run(headless_service.start)
-        except Exception as e:
-            logger.error(f"Error in headless service thread: {e}")
-            logger.error(f"Traceback:\n{traceback.format_exc()}")
-
-    # Start the service in a daemon thread
-    thread = threading.Thread(target=run_service, daemon=True)
-    thread.start()
-
-    # Wait for the service to be ready. Also break out as soon as the service
-    # reports a fatal startup failure: otherwise a bad port/seed/announce
-    # address makes the process sit idle for the full 30 seconds.
-    max_wait = 30  # Maximum wait time in seconds
-    waited = 0.0
-    while (
-        not headless_service.ready
-        and not getattr(headless_service, "failed", False)
-        and waited < max_wait
-    ):
-        time.sleep(0.1)
-        waited += 0.1
-
-    if getattr(headless_service, "failed", False):
-        raise RuntimeError("Headless service failed to start")
-    if not headless_service.ready:
-        raise RuntimeError("Headless service failed to start within timeout")
-
-    logger.info("✅ Headless service is ready in background thread")
-    return thread
-
-
-def stop_headless_and_join(
-    headless_service: Any,
-    thread: threading.Thread | None,
-    timeout: float = 10.0,
-) -> None:
-    """Request shutdown and wait for the trio thread to finish cleanup.
-
-    UI modes and the API adapter run the service on a daemon thread. Without
-    this call the process exits via ``os._exit`` semantics and the host,
-    ChatRoom, Bitswap client, and queues are never closed. ``request_stop()``
-    only sets an event; the owning trio thread performs teardown in
-    ``HeadlessService.start()``'s ``finally`` block.
-    """
-    if headless_service is None:
-        return
-    request_stop = getattr(headless_service, "request_stop", None)
-    if request_stop is not None:
-        request_stop()
-    else:  # pragma: no cover - defensive for test doubles
-        headless_service.stop_event.set()
-    if thread is None:
-        return
-    thread.join(timeout)
-    if thread.is_alive():
-        logger.warning(
-            "Headless service thread did not stop within %.1fs", timeout
-        )
 
 
 def install_shutdown_signal_handlers(
@@ -312,7 +247,8 @@ async def handle_user_input(runtime: ApplicationRuntime) -> None:
                 for addr in info.get("listen_addrs", []) or []:
                     print(f"  - Listening: {addr}")
                 print(f"  - Connected peers: {info.get('peer_count', 0)}")
-                print(f"  - Subscribed topics: chat, discovery")
+                topics = sorted(runtime.messaging.subscribed_topics())
+                print(f"  - Subscribed topics: {', '.join(topics) or 'none'}")
                 continue
 
             if message.strip():
@@ -360,8 +296,8 @@ def main() -> None:
     parser.add_argument(
         "-p", "--port",
         type=int,
-        help="Port to listen on",
-        default=0
+        help=f"Port to listen on (default: {DEFAULT_PORT}; 0 picks an ephemeral port)",
+        default=DEFAULT_PORT
     )
 
     parser.add_argument(
@@ -401,7 +337,11 @@ def main() -> None:
     parser.add_argument(
         "--no-strict-signing",
         action="store_true",
-        help="Disable strict message signing (allows unsigned messages)"
+        help=(
+            "Disable strict message signing. Pubsub then accepts unsigned and "
+            "unauthenticated messages: any peer that can reach the topic can "
+            "impersonate any sender. Only for interop debugging."
+        )
     )
     parser.add_argument(
         "-s",

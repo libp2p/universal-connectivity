@@ -31,11 +31,24 @@ logger = logging.getLogger("app.services.discovery")
 
 
 def _topic_to_dht_key(topic: str) -> str:
-    """Compute multihash hex string for a topic (matching go-libp2p nsToCid multihash)."""
+    """Multihash hex for a topic, matching go-libp2p's ``nsToCid``.
+
+    go-libp2p's ``routing.Advertise``/``FindPeers`` translate a namespace with
+    ``cid.NewCidV1(cid.Raw, multihash.Sum(ns, SHA2_256, -1))``, so the DHT key is
+    the bare SHA-256 multihash. ``KadDHT.provide``/``find_providers`` hex-decode
+    a hex string into those same bytes.
+    """
     digest = hashlib.sha256(topic.encode("utf-8")).digest()
     # 0x12 = sha2-256, 0x20 = 32 bytes length
     mh = bytes([0x12, len(digest)]) + digest
     return mh.hex()
+
+
+# rust-peer announces itself with ``kad.start_providing(RecordKey::new(
+# "universal-connectivity/0.1.0"))``, i.e. the raw UTF-8 bytes of its agent
+# string. Providing and searching that key here is what makes py-peer visible to
+# rust-peer's provider lookup.
+RUST_DISCOVERY_KEY = "universal-connectivity/0.1.0"
 
 
 class DiscoveryService:
@@ -331,7 +344,7 @@ class DiscoveryService:
         logger.info("🧭 Starting Kademlia DHT peer discovery worker")
 
         dht_key_hex = _topic_to_dht_key(DISCOVERY_SERVICE_TAG)
-        rust_key = "universal-connectivity/0.1.0"
+        rust_key = RUST_DISCOVERY_KEY
 
         last_provide_time = 0.0
         PROVIDE_INTERVAL = 120.0

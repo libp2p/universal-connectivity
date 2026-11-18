@@ -109,6 +109,13 @@ class ApplicationRuntime:
         self._stop_requested = False
         self._started_at: float | None = None
         self._explicit_failure = False
+        # Set once startup resolves either way (ready or the thread exits), so
+        # start_in_thread can block instead of polling service.ready.
+        self._startup_done = threading.Event()
+        try:
+            self.service.on_ready = self._startup_done.set
+        except Exception:  # pragma: no cover - duck-typed test doubles
+            logger.debug("Attached service does not accept an on_ready callback")
 
     # ------------------------------------------------------------------ #
     #  Lifecycle
@@ -180,6 +187,9 @@ class ApplicationRuntime:
         except BaseException:
             # Startup failures are surfaced through service.failed / start_in_thread.
             logger.exception("Application runtime thread exited with an error")
+        finally:
+            # Wake a waiter even when startup failed before readiness.
+            self._startup_done.set()
 
     def start_in_thread(self, timeout: float = 30.0) -> threading.Thread:
         """Start the runtime on a background trio thread and wait for readiness.
@@ -199,13 +209,9 @@ class ApplicationRuntime:
             self._thread = thread
         thread.start()
 
-        deadline = time.monotonic() + timeout
-        while (
-            not self.ready
-            and not self.failed
-            and time.monotonic() < deadline
-        ):
-            time.sleep(0.05)
+        # Block until the engine signals readiness or the thread exits; no
+        # sleep loop, and a startup failure returns immediately.
+        self._startup_done.wait(timeout)
 
         if self.failed:
             self._stop_and_join(timeout=10.0)

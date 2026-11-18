@@ -18,6 +18,7 @@ from .messaging import MessagingService
 from .notifications import NotificationService
 from .peer import PeerService
 from .storage import StorageService
+from ..storage import MemoryStore
 
 
 class ServiceBundle:
@@ -35,7 +36,7 @@ class ServiceBundle:
         self.identity = IdentityService(engine)
         self.storage = StorageService(
             engine,
-            store or getattr(engine, "message_store", None),
+            store or getattr(engine, "message_store", None) or MemoryStore(),
             notifications=self.notifications,
         )
         self.messaging = MessagingService(

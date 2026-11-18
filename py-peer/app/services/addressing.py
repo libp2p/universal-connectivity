@@ -15,6 +15,8 @@ from typing import Any, List
 
 import multiaddr
 
+from ..constants import WEBRTC_DIRECT_PORT_OFFSET, WEBTRANSPORT_PORT_OFFSET
+
 logger = logging.getLogger("app.services.addressing")
 
 SUPPORTED_LISTEN_PROTOCOLS = {
@@ -31,13 +33,44 @@ SUPPORTED_LISTEN_PROTOCOLS = {
 
 
 def has_webrtc_support() -> bool:
-    """Return True if aiortc is available for WebRTC Direct transport."""
+    """Return True if aiortc (the WebRTC-direct backend) is importable."""
     try:
         import aiortc  # noqa: F401
 
         return True
     except ImportError:
         return False
+
+
+def default_listen_specs(
+    base_port: int, *, include_webrtc_direct: bool = True
+) -> list[str]:
+    """Build the default multi-transport listener list for *base_port*.
+
+    All five transports are advertised by the DApp, and py-libp2p builds a
+    transport from whichever listen multiaddr it sees. WebTransport and
+    WebRTC-direct each terminate their own TLS certificate, so they cannot
+    share the QUIC-v1 socket and are offset from the base port.
+
+    A *base_port* of 0 means "let the kernel pick": every transport then binds
+    its own ephemeral port (offsetting would ask for privileged ports 1 and 2).
+    """
+    if base_port == 0:
+        tcp = quic = webtransport = webrtc = 0
+    else:
+        tcp = quic = base_port
+        webtransport = base_port + WEBTRANSPORT_PORT_OFFSET
+        webrtc = base_port + WEBRTC_DIRECT_PORT_OFFSET
+
+    specs = [
+        f"/ip4/0.0.0.0/tcp/{tcp}",
+        f"/ip4/0.0.0.0/tcp/{tcp}/ws",
+        f"/ip4/0.0.0.0/udp/{quic}/quic-v1",
+        f"/ip4/0.0.0.0/udp/{webtransport}/quic-v1/webtransport",
+    ]
+    if include_webrtc_direct:
+        specs.append(f"/ip4/0.0.0.0/udp/{webrtc}/webrtc-direct")
+    return specs
 
 
 class AddressService:
@@ -50,22 +83,24 @@ class AddressService:
     #  Listen / announce resolution
     # ------------------------------------------------------------------ #
     def resolve_listen_addrs(self) -> List[multiaddr.Multiaddr]:
-        """Parse and validate the configured listen addresses, or build defaults across all transports."""
+        """Parse and validate the configured listen addresses.
+
+        Without an explicit ``--listen-addr`` the peer binds every transport the
+        DApp advertises: TCP, WebSocket, QUIC-v1, WebTransport and
+        WebRTC-direct.
+        """
         base_port = self._engine.port
         if self._engine.listen_addrs:
             raw = self._engine.listen_addrs
-        elif base_port == 0:
-            raw = [
-                "/ip4/0.0.0.0/tcp/0",
-                "/ip4/0.0.0.0/tcp/0/ws",
-                "/ip4/0.0.0.0/udp/0/quic-v1",
-            ]
         else:
-            raw = [
-                f"/ip4/0.0.0.0/tcp/{base_port}",
-                f"/ip4/0.0.0.0/tcp/{base_port}/ws",
-                f"/ip4/0.0.0.0/udp/{base_port}/quic-v1",
-            ]
+            raw = default_listen_specs(
+                base_port, include_webrtc_direct=has_webrtc_support()
+            )
+            if not has_webrtc_support():
+                logger.warning(
+                    "aiortc is not installed; WebRTC-direct listener disabled. "
+                    "Install the aiortc extra to serve browser peers."
+                )
 
         resolved = []
         for item in raw:
@@ -281,10 +316,12 @@ class AddressService:
         missing = []
         for req in requested:
             family, hostname, proto, port = self.addr_match_key(req)
+            is_wildcard = hostname in ("0.0.0.0", "::")
+            is_special = proto in ("webtransport", "webrtc-direct")
             matched = any(
                 b_family == family
                 and b_proto == proto
-                and (b_host == hostname or hostname in ("0.0.0.0", "::"))
+                and (b_host == hostname or (is_wildcard and is_special))
                 and (port is None or b_port == port)
                 for b_family, b_host, b_proto, b_port in bound_keys
             )

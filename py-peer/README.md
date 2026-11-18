@@ -697,16 +697,17 @@ Compose values and any explicit CLI flags consistent, because a CLI flag inside
 
 | Setting | Default | Notes |
 |---|---|---|
-| Peer port | `4001` (`--port 0` is converted to `4001`) | Compose/Docker pass `4001` explicitly |
-| Listen addresses | All 5 transports (TCP, WS, QUIC, WebTransport, WebRTC-Direct) | Default binds all transports; custom `--listen-addr` repeatable |
+| Peer port | `4001` (`--port 0` binds ephemeral ports) | Compose/Docker pass `4001` explicitly |
+| Listen addresses | All 5 transports (TCP, WS, QUIC, WebTransport, WebRTC-Direct) | Default binds all transports on `<port>`, `<port>+1` (WebTransport) and `<port>+2` (WebRTC-direct); custom `--listen-addr` repeatable |
 | Advertised host | `127.0.0.1` | Same-machine only; set a dialable address for LAN/Docker |
 | API port | `8765` | |
 | API host | `127.0.0.1` | Unauthenticated; `0.0.0.0` is explicit opt-in |
 | Data directory | platformdirs path | Overridden by `UC_DATA_DIR` or `--data-dir` |
 | History retention | 1000 messages/topic | Fixed in this build; hard maximum 100,000 |
 | Chat message size | 4096 characters | Enforced by the service for every adapter |
+| Inbound gossip frame | 64 KiB | Larger frames are dropped before decoding |
 | Topic name | 128 characters | Validated on subscription |
-| Upload size | 25 MB per file | Absolute HTTP body cap is 32 MB |
+| Upload size | 25 MB per file | HTTP body cap is 25 MB + 1 MB multipart headroom |
 | Event queue | 256 events/subscriber | Slow consumers drop the oldest event |
 | Legacy UI queues | 64–1024 items | Bounded; non-blocking command queues |
 
