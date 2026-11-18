@@ -146,14 +146,14 @@ class IdentityPersistenceTests(_TempDirTest):
 
     def test_explicit_seed_is_deterministic_and_not_written(self):
         path = os.path.join(self.tmp, "identity", "peer.key")
-        seeded = self._service(seed="phase4", identity_path=path)
+        seeded = self._service(seed="test-seed", identity_path=path)
         key_pair = seeded._load_identity()
 
         self.assertEqual(seeded.identity_source, "seed")
         self.assertFalse(os.path.exists(path))
         self.assertEqual(
             self._peer_id(key_pair),
-            self._peer_id(self._service(seed="phase4")._load_identity()),
+            self._peer_id(self._service(seed="test-seed")._load_identity()),
         )
 
     def test_explicit_seed_overrides_a_stored_identity(self):
@@ -202,12 +202,12 @@ class SystemLogTests(_TempDirTest):
         active = configure_system_log(path)
 
         self.assertEqual(active, os.path.abspath(path))
-        system_logger.info("phase four log line")
+        system_logger.info("test log line")
         for handler in self._rotating_handlers():
             handler.flush()
 
         with open(path, encoding="utf-8") as handle:
-            self.assertIn("phase four log line", handle.read())
+            self.assertIn("test log line", handle.read())
 
     def test_configure_is_idempotent(self):
         path = os.path.join(self.tmp, "logs", "system_messages.txt")

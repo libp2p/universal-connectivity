@@ -318,16 +318,16 @@ class AddressIntegrationTests(unittest.TestCase):
                 {str(peer) for peer in service_a.host.get_connected_peers()},
             )
 
-            self.assertTrue(service_a.send_message("phase1-connectivity"))
+            self.assertTrue(service_a.send_message("test-connectivity"))
             deadline = time.monotonic() + 10
             messages = []
             while time.monotonic() < deadline:
                 messages = service_b.get_topic_messages("universal-connectivity")
-                if any(m.get("message") == "phase1-connectivity" for m in messages):
+                if any(m.get("message") == "test-connectivity" for m in messages):
                     break
                 time.sleep(0.1)
             self.assertIn(
-                "phase1-connectivity",
+                "test-connectivity",
                 [m.get("message") for m in messages],
             )
         finally:
