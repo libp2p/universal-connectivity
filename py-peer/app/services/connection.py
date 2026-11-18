@@ -161,7 +161,7 @@ class ConnectionService:
                 await trio.sleep(3)
                 await self.check_pubsub_status(info.peer_id)
 
-                await self._system(f"Connected to peer: {str(info.peer_id)[:8]}")
+                await self._system(f"Connected to peer: {str(info.peer_id)}")
 
             except Exception as e:
                 logger.error(f"❌ Failed to connect to {addr_str}: {e}")

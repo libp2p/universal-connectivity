@@ -285,7 +285,7 @@ async def handle_user_input(runtime: ApplicationRuntime) -> None:
                 if peers:
                     print(f"📡 Connected peers ({len(peers)}):")
                     for peer in peers:
-                        print(f"  - {peer[:8]}...")
+                        print(f"  - {peer}")
                 else:
                     print("📡 No peers connected")
                 continue

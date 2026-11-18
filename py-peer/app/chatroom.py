@@ -199,7 +199,7 @@ class ChatRoom:
         self.running = False
         self.nursery: trio.Nursery | None = None
 
-        logger.info(f"ChatRoom initialized for peer {self.peer_id[:8]}... with nickname '{nickname}'")
+        logger.info(f"ChatRoom initialized for peer {self.peer_id} with nickname '{nickname}'")
         logger.info(f"Chat topic: {self.chat_topic}")
         self._log_system_message("Universal Connectivity Chat Started")
         self._log_system_message(f"Nickname: {nickname}")
@@ -628,7 +628,7 @@ class ChatRoom:
                         if peers:
                             print(f"📡 Connected peers ({len(peers)}):")
                             for peer in peers:
-                                print(f"  - {peer[:8]}...")
+                                print(f"  - {peer}")
                         else:
                             print("📡 No peers connected")
                         continue

@@ -59,7 +59,8 @@ class ChatUI(App[None]):
         border-title-align: left;
         height: 1fr;
         margin: 1;
-        width: 30%;
+        width: 40%;
+        min-width: 60;
     }
 
     #system-messages {
@@ -131,7 +132,7 @@ class ChatUI(App[None]):
         self.system_log: Optional[Log] = None
         self.message_input: Optional[Input] = None
 
-        logger.info(f"ModularChatUI initialized for peer {self.connection_info.get('peer_id', 'Unknown')[:8]}...")
+        logger.info(f"ModularChatUI initialized for peer {self.connection_info.get('peer_id', 'Unknown')}")
 
     def compose(self) -> ComposeResult:
         """Create the UI layout."""
@@ -304,10 +305,9 @@ class ChatUI(App[None]):
             if data.get("type") == "system_message":
                 self.display_system_message(data.get("message", ""))
         elif event.type in (EventType.PEER_CONNECTED, EventType.PEER_DISCONNECTED):
-            peer_id = data.get("peer_id", "")
-            short = peer_id[:8] if peer_id else "unknown"
+            peer_id = data.get("peer_id", "unknown")
             state = "connected" if event.type == EventType.PEER_CONNECTED else "disconnected"
-            self.display_system_message(f"Peer {state}: {short}...")
+            self.display_system_message(f"Peer {state}: {peer_id}")
             self.refresh_peers()
 
     def _drain_legacy_queues(self) -> None:
@@ -389,8 +389,7 @@ class ChatUI(App[None]):
 
             if peers:
                 for peer in sorted(peers):
-                    peer_short = peer[:8] if len(peer) > 8 else peer
-                    peers_log.write_line(f"  • {peer_short}...")
+                    peers_log.write_line(f"  • {peer}")
             else:
                 peers_log.write_line("  (No peers connected)")
 
