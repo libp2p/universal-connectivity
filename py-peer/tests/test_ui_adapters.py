@@ -141,6 +141,10 @@ class TextualAdapterTests(unittest.TestCase):
 
 
 class SimpleCliAdapterTests(unittest.TestCase):
+    def test_reexported_from_main(self):
+        from ui.interactive import _print_runtime_event as direct_fn
+        self.assertIs(_print_runtime_event, direct_fn)
+
     def test_chat_event_is_printed(self):
         event = Event(EventType.MESSAGE_RECEIVED, {
             "type": "chat_message",

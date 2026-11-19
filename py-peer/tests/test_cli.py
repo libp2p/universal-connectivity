@@ -1,9 +1,10 @@
-"""CLI argument validation for the base listen port."""
+"""CLI argument parsing and validation tests."""
 
 import argparse
 import unittest
 
-from core.constants import MAX_BASE_PORT
+from app.cli import build_parser, parse_args
+from core.constants import DEFAULT_PORT, MAX_BASE_PORT
 from main import _port_type
 
 
@@ -24,5 +25,32 @@ class PortTypeTests(unittest.TestCase):
             _port_type("http")
 
 
+class CliParserTests(unittest.TestCase):
+    def test_default_arguments(self):
+        args = parse_args([])
+        self.assertEqual(args.port, DEFAULT_PORT)
+        self.assertFalse(args.headless)
+        self.assertFalse(args.ui)
+        self.assertFalse(args.api)
+        self.assertEqual(args.announce_host, "127.0.0.1")
+        self.assertEqual(args.api_port, 8765)
+        self.assertEqual(args.max_connections, 500)
+
+    def test_explicit_arguments(self):
+        args = parse_args([
+            "--nick", "tester",
+            "--headless",
+            "-p", "4005",
+            "-c", "/ip4/127.0.0.1/tcp/4001",
+            "--api",
+        ])
+        self.assertEqual(args.nick, "tester")
+        self.assertTrue(args.headless)
+        self.assertEqual(args.port, 4005)
+        self.assertEqual(args.connect, ["/ip4/127.0.0.1/tcp/4001"])
+        self.assertTrue(args.api)
+
+
 if __name__ == "__main__":
     unittest.main()
+
