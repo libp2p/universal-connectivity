@@ -1,9 +1,12 @@
 [project]
-name = "py-peer"
+name = "uc-preview"
 version = "0.1.0"
-description = "Python implementation of the Universal Connectivity peer and p2p chat experience."
+description = "Universal Connectivity Python peer preview - multi-transport P2P networking & chat"
 readme = "README.md"
 requires-python = ">=3.12"
+authors = [
+    { name = "Sumanjeet", email = "sumanjeet0012@gmail.com" }
+]
 dependencies = [
     "textual>=0.47.0",
     "libp2p>=0.8.1",
@@ -29,6 +32,7 @@ dev = [
 ]
 
 [project.scripts]
+uc-preview = "main:main"
 py-peer = "main:main"
 
 [build-system]
