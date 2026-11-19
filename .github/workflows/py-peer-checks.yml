@@ -1,14 +1,14 @@
-name: py-peer typecheck
+name: py-peer checks
 
 on:
   pull_request:
     paths:
       - "py-peer/**"
-      - ".github/workflows/py-peer-typecheck.yml"
+      - ".github/workflows/py-peer-checks.yml"
   push:
     paths:
       - "py-peer/**"
-      - ".github/workflows/py-peer-typecheck.yml"
+      - ".github/workflows/py-peer-checks.yml"
   workflow_dispatch:
 
 concurrency:
@@ -21,7 +21,7 @@ defaults:
     working-directory: py-peer
 
 jobs:
-  typecheck:
+  checks:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -38,23 +38,14 @@ jobs:
         with:
           version: ">=0.13.4"
 
-      - name: Install project and type checkers
-        run: |
-          uv venv .venv
-          source .venv/bin/activate
-          uv pip install -e ".[dev]"
+      - name: Install project and dev dependencies from the lockfile
+        run: uv sync --frozen --extra dev
 
       - name: Run mypy
-        run: |
-          source .venv/bin/activate
-          mypy
+        run: uv run --frozen mypy
 
       - name: Run pyrefly
-        run: |
-          source .venv/bin/activate
-          pyrefly check
+        run: uv run --frozen pyrefly check
 
       - name: Run pytest
-        run: |
-          source .venv/bin/activate
-          pytest
+        run: uv run --frozen pytest

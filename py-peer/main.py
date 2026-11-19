@@ -19,9 +19,27 @@ from typing import Any
 from dotenv import load_dotenv
 load_dotenv()  # loads .env from cwd (py-peer/)
 
-from core.constants import DEFAULT_PORT
-from core.headless import HeadlessService
-from app import ApplicationError, ApplicationRuntime, RuntimeConfig
+from core.constants import DEFAULT_PORT, MAX_BASE_PORT  # noqa: E402
+from app import ApplicationError, ApplicationRuntime, RuntimeConfig  # noqa: E402
+
+def _port_type(value: str) -> int:
+    """Parse ``--port`` and reject values the transport offsets cannot serve.
+
+    The default listener set uses ``port``, ``port + 1`` (WebTransport) and
+    ``port + 2`` (WebRTC-direct), so the base must leave room for both offsets.
+    Validating here turns a late ``Invalid listen address`` error during host
+    startup into an immediate, actionable CLI error.
+    """
+    try:
+        port = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"invalid port: {value!r}") from exc
+    if not 0 <= port <= MAX_BASE_PORT:
+        raise argparse.ArgumentTypeError(
+            f"port must be between 0 and {MAX_BASE_PORT} (0 = ephemeral); "
+            "port+1 and port+2 are used by WebTransport and WebRTC-direct"
+        )
+    return port
 
 def build_runtime(args: argparse.Namespace) -> ApplicationRuntime:
     """Create the single runtime that owns the peer for this process."""
@@ -142,12 +160,12 @@ async def run_simple_interactive(runtime: ApplicationRuntime) -> None:
     """Run simple interactive mode."""
     connection_info = runtime.peer.connection_info().to_dict()
 
-    print(f"\n=== Universal Connectivity Chat ===")
+    print("\n=== Universal Connectivity Chat ===")
     print(f"Nickname: {connection_info.get('nickname', 'Unknown')}")
     print(f"Peer ID: {connection_info.get('peer_id', 'Unknown')}")
     print(f"Multiaddr: {connection_info.get('multiaddr', 'Unknown')}")
-    print(f"Type messages and press Enter to send. Type 'quit' to exit.")
-    print(f"Commands: /peers, /status, /multiaddr")
+    print("Type messages and press Enter to send. Type 'quit' to exit.")
+    print("Commands: /peers, /status, /multiaddr")
     print()
 
     # Start background task to monitor runtime events
@@ -227,7 +245,7 @@ async def handle_user_input(runtime: ApplicationRuntime) -> None:
 
             elif message.strip() == "/multiaddr":
                 info = runtime.peer.connection_info().to_dict()
-                print(f"\n📋 Copy this multiaddress:")
+                print("\n📋 Copy this multiaddress:")
                 multiaddrs = info.get("multiaddrs", []) or []
                 if multiaddrs:
                     for addr in multiaddrs:
@@ -239,7 +257,7 @@ async def handle_user_input(runtime: ApplicationRuntime) -> None:
 
             elif message.strip() == "/status":
                 info = runtime.peer.connection_info().to_dict()
-                print(f"📊 Status:")
+                print("📊 Status:")
                 print(f"  - Nickname: {info.get('nickname', 'Unknown')}")
                 print(f"  - Peer ID: {info.get('peer_id', 'Unknown')}")
                 for addr in info.get("multiaddrs", []) or []:
@@ -295,8 +313,12 @@ def main() -> None:
 
     parser.add_argument(
         "-p", "--port",
-        type=int,
-        help=f"Port to listen on (default: {DEFAULT_PORT}; 0 picks an ephemeral port)",
+        type=_port_type,
+        help=(
+            f"Port to listen on (default: {DEFAULT_PORT}; 0 picks an ephemeral "
+            "port). TCP/QUIC use this port; WebTransport uses port+1 and "
+            "WebRTC-direct uses port+2."
+        ),
         default=DEFAULT_PORT
     )
 
@@ -316,7 +338,8 @@ def main() -> None:
         dest="listen_addrs",
         metavar="MULTIADDR",
         help="Multiaddr to listen on (repeatable). Default: listens on "
-             "all supported transports (TCP, WS, QUIC)"
+             "all supported transports (TCP, WS, QUIC, WebTransport, "
+             "WebRTC-direct)"
     )
     parser.add_argument(
         "--announce-addr",

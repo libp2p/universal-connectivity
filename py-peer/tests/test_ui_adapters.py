@@ -2,6 +2,7 @@
 
 import asyncio
 import io
+import queue
 import threading
 import unittest
 from contextlib import redirect_stdout
@@ -29,7 +30,7 @@ class _ReadyService:
         self.transport_addrs = ["/ip4/127.0.0.1/tcp/41234"]
         self.full_multiaddrs = ["/ip4/127.0.0.1/tcp/41234/p2p/peer-fake"]
         self.connect_addrs = []
-        self.sent = []
+        self.outgoing_queue = SimpleNamespace(sync_q=queue.Queue())
 
     async def start(self):
         self.ready = True
@@ -37,10 +38,6 @@ class _ReadyService:
 
     def request_stop(self):
         self.stop_event.set()
-
-    def send_message(self, text):
-        self.sent.append(text)
-        return True
 
     def get_connection_info(self):
         return {
@@ -139,7 +136,8 @@ class TextualAdapterTests(unittest.TestCase):
         )
 
         self.assertTrue(message_input.cleared)
-        self.assertEqual(self.runtime.service.sent, ["hello from ui"])
+        queued = self.runtime.service.outgoing_queue.sync_q.get_nowait()
+        self.assertEqual(queued["message"], "hello from ui")
 
 
 class SimpleCliAdapterTests(unittest.TestCase):

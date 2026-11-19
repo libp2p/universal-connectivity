@@ -28,11 +28,6 @@ from libp2p.identity.identify.identify import (
     identify_handler_for,
 )
 
-# Value advertised through the identify protocol. go-peer and rust-peer use it
-# to recognise py-peer as a Universal Connectivity node. Applied in
-# ``_configure_agent_version`` rather than at import time so importing this
-# module has no side effects on the shared library.
-UC_AGENT_VERSION = "universal-connectivity/0.1.0"
 from libp2p.kad_dht.kad_dht import DHTMode, KadDHT
 from libp2p.network.config import ConnectionConfig
 from libp2p.rcmgr import new_resource_manager
@@ -62,6 +57,12 @@ from .constants import (
 )
 
 logger = logging.getLogger("headless")
+
+# Value advertised through the identify protocol. go-peer and rust-peer use it
+# to recognise py-peer as a Universal Connectivity node. Applied in
+# ``_configure_agent_version`` rather than at import time so importing this
+# module has no side effects on the shared library.
+UC_AGENT_VERSION = "universal-connectivity/0.1.0"
 
 # Constants retained here for backwards-compatible imports.
 PROTOCOL_ID_LIST = [PROTOCOL_ID, PROTOCOL_ID_V11, PROTOCOL_ID_V12]

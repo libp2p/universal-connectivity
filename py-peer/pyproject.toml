@@ -48,7 +48,7 @@ only-include = [
     "app",
 ]
 
-# The source distribution carries the Python project and its review assets.
+# The source distribution carries the Python project and its supporting files.
 # The React frontend is a separate project, so no frontend dependencies or
 # local runtime state belong here.
 [tool.hatch.build.targets.sdist]

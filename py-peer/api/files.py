@@ -9,9 +9,8 @@ POST /api/v1/files/upload          - upload via multipart and share to a topic
 """
 
 import asyncio
-import os
 
-from app.services.files import is_within as _is_within  # re-exported for tests
+from app.services.files import is_within as _is_within  # noqa: F401  # re-exported for tests
 
 from .base import BaseHandler, parse_string_field
 

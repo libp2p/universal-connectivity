@@ -118,6 +118,15 @@ class HeadlessStateTests(unittest.TestCase):
         self.assertTrue(self.service.delete_peer_info("peer-x"))
         self.assertFalse(self.service.delete_peer_info("peer-x"))
 
+    def test_compat_helpers_before_start_do_not_recurse(self):
+        # Regression: the service layer fell back to these legacy engine
+        # methods, which delegate back into the services. Before the chat room
+        # and outgoing queue exist that recursed until RecursionError.
+        self.assertEqual(self.service.get_subscribed_topics(), set())
+        self.assertEqual(self.service.get_all_pubsub_topics(), set())
+        self.assertFalse(self.service.send_message("hello"))
+        self.assertFalse(self.service.send_message_to_topic("topic-x", "hello"))
+
 
 if __name__ == "__main__":
     unittest.main()

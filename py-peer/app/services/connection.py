@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from queue import Empty, Full
 from typing import Any
 

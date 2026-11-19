@@ -10,6 +10,7 @@ import trio
 
 import core.headless as headless_module
 from core.headless import HeadlessService
+from app.services.addressing import default_listen_specs, has_webrtc_support
 
 
 def free_port():
@@ -25,6 +26,38 @@ def start_service(service):
     while not service.ready and not service.failed and time.monotonic() < deadline:
         time.sleep(0.05)
     return thread
+
+
+class DefaultListenSpecsTests(unittest.TestCase):
+    """The default listener set must cover all five advertised transports."""
+
+    def test_covers_all_transports_on_derived_ports(self):
+        specs = default_listen_specs(45678)
+        self.assertIn("/ip4/0.0.0.0/tcp/45678", specs)
+        self.assertIn("/ip4/0.0.0.0/tcp/45678/ws", specs)
+        self.assertIn("/ip4/0.0.0.0/udp/45678/quic-v1", specs)
+        self.assertIn("/ip4/0.0.0.0/udp/45679/quic-v1/webtransport", specs)
+        self.assertIn("/ip4/0.0.0.0/udp/45680/webrtc-direct", specs)
+
+    def test_ephemeral_base_port_keeps_every_listener_ephemeral(self):
+        for spec in default_listen_specs(0):
+            self.assertTrue(
+                spec.endswith("/0") or "/0/" in spec,
+                f"{spec} must bind an ephemeral port",
+            )
+
+    def test_webrtc_direct_can_be_omitted(self):
+        specs = default_listen_specs(4001, include_webrtc_direct=False)
+        self.assertEqual(len(specs), 4)
+        self.assertFalse(any("webrtc-direct" in spec for spec in specs))
+
+    def test_resolve_listen_addrs_uses_the_derived_ports(self):
+        service = HeadlessService(nickname="t", port=45678, ui_mode=True)
+        addrs = [str(addr) for addr in service._resolve_listen_addrs()]
+        self.assertIn("/ip4/0.0.0.0/tcp/45678", addrs)
+        self.assertTrue(any("/udp/45679/quic-v1/webtransport" in a for a in addrs))
+        if has_webrtc_support():
+            self.assertTrue(any("/udp/45680/webrtc-direct" in a for a in addrs))
 
 
 class ResolveListenAddrsTests(unittest.TestCase):

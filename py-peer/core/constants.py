@@ -49,16 +49,24 @@ DEFAULT_PORT = 4001
 WEBTRANSPORT_PORT_OFFSET = 1
 WEBRTC_DIRECT_PORT_OFFSET = 2
 
+# Highest port a socket can bind, and the highest valid *base* port: the base
+# port must leave room for the WebTransport (+1) and WebRTC-direct (+2)
+# listeners, so ``--port 65534``/``65535`` are rejected at parse time.
+MAX_PORT = 65535
+MAX_BASE_PORT = MAX_PORT - WEBRTC_DIRECT_PORT_OFFSET
+
 __all__ = [
     "BOOTSTRAP_PEERS",
     "DEFAULT_DOWNLOAD_DIR",
     "DEFAULT_PORT",
     "DISCOVERY_SERVICE_TAG",
     "FILE_MESSAGE_PREFIX",
+    "MAX_BASE_PORT",
     "MAX_FILE_QUEUE",
     "MAX_GOSSIP_MESSAGE_BYTES",
     "MAX_LEGACY_QUEUE",
     "MAX_OUTGOING_QUEUE",
+    "MAX_PORT",
     "MAX_REQUEST_QUEUE",
     "MAX_TOPIC_MESSAGES",
     "WEBRTC_DIRECT_PORT_OFFSET",

@@ -19,7 +19,7 @@ from enum import Enum
 from typing import Any, Iterable, cast
 
 import janus
-from queue import Empty, Full
+from queue import Full
 
 logger = logging.getLogger("app.events")
 

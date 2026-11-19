@@ -245,8 +245,10 @@ class AddressService:
             except OSError as exc:
                 if exc.errno == errno.EADDRINUSE:
                     logger.warning(
-                        "⚠️  Port %s/%s on %s is already in use by another process. "
-                        "Start each local peer with distinct ports.",
+                        "⚠️  Port %s/%s on %s is already in use by another "
+                        "process. Each peer needs three consecutive ports "
+                        "(base, base+1 for WebTransport, base+2 for "
+                        "WebRTC-direct); space peers at least three ports apart.",
                         port,
                         proto_name,
                         bind_host,

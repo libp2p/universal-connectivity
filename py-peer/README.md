@@ -349,6 +349,9 @@ docker run -d --name uc-peer --init \
   -e UC_DATA_DIR=/data \
   -v uc-data:/data \
   -p 4001:4001/tcp \
+  -p 4001:4001/udp \
+  -p 4002:4002/udp \
+  -p 4003:4003/udp \
   -p 127.0.0.1:8765:8765 \
   py-peer:local \
   --api --api-host 0.0.0.0 --announce-host 192.168.1.50 --nick alice
@@ -368,7 +371,9 @@ real peers.
 | Variable | Default | Purpose |
 |---|---|---|
 | `UC_NICKNAME` | `docker-peer` | Peer nickname |
-| `UC_PEER_PORT` | `4001` | libp2p TCP port, inside and published |
+| `UC_PEER_PORT` | `4001` | Base libp2p port (TCP/WS and QUIC); WebTransport/WebRTC use `+1`/`+2` |
+| `UC_WEBTRANSPORT_PORT` | `4002` | WebTransport UDP port; must equal `UC_PEER_PORT + 1` |
+| `UC_WEBRTC_DIRECT_PORT` | `4003` | WebRTC-direct UDP port; must equal `UC_PEER_PORT + 2` |
 | `UC_API_PORT` | `8765` | Tornado API port, inside and published |
 | `UC_API_PUBLISH_HOST` | `127.0.0.1` | Host interface for the API mapping |
 | `UC_ANNOUNCE_HOST` | `127.0.0.1` | Host advertised to other peers |
@@ -379,6 +384,8 @@ Example `.env` (gitignored):
 ```dotenv
 UC_NICKNAME=alice
 UC_PEER_PORT=4001
+UC_WEBTRANSPORT_PORT=4002
+UC_WEBRTC_DIRECT_PORT=4003
 UC_API_PORT=8765
 UC_API_PUBLISH_HOST=127.0.0.1
 UC_ANNOUNCE_HOST=192.168.1.50
@@ -413,9 +420,12 @@ sudo chown -R 10001:10001 ./peer-data
 |---|---|---|
 | `4001` | TCP | libp2p TCP & WebSocket (demultiplexed) |
 | `4001` | UDP | libp2p QUIC-v1 transport |
-| `4002` | UDP | libp2p WebTransport |
-| `4003` | UDP | libp2p WebRTC-Direct transport |
+| `4002` | UDP | libp2p WebTransport (`<port>+1`) |
+| `4003` | UDP | libp2p WebRTC-Direct (`<port>+2`) |
 | `8765` | TCP | REST + WebSocket API |
+
+The three peer numbers are derived from the base port: WebTransport is always
+`port+1` and WebRTC-direct is always `port+2`.
 
 Inside the container the listener binds `/ip4/0.0.0.0/tcp/4001`, but a
 wildcard address is not a dial target. The peer rewrites it using
@@ -427,11 +437,11 @@ wildcard address is not a dial target. The peer rewrites it using
 
 With the default `UC_ANNOUNCE_HOST=127.0.0.1`, the address is only reachable
 from the same host. For peers on a LAN, set `UC_ANNOUNCE_HOST` to the Docker
-host's LAN IP and make sure the host firewall allows TCP 4001. Container IPs
-(for example `172.17.0.x`) must never be advertised outside the Docker
-network. Internet reachability also requires a port forward on the router;
-automatic NAT traversal/relay is not implemented. On Linux, host networking is
-an alternative when you do not want port mapping:
+host's LAN IP and make sure the host firewall allows TCP 4001 and UDP 4001-4003.
+Container IPs (for example `172.17.0.x`) must never be advertised outside the
+Docker network. Internet reachability also requires a port forward on the
+router; automatic NAT traversal/relay is not implemented. On Linux, host
+networking is an alternative when you do not want port mapping:
 
 ```bash
 docker run --network host ... py-peer:local \
@@ -487,7 +497,7 @@ python main.py --api-routes
 | `--ui` | Use Textual TUI interface | `--ui` |
 | `--headless` | Run without UI (logs only) | `--headless` |
 | `-c, --connect ADDR` | Connect to specific peer | `-c /ip4/...` |
-| `-p, --port PORT` | Set listening port | `-p 8080` |
+| `-p, --port PORT` | Set the base listening port (also reserves `port+1` and `port+2` for WebTransport/WebRTC-direct; `0` = ephemeral) | `-p 4001` |
 | `--announce-host HOST` | Host advertised for wildcard listeners (default `127.0.0.1`; ignored when `--announce-addr` is given) | `--announce-host 192.168.1.50` |
 | `--listen-addr MULTIADDR` | Multiaddr to listen on (repeatable). Default `/ip4/0.0.0.0/tcp/<port>` | `--listen-addr /ip4/127.0.0.1/tcp/4001` |
 | `--announce-addr MULTIADDR` | Multiaddr advertised verbatim (repeatable). Overrides `--announce-host`; wildcard hosts are rejected | `--announce-addr /ip4/192.168.1.50/tcp/4001` |
@@ -525,17 +535,20 @@ python main.py --ui --nick Alice --port 9095
 python main.py --ui --nick Bob --connect /ip4/192.168.1.100/tcp/9095/p2p/QmXXX...
 ```
 
-> **Running several peers on one machine:** every peer defaults to port `4001`, and
-> libp2p enables `SO_REUSEPORT`, so a second peer *can* bind the same port. Inbound
-> connections are then delivered to whichever process the kernel picks, which shows
-> up as `handshake failed when upgrading to secure connection`. Give each peer its
-> own `--port` (`4001`, `4002`, ...) and dial `127.0.0.1` rather than `0.0.0.0`
-> (`0.0.0.0` is a bind address, not a dial target — the peer rewrites it for you).
+> **Running several peers on one machine:** each peer binds three consecutive
+> ports: `<port>` for TCP/WS and QUIC, `<port>+1` for WebTransport, and
+> `<port>+2` for WebRTC-direct. Space peers at least three ports apart
+> (`4001`, `4005`, `4009`, ...); adjacent ports collide and the second peer
+> fails to start with `QUICListenError: ... Address already in use`. Do not try
+> to share one base port between processes: the UDP listeners do not tolerate
+> it, and sharing a TCP port delivers messages to whichever process the kernel
+> picks. Dial `127.0.0.1` rather than `0.0.0.0` (`0.0.0.0` is a bind address,
+> not a dial target — the peer rewrites it for you).
 >
 > ```bash
 > python main.py --seed 1 --port 4001 --api --api-port 8765
-> python main.py --seed 2 --port 4002 --api --api-port 8766
-> # then connect to /ip4/127.0.0.1/tcp/4002/p2p/<seed-2-peer-id>
+> python main.py --seed 2 --port 4005 --api --api-port 8766
+> # then connect to /ip4/127.0.0.1/tcp/4005/p2p/<seed-2-peer-id>
 > ```
 >
 > The default data directory holds **one** peer identity, so two peers that

@@ -12,7 +12,7 @@ from typing import Any, Optional
 
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal
-from textual.widgets import Input, Log, Static
+from textual.widgets import Input, Log
 from textual.reactive import reactive
 from textual.binding import Binding
 
@@ -246,7 +246,7 @@ class ChatUI(App[None]):
 
         elif cmd == "/status":
             info = self.runtime.peer.connection_info().to_dict()
-            self.display_system_message(f"Status:")
+            self.display_system_message("Status:")
             self.display_system_message(f"  - Nickname: {info.get('nickname', 'Unknown')}")
             self.display_system_message(f"  - Peer ID: {info.get('peer_id', 'Unknown')}")
             for addr in info.get("multiaddrs", []) or []:
