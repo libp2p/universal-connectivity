@@ -1,0 +1,8 @@
+*.pyc
+.bin
+.env
+.venv/
+system_messages.txt
+__pycache__/
+.tox/
+.mypy_cache/
