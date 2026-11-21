@@ -2,8 +2,8 @@ name: js-peer build
 
 permissions:
   contents: read
-  pull-requests: write
-  statuses: write
+  pages: write
+  id-token: write
 
 on:
   push:
@@ -13,26 +13,56 @@ on:
     paths:
       - 'js-peer/**' # only run for PRs changing js-peer
 
+concurrency:
+  group: js-peer-pages
+  cancel-in-progress: true
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: js-peer
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+        id: pages
       - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
       - run: npm ci
       - run: npm run lint
-      - run: npm run build
-      - uses: ipfs/ipfs-deploy-action@v1
-        name: Deploy to IPFS
-        id: deploy
+      - name: Build static js-peer site
+        env:
+          GITHUB_PAGES: 'true'
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: npm run build
+      - name: Upload GitHub Pages artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
         with:
-          # 👇 note that working-directory doesn't apply to action steps with `uses`, so we need to specify the full path
-          path-to-deploy: js-peer/out
-          storacha-key: ${{ secrets.STORACHA_KEY }}
-          storacha-proof: ${{ secrets.STORACHA_PROOF }}
-          github-token: ${{ github.token }}
+          path: js-peer/out
+      - name: Summarize GitHub Pages build
+        run: |
+          {
+            echo '## GitHub Pages Build'
+            echo
+            echo "- Pages base path: \`${{ steps.pages.outputs.base_path }}\`"
+            if [[ "${{ github.event_name }}" == "push" ]]; then
+              echo '- Deployment target: GitHub Pages'
+            else
+              echo '- Pull requests build the static site but do not deploy it.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

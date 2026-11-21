@@ -2,7 +2,6 @@ import { Fragment } from 'react'
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/router'
 
 const navigationItems = [{ name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' }]
@@ -13,6 +12,8 @@ function classNames(...classes: string[]) {
 
 export default function Navigation({ connectionInfoButton }: { connectionInfoButton?: React.ReactNode }) {
   const router = useRouter()
+  const logoSrc = `${router.basePath || ''}/libp2p-logo.svg`
+  const heroSrc = `${router.basePath || ''}/libp2p-hero.svg`
 
   return (
     <Disclosure as="nav" className="border-b border-gray-200 bg-white">
@@ -22,16 +23,10 @@ export default function Navigation({ connectionInfoButton }: { connectionInfoBut
             <div className="flex h-16 justify-between items-center">
               <div className="flex items-center">
                 <div className="flex flex-shrink-0 items-center">
-                  <Image src="/libp2p-logo.svg" alt="libp2p logo" height="46" width="46" />
+                  <img src={logoSrc} alt="libp2p logo" height="46" width="46" />
                   <div className="ml-3 flex items-center">
                     <h1 className="text-xl font-semibold text-gray-900 hidden sm:block">Universal Connectivity</h1>
-                    <Image
-                      src="/libp2p-hero.svg"
-                      alt="libp2p hero"
-                      height="24"
-                      width="24"
-                      className="ml-2 hidden sm:block"
-                    />
+                    <img src={heroSrc} alt="libp2p hero" height="24" width="24" className="ml-2 hidden sm:block" />
                   </div>
                 </div>
               </div>
