@@ -1,0 +1,46 @@
+# Version control and local environment
+.git
+.gitignore
+.gitattributes
+.venv
+.venv/
+__pycache__/
+*.py[cod]
+.python-version
+
+# Developer caches and tooling
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local secrets and configuration
+.env
+.env.*
+*.pem
+*.key
+
+# Runtime state must live in the mounted /data volume, never in the image
+system_messages.txt
+data/
+*.db
+*.db-wal
+*.db-shm
+logs/
+
+# Frontend build output and dependencies (the React app is a separate project)
+node_modules/
+dist/
+
+# Repository-only files
+assets/
+tests/
+docs/
+*.md
+!README.md
+
+# Editor and OS noise
+.DS_Store
+.idea/
+.vscode/

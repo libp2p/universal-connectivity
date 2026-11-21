@@ -1,0 +1,254 @@
+"""
+Tornado REST + WebSocket server for the py-peer Universal Connectivity DApp.
+
+Routes all API requests to the appropriate handlers, injects the shared
+ApplicationRuntime (which owns the one libp2p host) via handler `initialize()`,
+and runs the asyncio IOLoop in the main thread while the runtime's trio loop
+runs in a background thread.
+
+Usage
+-----
+Instantiate TornadoServer and call start():
+
+    from .server import TornadoServer
+    server = TornadoServer(headless_service, port=8765)
+    server.start()          # blocks — runs Tornado IOLoop
+"""
+
+import logging
+from typing import Any
+
+import tornado.ioloop
+import tornado.web
+
+from .node      import NodeInfoHandler, NodeStatusHandler, NodeMultiaddrHandler
+from .peers     import (PeerListHandler, PeerCountHandler, KnownPeersHandler,
+                           PeerConnectHandler, PeerDetailHandler, PeerIdentifyHandler)
+from .messages  import (SendDefaultMessageHandler, TopicMessagesHandler,
+                           TopicUnreadHandler, TopicMarkReadHandler)
+from .topics    import TopicListHandler, TopicInfoHandler, TopicMeshPeersHandler
+from .files     import (SharedFilesHandler, SharedFileDetailHandler,
+                           ShareFileHandler, DownloadFileHandler, UploadAndShareHandler,
+                           MAX_UPLOAD_BYTES)
+from .dht       import DHTStatusHandler, DHTPeersHandler, DHTRoutingTableHandler
+from .pubsub    import (PubSubPeersHandler, PubSubMeshHandler, PubSubFanoutHandler,
+                           PubSubConfigHandler, PubSubSubscriptionsHandler)
+from .identity  import (IdentityCacheListHandler, IdentityPeerHandler,
+                           IdentityPublicKeyHandler, IdentityCacheDeleteHandler)
+from .service   import (ServiceStatusHandler, ServiceConfigHandler,
+                           ServiceStopHandler, ServiceBootstrapHandler)
+from .websocket import (MessageStreamHandler, SystemStreamHandler,
+                           PeerUpdateHandler, MeshUpdateHandler)
+
+logger = logging.getLogger("tornado_server")
+
+DEFAULT_API_PORT = 8765
+# The API has no authentication and allows all origins. It is therefore a
+# trusted-local interface by default; exposing it on the LAN requires an
+# explicit --api-host 0.0.0.0 (and an external access-control layer).
+DEFAULT_API_HOST = "127.0.0.1"
+
+
+
+def _make_app(runtime: Any) -> tornado.web.Application:
+    """Build and return the Tornado Application with all routes."""
+
+    kw = dict(runtime=runtime)   # kwargs passed to every handler's initialize()
+
+    routes = [
+        # ── Node ────────────────────────────────────────────────────────
+        (r"/api/v1/node/info",      NodeInfoHandler,     kw),
+        (r"/api/v1/node/status",    NodeStatusHandler,   kw),
+        (r"/api/v1/node/multiaddr", NodeMultiaddrHandler, kw),
+
+        # ── Peers ────────────────────────────────────────────────────────
+        (r"/api/v1/peers",                    PeerListHandler,     kw),
+        (r"/api/v1/peers/count",              PeerCountHandler,    kw),
+        (r"/api/v1/peers/known",              KnownPeersHandler,   kw),
+        (r"/api/v1/peers/connect",            PeerConnectHandler,  kw),
+        (r"/api/v1/peers/([^/]+)/identify",   PeerIdentifyHandler, kw),
+        (r"/api/v1/peers/([^/]+)",            PeerDetailHandler,   kw),
+
+        # ── Messages ─────────────────────────────────────────────────────
+        (r"/api/v1/messages",                         SendDefaultMessageHandler, kw),
+        (r"/api/v1/messages/([^/]+)/unread",          TopicUnreadHandler,        kw),
+        (r"/api/v1/messages/([^/]+)/read",            TopicMarkReadHandler,      kw),
+        (r"/api/v1/messages/([^/]+)",                 TopicMessagesHandler,      kw),
+
+        # ── Topics ───────────────────────────────────────────────────────
+        (r"/api/v1/topics",                   TopicListHandler,      kw),
+        (r"/api/v1/topics/([^/]+)/info",      TopicInfoHandler,      kw),
+        (r"/api/v1/topics/([^/]+)/peers",     TopicMeshPeersHandler, kw),
+
+        # ── Files ────────────────────────────────────────────────────────
+        (r"/api/v1/files/shared",             SharedFilesHandler,       kw),
+        (r"/api/v1/files/shared/([^/]+)",     SharedFileDetailHandler,  kw),
+        (r"/api/v1/files/share",              ShareFileHandler,          kw),
+        (r"/api/v1/files/download",           DownloadFileHandler,       kw),
+        (r"/api/v1/files/upload",             UploadAndShareHandler,     kw),
+
+        # ── DHT ──────────────────────────────────────────────────────────
+        (r"/api/v1/dht/status",        DHTStatusHandler,       kw),
+        (r"/api/v1/dht/peers",         DHTPeersHandler,        kw),
+        (r"/api/v1/dht/routing-table", DHTRoutingTableHandler, kw),
+
+        # ── PubSub ───────────────────────────────────────────────────────
+        (r"/api/v1/pubsub/peers",         PubSubPeersHandler,        kw),
+        (r"/api/v1/pubsub/mesh",          PubSubMeshHandler,         kw),
+        (r"/api/v1/pubsub/fanout",        PubSubFanoutHandler,       kw),
+        (r"/api/v1/pubsub/config",        PubSubConfigHandler,       kw),
+        (r"/api/v1/pubsub/subscriptions", PubSubSubscriptionsHandler, kw),
+
+        # ── Identity ─────────────────────────────────────────────────────
+        (r"/api/v1/identity/cache",                IdentityCacheListHandler,   kw),
+        (r"/api/v1/identity/([^/]+)/pubkey",       IdentityPublicKeyHandler,   kw),
+        (r"/api/v1/identity/([^/]+)/cache",        IdentityCacheDeleteHandler, kw),
+        (r"/api/v1/identity/([^/]+)",              IdentityPeerHandler,        kw),
+
+        # ── Service ──────────────────────────────────────────────────────
+        (r"/api/v1/service/status",    ServiceStatusHandler,    kw),
+        (r"/api/v1/service/config",    ServiceConfigHandler,    kw),
+        (r"/api/v1/service/stop",      ServiceStopHandler,      kw),
+        (r"/api/v1/service/bootstrap", ServiceBootstrapHandler, kw),
+        # ── WebSockets ───────────────────────────────────────────────────
+        (r"/ws/messages",    MessageStreamHandler, kw),
+        (r"/ws/system",      SystemStreamHandler,  kw),
+        (r"/ws/peers",       PeerUpdateHandler,    kw),
+        (r"/ws/pubsub/mesh", MeshUpdateHandler,    kw),
+    ]
+
+    return tornado.web.Application(
+        routes,
+        debug=False,
+        # The upload handler enforces MAX_UPLOAD_BYTES per file. Allow one
+        # multipart boundary/part-header of headroom on top so that a legal
+        # upload is never rejected by the transport layer, while a request of
+        # tens of megabytes is refused before it is buffered in memory.
+        max_body_size=MAX_UPLOAD_BYTES + 1024 * 1024,
+    )
+
+
+class TornadoServer:
+    """
+    Wraps the Tornado Application and IOLoop.
+
+    Parameters
+    ----------
+    runtime : ApplicationRuntime
+        The shared runtime (or a bare HeadlessService, which is wrapped once).
+    port : int
+        HTTP port to listen on (default 8765).
+    host : str
+        Interface to bind. Defaults to loopback because the API is
+        unauthenticated; pass ``0.0.0.0`` only behind a trusted boundary.
+    """
+
+    def __init__(
+        self,
+        runtime: Any,
+        port: int = DEFAULT_API_PORT,
+        host: str = DEFAULT_API_HOST,
+    ) -> None:
+        from .base import as_runtime
+
+        self.runtime = as_runtime(runtime)
+        self.service = self.runtime.service
+        self.port = port
+        self.host = host
+        # Capture the main thread's IOLoop now; calling IOLoop.current() from the
+        # headless thread later would return that thread's loop instead.
+        self._ioloop = tornado.ioloop.IOLoop.current()
+        if hasattr(self.service, "on_stopped"):
+            self.service.on_stopped = self._on_service_stopped
+        self._app = _make_app(self.runtime)
+
+    def _on_service_stopped(self) -> None:
+        """Shut the API down once the headless service has stopped."""
+        try:
+            self._ioloop.add_callback(self._ioloop.stop)
+        except Exception:
+            logger.exception("Failed to stop the Tornado IOLoop")
+
+    def stop(self) -> None:
+        """Stop the IOLoop. Safe to call from any thread (e.g. a signal handler)."""
+        self._ioloop.add_callback(self._ioloop.stop)
+
+    def start(self) -> None:
+        """Start Tornado — blocks until the process is killed."""
+        self._app.listen(self.port, address=self.host)
+        logger.info(f"🌪  Tornado API server started on http://{self.host}:{self.port}")
+        logger.info(f"    REST : http://{self.host}:{self.port}/api/v1/node/info")
+        logger.info(f"    WS   : ws://{self.host}:{self.port}/ws/messages")
+        if self.host not in ("127.0.0.1", "localhost", "::1"):
+            logger.warning(
+                "API is bound to %s with no authentication and CORS '*'. "
+                "Expose it only behind a trusted network boundary.",
+                self.host,
+            )
+        try:
+            self._ioloop.start()
+        except KeyboardInterrupt:
+            logger.info("Tornado server stopped.")
+            self._ioloop.stop()
+
+
+def _print_routes(port: int = DEFAULT_API_PORT) -> None:
+    """Pretty-print all available API routes."""
+    routes = [
+        ("GET",    "/api/v1/node/info",               "Node info (peer_id, multiaddr, nickname)"),
+        ("GET",    "/api/v1/node/status",              "Readiness, uptime"),
+        ("GET",    "/api/v1/node/multiaddr",           "Full multiaddr string"),
+        ("GET",    "/api/v1/peers",                    "Connected peers list"),
+        ("GET",    "/api/v1/peers/count",              "Connected peer count"),
+        ("GET",    "/api/v1/peers/known",              "All peers in peerstore"),
+        ("POST",   "/api/v1/peers/connect",            "Connect via multiaddr"),
+        ("GET",    "/api/v1/peers/{peer_id}",        "Peer peerstore info"),
+        ("GET",    "/api/v1/peers/{peer_id}/identify","Cached identify info"),
+        ("POST",   "/api/v1/messages",                 "Send to default chat topic"),
+        ("GET",    "/api/v1/messages/{topic}",       "List stored messages"),
+        ("POST",   "/api/v1/messages/{topic}",       "Send to specific topic"),
+        ("GET",    "/api/v1/messages/{topic}/unread","Unread count"),
+        ("PUT",    "/api/v1/messages/{topic}/read",  "Mark as read"),
+        ("GET",    "/api/v1/topics",                   "List subscribed topics"),
+        ("POST",   "/api/v1/topics",                   "Subscribe to new topic"),
+        ("GET",    "/api/v1/topics/{topic}/info",    "Topic details"),
+        ("GET",    "/api/v1/topics/{topic}/peers",   "Mesh peers for topic"),
+        ("GET",    "/api/v1/files/shared",             "List shared files"),
+        ("GET",    "/api/v1/files/shared/{cid}",     "Shared file detail"),
+        ("POST",   "/api/v1/files/share",              "Share local file"),
+        ("POST",   "/api/v1/files/download",           "Download file by CID"),
+        ("POST",   "/api/v1/files/upload",             "Upload + share (multipart)"),
+        ("GET",    "/api/v1/dht/status",               "DHT mode & routing table size"),
+        ("GET",    "/api/v1/dht/peers",                "DHT routing table peers"),
+        ("GET",    "/api/v1/dht/routing-table",        "Full routing table"),
+        ("GET",    "/api/v1/pubsub/peers",             "PubSub connected peers"),
+        ("GET",    "/api/v1/pubsub/mesh",              "GossipSub mesh state"),
+        ("GET",    "/api/v1/pubsub/fanout",            "GossipSub fanout"),
+        ("GET",    "/api/v1/pubsub/config",            "GossipSub config"),
+        ("GET",    "/api/v1/pubsub/subscriptions",     "Active subscriptions"),
+        ("GET",    "/api/v1/identity/cache",           "All cached identify entries"),
+        ("GET",    "/api/v1/identity/{peer_id}",     "Cached identify info"),
+        ("GET",    "/api/v1/identity/{peer_id}/pubkey","Public key (hex)"),
+        ("DELETE", "/api/v1/identity/{peer_id}/cache","Invalidate cache entry"),
+        ("GET",    "/api/v1/service/status",           "Service health"),
+        ("GET",    "/api/v1/service/config",           "Service config"),
+        ("POST",   "/api/v1/service/stop",             "Graceful stop"),
+        ("POST",   "/api/v1/service/bootstrap",        "Re-trigger bootstrap"),
+        ("WS",     "/ws/messages",                     "Real-time message stream"),
+        ("WS",     "/ws/system",                       "Real-time system events"),
+        ("WS",     "/ws/peers",                        "Real-time peer updates"),
+        ("WS",     "/ws/pubsub/mesh",                  "Real-time mesh topology"),
+    ]
+    print(f"\n{'='*70}")
+    print(f" Tornado API  —  http://localhost:{port}")
+    print(f"{'='*70}")
+    for method, path, desc in routes:
+        print(f"  {method:<7} {path:<44} {desc}")
+    print(f"{'='*70}\n")
+
+
+if __name__ == "__main__":
+    # Quick standalone test — no real HeadlessService
+    logging.basicConfig(level=logging.INFO)
+    _print_routes()
+    print("Run with: python main.py --nick alice --api --api-port 8765")

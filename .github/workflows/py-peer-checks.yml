@@ -1,0 +1,51 @@
+name: py-peer checks
+
+on:
+  pull_request:
+    paths:
+      - "py-peer/**"
+      - ".github/workflows/py-peer-checks.yml"
+  push:
+    paths:
+      - "py-peer/**"
+      - ".github/workflows/py-peer-checks.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: py-peer
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ">=0.13.4"
+
+      - name: Install project and dev dependencies from the lockfile
+        run: uv sync --frozen --extra dev
+
+      - name: Run mypy
+        run: uv run --frozen mypy
+
+      - name: Run pyrefly
+        run: uv run --frozen pyrefly check
+
+      - name: Run pytest
+        run: uv run --frozen pytest

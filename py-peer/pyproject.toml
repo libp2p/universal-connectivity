@@ -1,0 +1,132 @@
+[project]
+name = "uc-preview"
+version = "0.1.0"
+description = "Universal Connectivity Python peer preview - multi-transport P2P networking & chat"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "Sumanjeet", email = "sumanjeet0012@gmail.com" }
+]
+dependencies = [
+    "textual>=0.47.0",
+    "libp2p>=0.8.1",
+    "trio>=0.22.0",
+    "base58",
+    "protobuf>=6.32.1,<7",
+    "janus>=1.0.0",
+    "python-dotenv>=1.2.2",
+    "platformdirs>=4.0.0",
+    "tornado>=6.5.5",
+    "aiortc>=1.15.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.18,<3",
+    "pyrefly>=0.17.1,<0.18.0",
+    "tox>=4.0",
+    "pre-commit>=3.4",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-timeout>=2.3",
+]
+
+[project.scripts]
+uc-preview = "main:main"
+py-peer = "main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Only the entry point and Python packages are shipped; the transport engine
+# lives in ``core``, application/domain code in ``app``, HTTP adapters in
+# ``api``, and the Textual adapter in ``ui``. The repository root stays limited
+# to project files.
+[tool.hatch.build.targets.wheel]
+only-include = [
+    "main.py",
+    "core",
+    "ui",
+    "api",
+    "app",
+]
+
+# The source distribution carries the Python project and its supporting files.
+# The React frontend is a separate project, so no frontend dependencies or
+# local runtime state belong here.
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "main.py",
+    "core",
+    "ui",
+    "api",
+    "app",
+    "tests",
+    "assets",
+    "Dockerfile",
+    "docker-compose.yml",
+    ".dockerignore",
+    "README.md",
+    "pyproject.toml",
+    "uv.lock",
+    ".python-version",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["main.py", "core", "app", "api", "ui"]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = false
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+incremental = false
+strict_equality = true
+strict_optional = true
+warn_redundant_casts = true
+warn_return_any = false
+warn_unused_configs = true
+warn_unused_ignores = false
+show_error_codes = true
+pretty = true
+
+# libp2p ships ``py.typed``; these third-party packages do not.
+[[tool.mypy.overrides]]
+module = ["multiaddr.*", "aiortc.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["core.pb.*"]
+ignore_errors = true
+
+# Pyrefly runs alongside mypy in py-libp2p. It checks the same application
+# modules.
+[tool.pyrefly]
+python_version = "3.12"
+project_includes = ["main.py", "core", "app", "api", "ui"]
+project_excludes = ["core/pb/**"]
+# These optional/third-party packages do not ship type information in all
+# installs, matching the mypy ``ignore_missing_imports`` policy above.
+replace_imports_with_any = [
+    "multiaddr",
+    "multiaddr.*",
+    "aiortc",
+    "aiortc.*",
+]
+
+# Tornado dispatches ``get``/``post`` handlers with route arguments that are
+# not part of the base class's call signature, so its handlers cannot satisfy
+# Pyrefly's Liskov override check. Keep the check everywhere else.
+[[tool.pyrefly.sub_config]]
+matches = "api/**"
+[tool.pyrefly.sub_config.errors]
+bad-override = false

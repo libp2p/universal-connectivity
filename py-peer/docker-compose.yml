@@ -1,0 +1,75 @@
+name: universal-connectivity
+
+services:
+  py-peer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: py-peer:local
+    container_name: uc-peer
+    restart: unless-stopped
+    # Docker's init reaps zombies and forwards SIGTERM to the Python process;
+    # main.py then requests a graceful runtime shutdown and joins the trio
+    # thread before exiting.
+    init: true
+
+    environment:
+      # Durable identity, history, and logs live on the named volume.
+      UC_DATA_DIR: /data
+      # The API is unauthenticated. It listens on 0.0.0.0 *inside* the
+      # container, but the port mapping below publishes it on host loopback
+      # only unless UC_API_PUBLISH_HOST is changed deliberately.
+      UC_HEALTHCHECK_URL: http://127.0.0.1:${UC_API_PORT:-8765}/api/v1/service/status
+      UC_NICKNAME: ${UC_NICKNAME:-docker-peer}
+      UC_PEER_PORT: ${UC_PEER_PORT:-4001}
+      UC_API_PORT: ${UC_API_PORT:-8765}
+      # Set this to the host LAN/public IP that other peers can dial. The
+      # default is loopback, which is only useful for same-host testing.
+      UC_ANNOUNCE_HOST: ${UC_ANNOUNCE_HOST:-127.0.0.1}
+
+    command:
+      - --api
+      - --api-host
+      - 0.0.0.0
+      - --api-port
+      - ${UC_API_PORT:-8765}
+      - --port
+      - ${UC_PEER_PORT:-4001}
+      - --announce-host
+      - ${UC_ANNOUNCE_HOST:-127.0.0.1}
+      - --nick
+      - ${UC_NICKNAME:-docker-peer}
+
+    ports:
+      # API: loopback-only by default. To expose it, set
+      # UC_API_PUBLISH_HOST=0.0.0.0 only behind an authenticating proxy/firewall.
+      - "${UC_API_PUBLISH_HOST:-127.0.0.1}:${UC_API_PORT:-8765}:${UC_API_PORT:-8765}"
+      # Peer transports: TCP + WebSocket share UC_PEER_PORT, QUIC-v1 uses the
+      # same number over UDP, and WebTransport / WebRTC-direct are bound on
+      # UC_PEER_PORT+1 and +2 (each terminates its own TLS certificate).
+      # Compose cannot do arithmetic, so set UC_WEBTRANSPORT_PORT and
+      # UC_WEBRTC_DIRECT_PORT to UC_PEER_PORT+1 and +2 when you change it.
+      # Space multiple instances at least three ports apart.
+      - "${UC_PEER_PORT:-4001}:${UC_PEER_PORT:-4001}/tcp"
+      - "${UC_PEER_PORT:-4001}:${UC_PEER_PORT:-4001}/udp"
+      - "${UC_WEBTRANSPORT_PORT:-4002}:${UC_WEBTRANSPORT_PORT:-4002}/udp"
+      - "${UC_WEBRTC_DIRECT_PORT:-4003}:${UC_WEBRTC_DIRECT_PORT:-4003}/udp"
+
+    volumes:
+      - uc-data:/data
+
+    healthcheck:
+      test: ["CMD", "python", "/app/core/healthcheck.py"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  uc-data:
