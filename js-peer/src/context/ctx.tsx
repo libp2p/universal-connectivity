@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
+import { PixelArtProvider } from './pixel-art-ctx'
 import type { Libp2p, PubSub } from '@libp2p/interface'
 import type { Identify } from '@libp2p/identify'
 import type { DirectMessage } from '@/lib/direct-message'
@@ -58,7 +59,9 @@ export function AppWrapper({ children }: WrapperProps) {
 
   return (
     <libp2pContext.Provider value={{ libp2p }}>
-      <ChatProvider>{children}</ChatProvider>
+      <ChatProvider>
+        <PixelArtProvider>{children}</PixelArtProvider>
+      </ChatProvider>
     </libp2pContext.Provider>
   )
 }

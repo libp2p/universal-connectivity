@@ -4,7 +4,11 @@ import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
-const navigationItems = [{ name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' }]
+const navigationItems = [
+  { name: 'Chat', href: '/' },
+  { name: 'Pixel Art', href: '/pixel-art' },
+  { name: 'Source', href: 'https://github.com/libp2p/universal-connectivity' },
+]
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')

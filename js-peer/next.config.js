@@ -10,6 +10,7 @@ const basePath =
 
 const nextConfig = {
   output: 'export',
+  trailingSlash: true,
   reactStrictMode: true,
   productionBrowserSourceMaps: true,
   basePath,
