@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
-import type { Libp2p, PubSub } from '@libp2p/interface'
+import type { Libp2p, PubSub, Connection } from '@libp2p/interface'
 import type { Identify } from '@libp2p/identify'
 import type { DirectMessage } from '@/lib/direct-message'
 import type { DelegatedRoutingV1HttpApiClient } from '@helia/delegated-routing-v1-http-api-client'
@@ -14,9 +14,13 @@ export type Libp2pType = Libp2p<{
   delegatedRouting: DelegatedRoutingV1HttpApiClient
 }>
 
-export const libp2pContext = createContext<{ libp2p: Libp2pType }>({
+export const libp2pContext = createContext<{
+  libp2p: Libp2pType
+  connections: Connection[]
+}>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
   libp2p: undefined,
+  connections: [],
 })
 
 interface WrapperProps {
@@ -28,6 +32,22 @@ let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
   const [libp2p, setLibp2p] = useState<Libp2pType | undefined>(undefined)
   const [error, setError] = useState('')
+  const [connections, setConnections] = useState<Connection[]>([])
+
+  useEffect(() => {
+    if (!libp2p) return
+    const onConnection = () => {
+      const connections = libp2p.getConnections()
+      setConnections(connections)
+    }
+    onConnection()
+    libp2p.addEventListener('connection:open', onConnection)
+    libp2p.addEventListener('connection:close', onConnection)
+    return () => {
+      libp2p.removeEventListener('connection:open', onConnection)
+      libp2p.removeEventListener('connection:close', onConnection)
+    }
+  }, [libp2p, setConnections])
 
   useEffect(() => {
     const init = async () => {
@@ -57,7 +77,7 @@ export function AppWrapper({ children }: WrapperProps) {
   }
 
   return (
-    <libp2pContext.Provider value={{ libp2p }}>
+    <libp2pContext.Provider value={{ libp2p, connections }}>
       <ChatProvider>{children}</ChatProvider>
     </libp2pContext.Provider>
   )

@@ -3,7 +3,6 @@ import Nav from '@/components/nav'
 import ChatContainer from '@/components/chat'
 import ConnectionPanel from '@/components/connection-panel'
 import { useState } from 'react'
-import { useLibp2pContext } from '@/context/ctx'
 import ConnectionInfoButton from '@/components/connection-info-button'
 
 export default function Chat() {
