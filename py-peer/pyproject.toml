@@ -9,7 +9,7 @@ authors = [
 ]
 dependencies = [
     "textual>=0.47.0",
-    "libp2p>=0.8.1",
+    "libp2p>=0.8.3",
     "trio>=0.22.0",
     "base58",
     "protobuf>=6.32.1,<7",

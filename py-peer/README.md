@@ -257,7 +257,7 @@ cd /tmp
 /tmp/py-peer-venv/bin/py-peer --api-routes
 ```
 
-The wheel requires `libp2p>=0.8.1`. It does **not** install any
+The wheel requires `libp2p>=0.8.3`. It does **not** install any
 UI framework beyond Textual, and it never writes into the installation
 directory: identity, history, and logs go to the data directory described
 below. Upgrading the package leaves that directory untouched.
